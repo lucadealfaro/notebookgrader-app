@@ -32,7 +32,7 @@ VERIFY_EMAIL = True
 REQUIRES_APPROVAL = False
 
 # ALLOWED_ACTIONS:
-# ["all"] 
+# ["all"]
 # ["login", "logout", "request_reset_password", "reset_password", "change_password", "change_email", "update_profile"]
 # if you add "login", add also "logout"
 ALLOWED_ACTIONS = ["all"]
@@ -46,7 +46,7 @@ SMTP_LOGIN = "username:password"
 SMTP_TLS = False
 
 # session settings
-SESSION_TYPE = "cookies"
+SESSION_TYPE = "database"
 SESSION_SECRET_KEY = "<session-secret-key>" # replace this with a uuid
 MEMCACHE_CLIENTS = ["127.0.0.1:11211"]
 REDIS_SERVER = "localhost:6379"
