@@ -5,7 +5,10 @@
 # the user).
 # See https://developers.google.com/identity/protocols/oauth2/web-server#python
 
+import calendar
 import json
+import time
+import uuid
 
 import google_auth_oauthlib.flow
 import google.oauth2.credentials
@@ -59,7 +62,9 @@ class GoogleScopedLogin(object):
     def _define_tables(self):
         self.db.define_table('auth_credentials', [
             Field('email'),
-            Field('credentials') # Stored in Json for generality.
+            Field('name'), # First and last names, all together.
+            Field('profile_pic'), # URL of profile pic.
+            Field('credentials') # Credentials for access, stored in Json for generality.
         ])
 
 
@@ -78,16 +83,16 @@ class GoogleScopedLogin(object):
                     self.db(self.db.auth_credentials.email == email).delete()
                     self.db.commit()
             auth.session.clear()
+            next = request.query.get("next") or URL("index")
+            redirect(next)
         else:
             raise HTTP(404)
 
 
     def get_login_url(self, auth, state=None):
         # Creates a flow.
-        print("Flow first scopes:", self.scopes)
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             self.secrets_file, scopes=self.scopes)
-        print("Flow after first scopes:", self.scopes)
         # Sets its callback URL.  This is the local URL that will be called
         # once the user gives permission.
         """Returns the URL to which the user is directed."""
@@ -104,10 +109,8 @@ class GoogleScopedLogin(object):
     def _handle_callback(self, auth, get_vars):
         # Builds a flow again, this time with the state in it.
         state = auth.session["oauth2googlescoped:state"]
-        print("Flow second scopes:", self.scopes)
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             self.secrets_file, scopes=self.scopes, state=state)
-        print("Flow after second scopes:", self.scopes)
         flow.redirect_uri = URL(self.callback_url, scheme=True)
         # Use the authorization server's response to fetch the OAuth 2.0 tokens.
         if state and get_vars.get('state', None) != state:
@@ -144,11 +147,31 @@ class GoogleScopedLogin(object):
             self.db.auth_credentials.update_or_insert(
                 self.db.auth_credentials.email == email,
                 email=email,
-                credentials=credentials_json
+                name=user_info.get("name"),
+                credentials=credentials_json,
+                profile_pic=user_info.get("picture"),
             )
             self.db.commit()
         # Logs in the user.
-        auth.store_user_in_session(email)
+        if auth.db:
+            user = {
+                "email": user_info.get("email"),
+                "first_name": user_info.get("given_name"),
+                "last_name": user_info.get("family_name"),
+            }
+            data = auth.get_or_register_user(user)
+            user["id"] = data.get("id")
+        else:
+            # WIP Allow login without DB
+            user = dict(user_info)
+            if not "id" in user:
+                user["id"] = user.get("username") or user.get("email")
+        # Stores the user in the session.  We do it here, so we store
+        # the complete details, and not just the user_id.
+        auth.session["user"] = user
+        auth.session["recent_activity"] = calendar.timegm(time.gmtime())
+        auth.session["uuid"] = str(uuid.uuid1())
+        # Finally, redirects to next.
         if "_next" in auth.session:
             next = auth.session.get("_next")
             del auth.session["_next"]

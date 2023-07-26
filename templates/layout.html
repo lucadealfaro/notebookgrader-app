@@ -14,7 +14,7 @@
     <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
       <div class="navbar-brand">
         <a class="navbar-item" href="[[=URL('index')]]">
-          Learn py4web
+          NotebookGrader
           <!-- <img class="logo" width="150" src="images/site_icon.png"> -->
         </a>
 
@@ -33,10 +33,15 @@
         </div>
 
         <div class="navbar-end">
+          [[if globals().get('user'):]]
+          <div class="navbar-item">
+            [[=globals().get('user').get('email')]]
+          </div>
+          [[pass]]
           <div class="navbar-item">
             <div class="buttons">
               [[if globals().get('user'):]]
-              <a class="button is-light" href="[[=URL('auth/plugin/oauth2googlescoped/logout')]]">Sign out</a>
+                <a class="button is-warning" href="[[=URL('auth/plugin/oauth2googlescoped/logout')]]">Sign Out</a>
               [[else:]]
               <a class="button is-link" href="[[=URL('auth/plugin/oauth2googlescoped/login', vars=dict(next=URL('index')))]]">Sign In</a>
               [[pass]]
