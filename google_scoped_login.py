@@ -192,6 +192,3 @@ class GoogleScopedLogin(object):
     @staticmethod
     def credentials_from_dict(credentials_dict):
         return google.oauth2.credentials.Credentials(**credentials_dict)
-
-    def etc(self):
-        google_auth_oauthlib.flow.Flow.from_client_config()
