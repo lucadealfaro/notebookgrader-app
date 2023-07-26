@@ -1,3 +1,8 @@
+# This is a version of google login that also enables the use of other
+# authenticatio scopes (e.g., Google Drive, etc).  The credentials for the
+# scopes are stored, so that the application can access them and use to
+# operate on the scopes (e.g., create files on Google Drive on behalf of
+# the user).
 # See https://developers.google.com/identity/protocols/oauth2/web-server#python
 
 import json
@@ -7,7 +12,6 @@ import google.oauth2.credentials
 from googleapiclient.discovery import build
 
 from py4web import request, redirect, URL, HTTP
-from common import session
 from pydal import Field
 
 class GoogleScopedLogin(object):
@@ -19,7 +23,8 @@ class GoogleScopedLogin(object):
     label = "Google Scoped"
     callback_url = "auth/plugin/oauth2googlescoped/callback"
 
-    def __init__(self, secrets_file=None, scopes=None, db=None, define_tables=True):
+    def __init__(self, secrets_file=None, scopes=None, db=None,
+                 define_tables=True, delete_credentials_on_logout=True):
         """
         Creates an authorization object for Google with Oauth2 and paramters.
         Args:
@@ -27,8 +32,13 @@ class GoogleScopedLogin(object):
             scopes: scopes desired.
                 See https://developers.google.com/drive/api/guides/api-specific-auth
                 and https://developers.google.com/identity/protocols/oauth2/scopes
-            db:
-            define_tables:
+            db: Database handle.
+            define_tables: Define the tables for storing credentials?
+            delete_credentials_on_logout: if True, the credentials are cleared
+                when the user logs out.  If False, the app keeps a copy of the
+                credentials, so it can do work on behalf of the user using
+                those credentials after logout.  This can obviously
+                generate security concerns.
         """
 
         # Local secrets to be able to access.
@@ -42,6 +52,7 @@ class GoogleScopedLogin(object):
         self.db = db
         if db and define_tables:
             self._define_tables()
+            self.delete_credentials_on_logout = delete_credentials_on_logout
 
 
     def _define_tables(self):
@@ -51,7 +62,7 @@ class GoogleScopedLogin(object):
         ])
 
 
-    def get_login_url(self, state=None, next=None):
+    def get_login_url(self, auth, state=None, next=None):
         # Creates a flow.
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             self.secrets_file, scopes=self.scopes)
@@ -68,7 +79,7 @@ class GoogleScopedLogin(object):
             access_type='offline',
             # Enable incremental authorization. Recommended as a best practice.
             include_granted_scopes='true')
-        session["oauth2googlescoped:state"] = state
+        auth.session["oauth2googlescoped:state"] = state
         return authorization_url
 
 
@@ -76,15 +87,23 @@ class GoogleScopedLogin(object):
         """Handles the login request or the callback."""
         if path == "login":
             auth.session["_next"] = request.query.get("next") or URL("index")
-            redirect(self.get_login_url())
+            redirect(self.get_login_url(auth))
         elif path == "callback":
             self._handle_callback(auth, get_vars)
+        elif path == "logout":
+            # Deletes the credentials, and clears the session.
+            if self.delete_credentials_on_logout:
+                email = auth.current_user.get('email') if auth.current_user else None
+                if email is not None:
+                    self.db(self.db.auth_credentials.email == email).delete()
+                    self.db.commit()
+            auth.session.clear()
         else:
             raise HTTP(404)
 
     def _handle_callback(self, auth, get_vars):
         # Builds a flow again, this time with the state in it.
-        state = session["oauth2googlescoped:state"]
+        state = auth.session["oauth2googlescoped:state"]
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             self.secrets_file, scopes=self.scopes, state=state)
         flow.redirect_uri = URL(self.callback_url, vars=vars, scheme=True)

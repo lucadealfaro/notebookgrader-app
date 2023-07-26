@@ -15,7 +15,7 @@ from py4web.utils.factories import ActionFactory
 from py4web.utils.form import FormStyleBulma
 from . import settings
 
-from google_scoped_login import GoogleScopedLogin
+from .google_scoped_login import GoogleScopedLogin
 
 # #######################################################
 # implement custom loggers form settings.LOGGERS
