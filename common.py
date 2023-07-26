@@ -141,7 +141,6 @@ auth.register_plugin(GoogleScopedLogin(
     db=db,
     scopes=[
         "https://www.googleapis.com/auth/drive.file",
-        "https://www.googleapis.com/auth/drive.resource",
     ]
 ))
 

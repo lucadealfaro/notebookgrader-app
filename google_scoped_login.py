@@ -49,6 +49,7 @@ class GoogleScopedLogin(object):
         self.scopes = ["openid",
                        "https://www.googleapis.com/auth/userinfo.email",
                        "https://www.googleapis.com/auth/userinfo.profile"] + scopes
+        print("Initial scopes:", self.scopes)
         self.db = db
         if db and define_tables:
             self._define_tables()
@@ -83,8 +84,10 @@ class GoogleScopedLogin(object):
 
     def get_login_url(self, auth, state=None):
         # Creates a flow.
+        print("Flow first scopes:", self.scopes)
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             self.secrets_file, scopes=self.scopes)
+        print("Flow after first scopes:", self.scopes)
         # Sets its callback URL.  This is the local URL that will be called
         # once the user gives permission.
         """Returns the URL to which the user is directed."""
@@ -101,8 +104,10 @@ class GoogleScopedLogin(object):
     def _handle_callback(self, auth, get_vars):
         # Builds a flow again, this time with the state in it.
         state = auth.session["oauth2googlescoped:state"]
+        print("Flow second scopes:", self.scopes)
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             self.secrets_file, scopes=self.scopes, state=state)
+        print("Flow after second scopes:", self.scopes)
         flow.redirect_uri = URL(self.callback_url, scheme=True)
         # Use the authorization server's response to fetch the OAuth 2.0 tokens.
         if state and get_vars.get('state', None) != state:
