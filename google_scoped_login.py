@@ -62,27 +62,6 @@ class GoogleScopedLogin(object):
         ])
 
 
-    def get_login_url(self, auth, state=None, next=None):
-        # Creates a flow.
-        flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-            self.secrets_file, scopes=self.scopes)
-        # Sets its callback URL.  This is the local URL that will be called
-        # once the user gives permission.
-        vars = {}
-        if next:
-            vars["next"] = next
-        """Returns the URL to which the user is directed."""
-        flow.redirect_uri = URL(self.callback_url, vars=vars, scheme=True)
-        authorization_url, state = flow.authorization_url(
-            # Enable offline access so that you can refresh an access token without
-            # re-prompting the user for permission. Recommended for web server apps.
-            access_type='offline',
-            # Enable incremental authorization. Recommended as a best practice.
-            include_granted_scopes='true')
-        auth.session["oauth2googlescoped:state"] = state
-        return authorization_url
-
-
     def handle_request(self, auth, path, get_vars, post_vars):
         """Handles the login request or the callback."""
         if path == "login":
@@ -101,12 +80,30 @@ class GoogleScopedLogin(object):
         else:
             raise HTTP(404)
 
+
+    def get_login_url(self, auth, state=None):
+        # Creates a flow.
+        flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+            self.secrets_file, scopes=self.scopes)
+        # Sets its callback URL.  This is the local URL that will be called
+        # once the user gives permission.
+        """Returns the URL to which the user is directed."""
+        flow.redirect_uri = URL(self.callback_url, scheme=True)
+        authorization_url, state = flow.authorization_url(
+            # Enable offline access so that you can refresh an access token without
+            # re-prompting the user for permission. Recommended for web server apps.
+            access_type='offline',
+            # Enable incremental authorization. Recommended as a best practice.
+            include_granted_scopes='true')
+        auth.session["oauth2googlescoped:state"] = state
+        return authorization_url
+
     def _handle_callback(self, auth, get_vars):
         # Builds a flow again, this time with the state in it.
         state = auth.session["oauth2googlescoped:state"]
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             self.secrets_file, scopes=self.scopes, state=state)
-        flow.redirect_uri = URL(self.callback_url, vars=vars, scheme=True)
+        flow.redirect_uri = URL(self.callback_url, scheme=True)
         # Use the authorization server's response to fetch the OAuth 2.0 tokens.
         if state and get_vars.get('state', None) != state:
             raise HTTP(401, "Invalid state")
