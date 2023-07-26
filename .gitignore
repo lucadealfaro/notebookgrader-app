@@ -3,3 +3,4 @@ __pycache__/*
 databases/*
 !databases/README.md
 private/*
+temp_files/*

@@ -26,9 +26,11 @@ Warning: Fixtures MUST be declared with @action.uses({fixtures}) else your app w
 """
 
 from py4web import action, request, abort, redirect, URL
-from yatl.helpers import A
+from pydal import Field
+from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
 from py4web.utils.url_signer import URLSigner
+from py4web.utils.form import Form, FormStyleBulma
 from .models import get_user_email
 
 url_signer = URLSigner(session)
@@ -40,3 +42,18 @@ def index():
         # COMPLETE: return here any signed URLs you need.
         my_callback_url = URL('my_callback', signer=url_signer),
     )
+
+@action('share')
+@action.uses('share.html', db, auth)
+def share():
+    form = Form([Field('name')],
+        csrf_session=session, formstyle=FormStyleBulma
+    )
+    attrs = {
+        "_onclick": "window.history.back(); return false;",
+        "_class": "button is-default ml-2",
+    }
+    form.param.sidecar.append(A("Cancel", **attrs))
+    if form.accepted:
+        pass
+    return dict(form=form)

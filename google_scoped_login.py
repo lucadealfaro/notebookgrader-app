@@ -52,7 +52,6 @@ class GoogleScopedLogin(object):
         self.scopes = ["openid",
                        "https://www.googleapis.com/auth/userinfo.email",
                        "https://www.googleapis.com/auth/userinfo.profile"] + scopes
-        print("Initial scopes:", self.scopes)
         self.db = db
         if db and define_tables:
             self._define_tables()
