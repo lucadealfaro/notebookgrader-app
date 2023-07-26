@@ -15,6 +15,8 @@ from py4web.utils.factories import ActionFactory
 from py4web.utils.form import FormStyleBulma
 from . import settings
 
+from google_scoped_login import GoogleScopedLogin
+
 # #######################################################
 # implement custom loggers form settings.LOGGERS
 # #######################################################
@@ -132,6 +134,19 @@ if auth.db:
 # #######################################################
 # Enable optional auth plugin
 # #######################################################
+
+# Registers our Google Oauth plugin with stored credentials.
+auth.register_plugin(GoogleScopedLogin(
+    secrets_file=settings.GOOGLE_SCOPED_CLIENT_SECRETS,
+    db=db,
+    scopes=[
+        "https://www.googleapis.com/auth/drive.file",
+        "https://www.googleapis.com/auth/drive.resource",
+    ]
+))
+
+# Below are the standard py4web plugins.
+
 if settings.USE_PAM:
     from py4web.utils.auth_plugins.pam_plugin import PamPlugin
 

@@ -19,7 +19,7 @@ class GoogleScopedLogin(object):
     label = "Google Scoped"
     callback_url = "auth/plugin/oauth2googlescoped/callback"
 
-    def __init__(self, secrets_file, scopes, db=None, define_tables=True):
+    def __init__(self, secrets_file=None, scopes=None, db=None, define_tables=True):
         """
         Creates an authorization object for Google with Oauth2 and paramters.
         Args:
@@ -32,8 +32,10 @@ class GoogleScopedLogin(object):
         """
 
         # Local secrets to be able to access.
+        assert secrets_file is not None, "Missing secrets file"
         self.secrets_file = secrets_file
         # Scopes for which we ask authorization
+        scopes = scopes or []
         self.scopes = ["openid",
                        "https://www.googleapis.com/auth/userinfo.email",
                        "https://www.googleapis.com/auth/userinfo.profile"] + scopes
@@ -116,13 +118,14 @@ class GoogleScopedLogin(object):
             raise HTTP(401, "Missing email")
         # Finally, we store the credentials, so we can re-use them in order
         # to use the scopes we requested.
-        credentials_json=json.dumps(self.credentials_to_dict(credentials))
-        self.db.auth_credentials.update_or_insert(
-            self.db.auth_credentials.email == email,
-            email=email,
-            credentials=credentials_json
-        )
-        self.db.commit()
+        if self.db:
+            credentials_json=json.dumps(self.credentials_to_dict(credentials))
+            self.db.auth_credentials.update_or_insert(
+                self.db.auth_credentials.email == email,
+                email=email,
+                credentials=credentials_json
+            )
+            self.db.commit()
         # Logs in the user.
         auth.store_user_in_session(email)
         if "_next" in auth.session:
