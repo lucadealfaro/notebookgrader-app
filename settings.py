@@ -96,3 +96,5 @@ try:
     from .settings_private import *
 except (ImportError, ModuleNotFoundError):
     pass
+
+COLAB_BASE = "https://colab.research.google.com/drive/"

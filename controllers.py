@@ -25,6 +25,9 @@ session, db, T, auth, and tempates are examples of Fixtures.
 Warning: Fixtures MUST be declared with @action.uses({fixtures}) else your app will result in undefined behavior
 """
 
+import json
+import os
+
 from py4web import action, request, abort, redirect, URL
 from pydal import Field
 from yatl.helpers import A, BUTTON, SPAN
@@ -32,6 +35,14 @@ from .common import db, session, T, cache, auth, logger, authenticated, unauthen
 from py4web.utils.url_signer import URLSigner
 from py4web.utils.form import Form, FormStyleBulma
 from .models import get_user_email
+from .settings import APP_FOLDER, COLAB_BASE
+
+# Google imports
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
+import google.oauth2.credentials
 
 url_signer = URLSigner(session)
 
@@ -43,8 +54,8 @@ def index():
         my_callback_url = URL('my_callback', signer=url_signer),
     )
 
-@action('share')
-@action.uses('share.html', db, auth)
+@action('share', method=["GET", "POST"])
+@action.uses('share.html', db, auth.user)
 def share():
     form = Form([Field('name')],
         csrf_session=session, formstyle=FormStyleBulma
@@ -55,5 +66,25 @@ def share():
     }
     form.param.sidecar.append(A("Cancel", **attrs))
     if form.accepted:
-        pass
+        # We share the notebook to the current user.
+        file_path = os.path.join(APP_FOLDER, "temp_files/TestoutJuly2023.ipynb")
+        mime = 'application/vnd.google.colaboratory'
+        media = MediaFileUpload(file_path, mimetype=mime, resumable=True)
+        file_meta = {'name': form.vars["name"]}
+        # Reads the credentials.
+        user_info = db(db.auth_credentials.email == get_user_email()).select().first()
+        if not user_info:
+            print("No user credentials")
+            redirect(URL('index'))
+        credentials_dict = json.loads(user_info.credentials)
+        creds = google.oauth2.credentials.Credentials(**credentials_dict)
+        drive_service = build('drive', 'v3', credentials=creds)
+        upfile = drive_service.files().create(
+            body=file_meta,
+            media_body=media,
+            fields='id').execute()
+        file_id = upfile.get('id')
+        print("file_id:", file_id)
+        redirect(COLAB_BASE + file_id)
+
     return dict(form=form)
