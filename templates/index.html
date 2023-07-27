@@ -6,17 +6,18 @@
 }
 </style>
 
-
-<div class="section" id="vue-target" v-cloak>
-  <!-- Put here your Vue.js template -->
-</div>
-
 <section class="section">
-  [[if globals().get('user'):]]
-    <a href="[[=URL('share')]]" class="button is-success">
-      Share Notebook
-    </a>
-  [[pass]]
+  <p>NotebookGrader is a tool that makes it easy for instructors to assign homework consisting of Python Jupyter Notebooks, and for students to work on such homework.</p>
+  
+  <p class="mt-4">Instructors can upload a Python Jupyter notebook that specifies the homework assignment.  These notebooks are modeled after the <a href="https://nbgrader.readthedocs.io/en/stable/">nbgrader</a> ones: some cells are read-only, in others the students can write their solutions, and other cells contain tests. Students get points if their solutions pass the tests.</p>
+  
+  <p class="mt-4">Students can click on an assignment, and obtain a <a href="https://colab.research.google.com/">Google Colab</a> notebook in their Google Drive, on which they can work. A Google Colab is a Python Notebook hosted by Google. In this way, students do not need to install Python and Jupyter: all they need to do their work is a browser.</p>
+  
+  <p class="mt-4">When students are done working on their assignment, they can click on a <em>Grade</em> button. Their work is read from Google Drive and graded, and students receive their grade and feedback immediately. Students can resubmit their work for grading a few times a day.</p>
+  
+  <p class="mt-4">Instructors can download all grades, and they also have access to the Colab Notebooks on which the students are working, so they can see in real-time how students are approaching the problems, and help them if needed.</p>
+  
+  <p class="mt-4">NotebookGrader can be used by instructors and students: please choose your role using the top bar.</p>
 </section>
 
 [[block page_scripts]]

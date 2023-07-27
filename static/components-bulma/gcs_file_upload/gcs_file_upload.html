@@ -1,0 +1,36 @@
+<div class="gcs_file_upload">
+  <div class="field has-addons">
+    <p class="control">
+      <div class="file is-info">
+        <label class="file-label">
+          <input class="file-input" type="file" @change="upload_file($event)">
+          <span class="file-cta">
+            <span class="file-icon">
+              <i v-if="uploading" class="fa fa-spinner fa-pulse fa-fw"></i>
+              <i v-else class="fa fa-upload fa-fw"></i>
+            </span>
+            <span class="file-label">
+              <span v-if="!uploading">Upload new file</span>
+            </span>
+          </span>
+        </label>
+      </div>
+    </p>
+    <p class="control">
+      <button v-if="file_path" class="button" @click="download_file"
+              :class="{'disabled': !file_path}">
+        <span class="icon" v-if="download_url">
+          <i class="fa fa-download fa-fw"></i>
+        </span>
+        <span>{{file_info}}</span>
+      </button>
+      <button v-else class="button is-static">No file uploaded</button>
+    </p>
+    <p class="control" v-if='file_path'>
+      <button class="button is-danger" @click="delete_file" :class="{'is-loading': deleting}">
+        <span v-if="delete_confirmation">Confirm deletion</span>
+        <i v-else class="fa fa-trash"></i>
+      </button>
+    </p>
+  </div>
+</div>
