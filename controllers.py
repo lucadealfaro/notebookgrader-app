@@ -28,7 +28,7 @@ Warning: Fixtures MUST be declared with @action.uses({fixtures}) else your app w
 import json
 import os
 
-from py4web import action, request, abort, redirect, URL
+from py4web import action, request, abort, redirect, URL, Flash
 from pydal import Field
 from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
@@ -45,14 +45,59 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 import google.oauth2.credentials
 
 url_signer = URLSigner(session)
+flash = Flash()
 
 @action('index')
-@action.uses('index.html', db, auth, url_signer)
+@action.uses('index.html', db, auth, url_signer, flash)
 def index():
     return dict(
         # COMPLETE: return here any signed URLs you need.
         my_callback_url = URL('my_callback', signer=url_signer),
     )
+
+@action('privacy_policy')
+@action.uses('privacy_policy.html')
+def privacy_policy():
+    return dict()
+
+@action('terms_of_use')
+@action.uses('terms_of_use.html')
+def terms_of_use():
+    return dict()
+
+@action('delete_personal_information', method=["GET", "POST"])
+@action.uses('delete_personal_information.html', db, auth.user)
+def delete_personal_information():
+    form = Form([Field('yes_i_confirm', 'boolean')],
+                csrf_session=session, formstyle=FormStyleBulma
+                )
+    attrs = {
+        "_onclick": "window.history.back(); return false;",
+        "_class": "button is-default ml-2",
+    }
+    form.param.sidecar.append(A("Cancel", **attrs))
+    if form.accepted:
+        if form.vars['yes_i_confirm']:
+            # Deletes all user info.
+            email = auth.current_user.get('email') if auth.current_user else None
+            if email is not None:
+                # Credentials for Google.
+                db(db.auth_credentials.email == email).delete()
+                # Login information.
+                db(db.auth_user.email == email).delete()
+                # INSERT HERE DELETION FROM ALL OTHER TABLES.
+                # Finally, we delete teh session information.
+                # This logs the user out.
+                auth.session.clear()
+                flash.set("All your personal information has been deleted.", sanitize=True)
+                redirect(URL('index'))
+        else:
+            flash.set("No information is deleted unless you confirm.",
+                      sanitize=True)
+            redirect(URL('delete_personal_information'))
+        redirect(URL('index'))
+    return dict(form=form)
+
 
 @action('share', method=["GET", "POST"])
 @action.uses('share.html', db, auth.user)
