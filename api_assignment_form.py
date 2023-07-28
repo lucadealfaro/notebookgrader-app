@@ -68,7 +68,7 @@ class AssignmentFormEdit(AssignmentForm):
 
     def process_post(self, record_id, validated_values):
         self.db(self.db.assignment.id == record_id).update(**validated_values)
-        return dict(redirect_url=URL(self.redirect_url, signer=self.signer))
+        return dict(redirect_url=URL(self.redirect_url, record_id))
 
 
 class AssignmentFormCreate(AssignmentFormEdit):

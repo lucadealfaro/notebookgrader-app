@@ -26,7 +26,8 @@ from .api_assignment_form import AssignmentFormCreate, AssignmentFormEdit, Assig
 # The ID is the ID of the course for which the assignment is created.
 form_assignment_create = AssignmentFormCreate('api-assignment-create',
                                               redirect_url='teacher-view-assignment',
-                                              signer=url_signer)
+                                              signer=url_signer,
+                                              )
 # The ID is the ID of the assignment.  This form is used for instructors.
 form_assignment_view = AssignmentFormView('api-assignment-view',
                                           signer=url_signer)
@@ -43,7 +44,7 @@ def teacher_home():
 @action('create-assignment')
 @action.uses('create_assignment.html', db, auth.user, form_assignment_create)
 def create_assignment():
-    form = form_assignment_create()
+    form = form_assignment_create(cancel_url=URL('teacher-home'))
     return dict(form=form)
 
 
@@ -53,12 +54,13 @@ def teacher_view_assignment(id=None):
     # Checks permissions.
     assignment = db.assignment[id]
     print("Assignment owner:", assignment.owner)
-    if assignment.owner != get_user_email():
+    if assignment is None or assignment.owner != get_user_email():
         redirect(URL('teacher-home'))
     # Displays the assignment.
     form = form_assignment_view(id=id)
     return dict(
         form=form,
+        assignment_id=assignment.id,
         change_access_url=URL('change-access-url', id, signer=url_signer),
     )
 
@@ -75,3 +77,12 @@ def change_access_url(id=None):
         assignment.update_record()
     return dict(access_url=URL('invite', assignment.access_url, scheme=True))
 
+@action('edit-assignment/<id>')
+@action.uses('edit_assignment.html', db, auth.user, form_assignment_edit)
+def edit_assignment(id=None):
+    assignment = db.assignment[id]
+    print("Assignment owner:", assignment.owner)
+    if assignment is None or assignment.owner != get_user_email():
+        redirect(URL('teacher-home'))
+    form = form_assignment_edit(id=id, cancel_url=URL('teacher-view-assignment', id))
+    return dict(form=form)
