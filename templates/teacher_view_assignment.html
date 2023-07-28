@@ -16,18 +16,23 @@
   <h1 class="title">Assignment</h1>
 
   [[=form]]
-
+  
+  <h2 class="subtitle">Access URL <span @mouseover="show_access_help = true" @mouseout="show_access_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_access_help">
+    <p>This URL can be given to students to access the assignment.
+      If you regenerate it, students with the old </p>
+  </div>
+  <p><span class="box is-family-monospace is-size-7">{{access_url}}</span>
+    <button class="button is-warning" @click="regenerate_access_url"><span class="icon is-small"><i class="fa fa-refresh"></i></span><span>Regenerate</span></button></p>
 </div>
 
 
 [[block page_scripts]]
 <!-- Loads the index-specific js for Vue -->
+<script>
+    const change_access_url = "[[=XML(change_access_url)]]";
+</script>
 <script src="components-bulma/vueform/luxon.min.js"></script>
 <script src="[[=URL('static/components-bulma/vueform/vueform.js')]]"></script>
-<script>
-  var app = new Vue({
-      el: "#vue-target",
-      data: {},
-  });
-</script>
+<script src="js/teacher_view_assignment.js"></script>
 [[end]]

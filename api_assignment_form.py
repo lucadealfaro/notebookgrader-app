@@ -9,7 +9,7 @@ from .components.vueform import VueForm
 
 from .constants import *
 from .common import db, session, auth, Field
-
+from .util import random_id
 
 FIELDS = [
     Field('name', length=STRING_FIELD_LENGTH, required=True,
@@ -99,7 +99,7 @@ class AssignmentFormCreate(AssignmentFormEdit):
 
     def process_post(self, record_id, validated_values):
         # Creates a random URL through which the assignment can be accessed.
-        validated_values['access_url'] = str(uuid.uuid1())
+        validated_values['access_url'] = random_id()
         new_id = self.db.assignment.insert(**validated_values)
         return dict(redirect_url=URL(self.redirect_url, new_id))
 

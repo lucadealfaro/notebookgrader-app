@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 
 from py4web import action, request, abort, redirect, URL, Flash
 from pydal import Field
@@ -18,6 +19,7 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 import google.oauth2.credentials
 
 from .controllers import flash, url_signer
+from .util import random_id
 
 from .api_assignment_form import AssignmentFormCreate, AssignmentFormEdit, AssignmentFormView
 
@@ -57,6 +59,19 @@ def teacher_view_assignment(id=None):
     form = form_assignment_view(id=id)
     return dict(
         form=form,
-        access_url=assignment.access_url,
+        change_access_url=URL('change-access-url', id, signer=url_signer),
     )
+
+@action('change-access-url/<id>', method=["GET", "POST"])
+@action.uses(db, auth.user, url_signer.verify())
+def change_access_url(id=None):
+    if request.method == "GET":
+        assignment = db.assignment[id]
+    elif request.method == "POST":
+        assignment = db.assignment[id]
+        if assignment is None:
+            return dict(access_url=None)
+        assignment.access_url = random_id()
+        assignment.update_record()
+    return dict(access_url=URL('invite', assignment.access_url, scheme=True))
 

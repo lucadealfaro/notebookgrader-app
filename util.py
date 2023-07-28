@@ -1,8 +1,7 @@
-import datetime
 import re
 
-from yatl.helpers import *
-from .common import T
+import hashlib
+import uuid
 
 email_split_pattern = re.compile('[,\s]+')
 whitespace = re.compile('\s+$')
@@ -34,9 +33,5 @@ def normalize_email_list(l):
     r.sort()
     return r
 
-def ribbon(link_list):
-    """Makes the ribbon."""
-    return UL(*[l for l in link_list], _class='btnbar')
-
-def MT(s):
-    return str(T(s))
+def random_id():
+    return hashlib.sha1(uuid.uuid1().bytes).hexdigest()

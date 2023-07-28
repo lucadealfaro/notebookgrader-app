@@ -13,8 +13,10 @@
 
 <div class="section" id="vue-target" v-cloak>
   <!-- Put here your Vue.js template -->
-  <h1 class="title">Create Assignment</h1>
-  <p>Specify here the data for your assignment. You will be able to upload the assignment's source notebook once it's created.</p>
+  <h1 class="title">Create Assignment<span @mouseover="show_form_help = true" @mouseout="show_form_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h1>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_form_help">
+    <p>Specify here the data for your assignment. You will be able to upload the assignment's source notebook once it's created.</p>
+  </div>
 
   [[=form]]
 
@@ -28,7 +30,7 @@
 <script>
   var app = new Vue({
       el: "#vue-target",
-      data: {},
+      data: {show_form_help: false},
   });
 </script>
 [[end]]
