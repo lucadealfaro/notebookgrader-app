@@ -32,7 +32,6 @@ from py4web import action, request, abort, redirect, URL, Flash
 from pydal import Field
 from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
-from py4web.utils.url_signer import URLSigner
 from py4web.utils.form import Form, FormStyleBulma
 from .models import get_user_email
 from .settings import APP_FOLDER, COLAB_BASE
@@ -44,8 +43,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 import google.oauth2.credentials
 
-url_signer = URLSigner(session)
-flash = Flash()
+from .common import url_signer, flash
 
 @action('index')
 @action.uses('index.html', db, auth, url_signer, flash)

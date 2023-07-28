@@ -20,7 +20,7 @@
   <h2 class="subtitle">Access URL <span @mouseover="show_access_help = true" @mouseout="show_access_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_access_help">
     <p>This URL can be given to students to access the assignment.
-      If you regenerate it, students with the old </p>
+      If you regenerate it, students with the old URL will no longer be able to join the assignment.</p>
   </div>
   <p><span class="box is-family-monospace is-size-7">{{access_url}}</span>
     <button class="button is-warning" @click="regenerate_access_url"><span class="icon is-small"><i class="fa fa-refresh"></i></span><span>Regenerate</span></button></p>

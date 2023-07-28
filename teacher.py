@@ -18,35 +18,32 @@ from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 import google.oauth2.credentials
 
-from .controllers import flash, url_signer
+from .common import flash, url_signer
 from .util import random_id
 
 from .api_assignment_form import AssignmentFormCreate, AssignmentFormEdit, AssignmentFormView
+from .api_assignment_grid import TeacherAssignmentGrid
 
 # The ID is the ID of the course for which the assignment is created.
 form_assignment_create = AssignmentFormCreate('api-assignment-create',
-                                              redirect_url='teacher-view-assignment',
-                                              signer=url_signer,
-                                              )
+                                              redirect_url='teacher-view-assignment')
 # The ID is the ID of the assignment.  This form is used for instructors.
-form_assignment_view = AssignmentFormView('api-assignment-view',
-                                          signer=url_signer)
+form_assignment_view = AssignmentFormView('api-assignment-view')
 # The ID is the ID of the assignment.  This form is used for instructors.
 form_assignment_edit = AssignmentFormEdit('api-assignment-edit',
-                                          redirect_url='teacher-view-assignment',
-                                          signer=url_signer)
+                                          redirect_url='teacher-view-assignment')
+teacher_assignment_grid = TeacherAssignmentGrid('api-teacher-assignment-grid')
 
 @action('teacher-home')
 @action.uses('teacher_home.html', db, auth.user)
 def teacher_home():
-    return dict()
+    return dict(grid=teacher_assignment_grid())
 
 @action('create-assignment')
 @action.uses('create_assignment.html', db, auth.user, form_assignment_create)
 def create_assignment():
     form = form_assignment_create(cancel_url=URL('teacher-home'))
     return dict(form=form)
-
 
 @action('teacher-view-assignment/<id>')
 @action.uses('teacher_view_assignment.html', db, auth.user, form_assignment_view)

@@ -10,6 +10,7 @@ from .components.vueform import VueForm
 from .constants import *
 from .common import db, session, auth, Field
 from .util import random_id
+from .common import url_signer
 
 FIELDS = [
     Field('name', length=STRING_FIELD_LENGTH, required=True,
@@ -18,6 +19,7 @@ FIELDS = [
     Field('available_from', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
           help="Date from which students can access the assignment."),
     Field('submission_deadline', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
+          label="Due Date",
           help="Date when students need to submit the assignment for it to be considered submitted on time."),
     Field('available_until', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
           help="Date until when student can access the assignment and submit a solution, even if late."),
@@ -28,7 +30,7 @@ FIELDS = [
 class AssignmentForm(VueForm):
 
     def __init__(self, fields, path, **kwargs):
-        super().__init__(fields, session, path, auth=auth, db=db, **kwargs)
+        super().__init__(fields, session, path, auth=auth, db=db, signer=url_signer, **kwargs)
 
     def read_values(self, record_id):
         values = {}

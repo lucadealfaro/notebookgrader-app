@@ -13,6 +13,8 @@ from py4web.utils.downloader import downloader
 from pydal.tools.tags import Tags
 from py4web.utils.factories import ActionFactory
 from py4web.utils.form import FormStyleBulma
+from py4web.utils.url_signer import URLSigner
+
 from . import settings
 
 from .google_scoped_login import GoogleScopedLogin
@@ -226,3 +228,6 @@ auth.enable(uses=(session, T, db), env=dict(T=T))
 # #######################################################
 unauthenticated = ActionFactory(db, session, T, flash, auth)
 authenticated = ActionFactory(db, session, T, flash, auth.user)
+
+url_signer = URLSigner(session)
+flash = Flash()
