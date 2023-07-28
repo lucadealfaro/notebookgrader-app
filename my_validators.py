@@ -41,7 +41,8 @@ class IS_ISO_DATETIME(IS_DATETIME):
             if value[-1:] == "Z":
                 value = value[:-1]
             value = datetime.datetime.fromisoformat(value)
-            return value.replace(tzinfo=datetime.timezone.utc)
+            value = value.replace(tzinfo=datetime.timezone.utc)
+            return value.replace(tzinfo=None)
         except:
             raise ValidationError("Wrong date format")
 

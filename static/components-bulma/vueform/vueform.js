@@ -50,13 +50,9 @@
     function set_results(self, res) {
         // This either sets new values (including errors) for the form,
         // or it implements the redirection that one may wish after the post.
-        if (res.data.redirect_url) {
-            window.location = res.data.redirect_url;
-        } else {
-            self.fields = form.decorate(preprocess_fields(self, res.data.fields));
-            console.log("Set fields:", self.fields);
-            self.readonly = res.data.readonly;
-        }
+        self.fields = form.decorate(preprocess_fields(self, res.data.fields));
+        console.log("Set fields:", self.fields);
+        self.readonly = res.data.readonly;
     }
 
     function preprocess_fields(self, fields) {
@@ -65,7 +61,7 @@
             f.readonly = !f.writable;
             if (f.type === 'datetime') {
                 if (f.value === null) {
-                    f.time = null;
+                    f.time = "11:59 PM";
                     f.date = null;
                     f.date_readonly = null;
                     f.datetime_readonly = null;
@@ -168,7 +164,17 @@
         if (ok) {
             console.log("Posting:", d);
             axios.post(self.server_url, d).then(function (res) {
-                set_results(self, res);
+            if (res.data.redirect_url) {
+                window.location = res.data.redirect_url;
+            } else {
+                // There has been some error.
+                // Clear our errors.
+                for (let field of self.fields) {
+                    field.error = null;
+                }
+                // Then copy the errors from the return message.
+
+            }
             });
         }
     };

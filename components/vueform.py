@@ -85,58 +85,53 @@ class VueForm(Fixture):
         self.readonly = readonly
         self.fields = collections.OrderedDict()
         for field in fields_or_table:
-            self.fields[field.name] = dict(
-                field=field,  # Field in the form specification.
-                error=None,  # Any error found.
-                value=None,
-                validated_value=None,
-            )
+            self.fields[field.name] = field
+
 
     def _get_fields_for_web(self, values):
         """Returns a dictionary mapping each field to information that is ready
         to be sent to the web app.
         """
         fields = collections.OrderedDict()
-        for f in self.fields.values():
+        for f_name, f in self.fields.items():
             # We only include readable fields.
-            ff = f["field"]
-            if ff.readable:
+            if f.readable:
                 # Formats the field.
-                v = values.get(ff.name)
-                if v is None and hasattr(ff, "default"):
-                    v = ff.default() if callable(ff.default) else ff.default
+                v = values.get(f_name)
+                if v is None and hasattr(f, "default"):
+                    v = f.default() if callable(f.default) else f.default
                 # Builds a default web field.
                 web_field = dict(
-                    name=ff.name,
-                    writable=ff.writable and not self.readonly,
-                    label=ff.label,
-                    type=VueForm.TYPE_CONVERSION.get(ff.type, "text"),
-                    placeholder=ff.placeholder if hasattr(ff, "placeholder") else None,
-                    comment=ff.comment if hasattr(ff, "comment") else None,
-                    error=f["error"],
+                    name=f_name,
+                    writable=f.writable and not self.readonly,
+                    label=f.label,
+                    type=VueForm.TYPE_CONVERSION.get(f.type, "text"),
+                    placeholder=f.placeholder if hasattr(f, "placeholder") else None,
+                    comment=f.comment if hasattr(f, "comment") else None,
                     value=v,
                 )
                 # Adapts the web field to specific types of fields.
                 # Datetime
-                if ff.type == "datetime":
-                    web_field["value"] = v
+                if f.type == "datetime":
+                    # Converts the field to the format expected by the web interface.
+                    web_field["value"] = v.isoformat() + "Z" if v else None
                 # Dropdown
-                if isinstance(ff.requires, IS_IN_SET):
-                    if not ff.writable:
+                if isinstance(f.requires, IS_IN_SET):
+                    if not f.writable:
                         if isinstance(v, list):
                             web_field["value"] = ", ".join(v)
                         else:
                             web_field["value"] = v
                     else:
-                        theset = ff.requires.theset
-                        labels = ff.requires.labels or theset
-                        if ff.requires.zero:
+                        theset = f.requires.theset
+                        labels = f.requires.labels or theset
+                        if f.requires.zero:
                             theset.insert(0, "")
                         vals = [dict(text=l, label=k) for (l, k) in zip(labels, theset)]
                         web_field["type"] = "dropdown"
                         web_field["values"] = vals
-                        web_field["multiple"] = ff.requires.multiple
-                fields[ff.name] = web_field
+                        web_field["multiple"] = f.requires.multiple
+                fields[f.name] = web_field
         return fields
 
     def read_values(self, record_id):
@@ -149,9 +144,8 @@ class VueForm(Fixture):
             something that has to be read to be edited / viewed.
         """
         values = {}
-        for f in self.fields.values():
-            ff = f["field"]
-            values[ff.name] = ff.formatter(None)
+        for f_name, f in self.fields.items():
+            values[f_name] = f.formatter(None)
         return values
 
     def get(self, id=None):
@@ -160,11 +154,11 @@ class VueForm(Fixture):
         # Gets the values from the fields.
         record_id = None if id == "None" else id
         values = self.read_values(record_id)
-        fields = self._get_fields_for_web(values)
+        web_fields = self._get_fields_for_web(values)
         response = []
-        for n, f in fields.items():
+        for n, f in web_fields.items():
             response.append(f)
-        return dict(fields=list(fields.values()), readonly=self.readonly)
+        return dict(fields=list(web_fields.values()), readonly=self.readonly)
 
     def __call__(self, id=None, cancel_url=''):
         """This method returns the element that can be included in the page.
@@ -183,56 +177,63 @@ class VueForm(Fixture):
     def check_url(self, id):
         return URL(*filter(None, [self.path_check, id]), signer=self.signer)
 
+    def validate_field(self, id=None):
+        """Validates one field, called from the client."""
+        name = request.json["name"]
+        record_id = None if id == "None" else id
+        # Gets the default for that field, if specified.
+        f = self.fields[name]
+        value = request.json.get("value", f.default)
+        error = None
+        if hasattr(f, "validate"):
+            _, error = f.validate(value, record_id=record_id)
+        return dict(error=error)
+
     def _validate_one_field(self, f_name, f_value, record_id=None):
         """Validates one field, returning the error if any, else None.
         The record_id is used by the validators."""
         f = self.fields[f_name]
-        ff = f["field"]
-        f["value"] = f_value
-        f["error"] = None
-        if hasattr(ff, "validate"):
-            f["validated_value"], f["error"] = ff.validate(f_value, record_id)
+        if hasattr(f, "validate"):
+            validated_value, error = f.validate(f_value, record_id)
         else:
-            f["validated_value"] = f_value
-        return f["error"]
-
-    def validate_field(self, id=None):
-        """Validates one field, called from the client."""
-        name = request.json["name"]
-        # Gets the default for that field, if specified.
-        f = self.fields[name]
-        ff = f["field"]
-        value = request.json.get("value", ff.default)
-        return dict(error=self._validate_one_field(name, value, record_id=id))
+            validated_value, error = f_value, None
+        return validated_value, error
 
     def validate_form(self, record_id=None):
-        """Validates an entire form, setting the error field in each """
-        # First performs the normal valuation.
-        for f_name, f_value in request.json.items():
-            self._validate_one_field(f_name, f_value, record_id=record_id)
+        """Validates an entire form. Returns two dictionaries:
+        one mapping names to validated field values (for use by the app),
+        and one mapping names to errors, to return to the web browser.
+        If the latter dict is empty then there are no errors."""
+        validated_dict = {}
+        error_dict = {}
+        # First performs the valuation on each field.
+        for f_name, f in self.fields.items():
+            f_value = request.json.get(f_name)
+            v, e = self._validate_one_field(f_name, f_value, record_id=record_id)
+            validated_dict[f_name] = v
+            if e is not None:
+                error_dict[f_name] = e
         # If an additional validation function is specified, uses it.
-        if self.validate is not None:
-            self.validate(self.fields)
-        return not any([ff["error"] for ff in self.fields.values()])
+        if self.validate is not None and len(error_dict) == 0:
+            error_dict.update(self.validate(self.fields, validated_dict))
+        return validated_dict, error_dict
 
     def post(self, id=None):
         """Processes the form submission. The return value is the same as for get.
         """
         record_id = None if id == "None" else id
-        is_valid = self.validate_form(record_id=record_id)
-        values = {n: f["validated_value"] for n, f in self.fields.items()}
-        if not is_valid:
-            # Returns the values with the errors.
-            fs = self._get_fields_for_web(values)
-            return dict(fields=list(fs.values()), readonly=self.readonly)
+        validated_dict, error_dict = self.validate_form(record_id=record_id)
+        if len(error_dict) > 0:
+            # Reports the errors to the web app.
+            return dict(errors=error_dict)
         else:
             # We do not want to overwrite the record id.
-            if "id" in values:
-                del values["id"]
-            return self.process_post(record_id, values)
+            if "id" in validated_dict:
+                del validated_dict["id"]
+            return self.process_post(record_id, validated_dict)
 
-    def process_post(self, id, values):
+    def process_post(self, id, validated_values):
         """This function should be over-ridden.  It processes the post.
         @param id: id of the item; can be None for a create;
-        @param values: dictionary from field name to field value."""
+        @param validated_values: dictionary from field name to field value."""
         return None
