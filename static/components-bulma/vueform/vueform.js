@@ -27,6 +27,7 @@
         a.map(function(e) {
             e._idx = k++;
             e._modified = false;
+            e.error = null;
         });
         return a;
     };
@@ -170,10 +171,9 @@
                 // There has been some error.
                 // Clear our errors.
                 for (let field of self.fields) {
-                    field.error = null;
+                    field.error = res.data.errors[field.name];
                 }
                 // Then copy the errors from the return message.
-
             }
             });
         }

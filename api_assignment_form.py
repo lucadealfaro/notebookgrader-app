@@ -61,6 +61,7 @@ class AssignmentFormEdit(AssignmentForm):
             errors['submission_deadline'] = "The submission deadline should come after the assignment is available"
         if d3 < d2:
             errors['available_until'] = "An assignment should be available at least until its deadline"
+        return errors
 
     def process_post(self, record_id, validated_values):
         self.db(self.db.assignment.id == record_id).update(**validated_values)
@@ -74,16 +75,18 @@ class AssignmentFormCreate(AssignmentFormEdit):
                          validate=self.validate_dates, **kwargs)
         self.redirect_url = redirect_url
 
-    def validate_dates(self, fields):
-        d1 = fields['available_from']['validated_value']
-        d2 = fields['submission_deadline']['validated_value']
-        d3 = fields['available_until']['validated_value']
+    def validate_dates(self, fields, validated_values):
+        d1 = validated_values['available_from']
+        d2 = validated_values['submission_deadline']
+        d3 = validated_values['available_until']
+        errors = {}
         if d2 < datetime.datetime.utcnow():
-            fields['submission_deadline']['error'] = "The submission deadline should be in the future"
+            errors['submission_deadline'] = "The submission deadline should be in the future"
         if d2 < d1:
-            fields['submission_deadline']['error'] = "The submission deadline should come after the assignment is available"
+            errors['submission_deadline'] = "The submission deadline should come after the assignment is available"
         if d3 < d2:
-            fields['available_until']['error'] = "An assignment should be available at least until its deadline"
+            errors['available_until'] = "An assignment should be available at least until its deadline"
+        return errors
 
     def read_values(self, record_id):
         values = {}
