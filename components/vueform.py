@@ -105,6 +105,7 @@ class VueForm(Fixture):
                     name=f_name,
                     writable=f.writable and not self.readonly,
                     label=f.label,
+                    help=f.help if hasattr(f, 'help') else None,
                     type=VueForm.TYPE_CONVERSION.get(f.type, "text"),
                     placeholder=f.placeholder if hasattr(f, "placeholder") else None,
                     comment=f.comment if hasattr(f, "comment") else None,

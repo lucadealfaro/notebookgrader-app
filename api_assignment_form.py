@@ -12,11 +12,15 @@ from .common import db, session, auth, Field
 
 FIELDS = [
     Field('name', length=STRING_FIELD_LENGTH, required=True,
-          requires=[IS_NOT_EMPTY(), IS_LENGTH(STRING_FIELD_LENGTH)]),  # Assignment name.
-    Field('available_from', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()]),
-    Field('submission_deadline', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()]),
-    Field('available_until', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()]),
-    Field('max_submissions_in_24h_period', 'integer', default=3, requires=[IS_INT_IN_RANGE(1, 5), IS_NOT_EMPTY()], label="Maximum number of submissions in a 24h period"),
+          requires=[IS_NOT_EMPTY(), IS_LENGTH(STRING_FIELD_LENGTH)],
+          help="Name of the assignment."),  # Assignment name.
+    Field('available_from', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
+          help="Date from which students can access the assignment."),
+    Field('submission_deadline', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
+          help="Date when students need to submit the assignment for it to be considered submitted on time."),
+    Field('available_until', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
+          help="Date until when student can access the assignment and submit a solution, even if late."),
+    Field('max_submissions_in_24h_period', 'integer', default=3, requires=[IS_INT_IN_RANGE(1, 5), IS_NOT_EMPTY()], label="Maximum number of submissions in a 24h period", help="Students will be able to only submit this many solutions in any 24h period."),
 ]
 
 

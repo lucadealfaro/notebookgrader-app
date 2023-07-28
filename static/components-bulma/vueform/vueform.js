@@ -27,6 +27,7 @@
         a.map(function(e) {
             e._idx = k++;
             e._modified = false;
+            e._show_help = false;
             e.error = null;
         });
         return a;

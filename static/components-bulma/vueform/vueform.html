@@ -1,6 +1,8 @@
 <div class="vueform">
     <div v-for="field in fields" class="field">
-      <label for="field.name" class="label">{{field.label}}:</label>
+      <label for="field.name" class="label">{{field.label}}:
+        <span v-if="field.help" @mouseover="field._show_help = true" @mouseout="field._show_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></label>
+      <div class="box has-background-primary-light has-text-primary-dark" v-if="field._show_help">{{field.help}}</div>
       <div class="field" v-on:input="mark_field(field._idx)"
            v-on:focusout="validate_field(field._idx)" v-on:mouseout="validate_field(field._idx)">
         <!-- Datetime -->
