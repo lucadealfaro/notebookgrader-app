@@ -13,7 +13,14 @@
 
 <div class="section" id="vue-target" v-cloak>
   <!-- Put here your Vue.js template -->
-  <h1 class="title">Assignment <a class="button is-primary" href="[[=URL('edit-assignment', assignment_id)]]">Edit</a></h1>
+  <h1 class="title">Assignment
+    <a class="button is-primary" href="[[=URL('edit-assignment', assignment_id)]]">
+      <span class="icon is-small"><i class="fa fa-pencil"></i></span>
+    </a>
+    <a class="button is-danger" href="[[=URL('delete-assignment', assignment_id)]]">
+      <span class="icon is-small"><i class="fa fa-trash"></i></span>
+    </a>
+  </h1>
 
   [[=form]]
   

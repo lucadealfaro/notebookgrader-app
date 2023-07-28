@@ -83,3 +83,31 @@ def edit_assignment(id=None):
         redirect(URL('teacher-home'))
     form = form_assignment_edit(id=id, cancel_url=URL('teacher-view-assignment', id))
     return dict(form=form)
+
+@action('delete-assignment/<id>', method=["GET", "POST"])
+@action.uses('delete_assignment.html', db, auth.user)
+def delete_assignment(id=None):
+    # Checks permissions.
+    assignment = db.assignment[id]
+    print("Assignment owner:", assignment.owner)
+    if assignment is None or assignment.owner != get_user_email():
+        redirect(URL('teacher-home'))
+    form = Form([Field('confirm_deletion', 'boolean')],
+                csrf_session=session, formstyle=FormStyleBulma
+                )
+    attrs = {
+        "_onclick": "window.history.back(); return false;",
+        "_class": "button is-default ml-2",
+    }
+    form.param.sidecar.append(A("Cancel", **attrs))
+    if form.accepted:
+        if form.vars['confirm_deletion']:
+            db(db.assignment.id == id).delete()
+            redirect(URL('teacher-home'))
+        else:
+            redirect(URL('teacher-view-assignment', id))
+    # Displays the assignment.
+    return dict(
+        form=form,
+        assignment=assignment,
+    )
