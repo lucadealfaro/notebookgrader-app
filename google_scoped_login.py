@@ -135,8 +135,6 @@ class GoogleScopedLogin(object):
         user_info_service = build('oauth2', 'v2', credentials=credentials)
         user_info = user_info_service.userinfo().get().execute()
         email = user_info.get("email")
-        print("User_info:", user_info)
-        print("Email:", email)
         if email is None:
             raise HTTP(401, "Missing email")
         # Finally, we store the credentials, so we can re-use them in order

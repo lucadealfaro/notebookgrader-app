@@ -19,8 +19,27 @@ import google.oauth2.credentials
 
 from .controllers import flash, url_signer
 
+from .api_assignment_form import AssignmentFormCreate, AssignmentFormEdit, AssignmentFormView
+
+# The ID is the ID of the course for which the assignment is created.
+form_assignment_create = AssignmentFormCreate('api_assignment_create',
+                                              redirect_url='teacher-home',
+                                              signer=url_signer)
+# The ID is the ID of the assignment.  This form is used for instructors.
+form_assignment_view = AssignmentFormView('api_assignment_view',
+                                          signer=url_signer)
+# The ID is the ID of the assignment.  This form is used for instructors.
+form_assignment_edit = AssignmentFormEdit('api_assignment_edit',
+                                          redirect_url='teacher-home',
+                                          signer=url_signer)
 
 @action('teacher-home')
 @action.uses('teacher_home.html', db, auth.user)
 def teacher_home():
     return dict()
+
+@action('create-assignment')
+@action.uses('create_assignment.html', db, auth.user, form_assignment_create)
+def create_assignment():
+    form = form_assignment_create()
+    return dict(form=form)

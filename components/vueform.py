@@ -57,8 +57,8 @@ class VueForm(Fixture):
         self.path_form = path + "/form"
         self.path_check = path + "/check"
         self.db = db
-        self.__prerequisites__ = [session]
         self.signer = signer or URLSigner(session)
+        self.__prerequisites__ = [session, self.signer]
         self.validate = validate
         # Creates entry points for giving the blank form, and processing form submissions.
         # There are three entry points:

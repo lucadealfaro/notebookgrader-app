@@ -28,6 +28,7 @@
             e._idx = k++;
             e._modified = false;
         });
+        return a;
     };
 
     form.methods.load = function () {
@@ -52,10 +53,9 @@
         if (res.data.redirect_url) {
             window.location = res.data.redirect_url;
         } else {
-            self.fields = preprocess_fields(self, res.data.fields);
+            self.fields = form.decorate(preprocess_fields(self, res.data.fields));
             console.log("Set fields:", self.fields);
             self.readonly = res.data.readonly;
-            form.decorate(self.fields);
         }
     }
 

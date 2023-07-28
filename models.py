@@ -31,7 +31,7 @@ db.define_table(
     Field('student_notebook_id_drive'),
     Field('available_from', 'datetime'),
     Field('available_until', 'datetime'),
-    Field('on_time_deadline', 'datetime'),
+    Field('submission_deadline', 'datetime'),
     Field('max_submissions_in_24h_period', 'integer'),
 )
 
