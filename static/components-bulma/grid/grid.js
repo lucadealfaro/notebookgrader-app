@@ -46,8 +46,8 @@
                 let m = luxon.DateTime.fromISO(c.text, {zone: "UTC"});
                 let local_m = m.setZone(self.time_zone);
                 c.text = local_m.toLocaleString({
-                    year: "numeric", month: "long",
-                    day: "numeric", weekday: "long",
+                    year: "numeric", month: "numeric",
+                    day: "numeric",
                     hour: "numeric", minute: "numeric",
                     timeZoneName: "short",
                 });

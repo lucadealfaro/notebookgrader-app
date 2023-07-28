@@ -128,6 +128,7 @@ class Grid(Fixture):
             - cells: <cells>
         <cells> is a list of dictionaries, containing:
             - text: <text>
+            - type: if 'datetime' or 'date', then it's converted in local time zone.
             - url: <text> or None
             - is_button: <boolean>
             - sortable: <boolean> (valid only of the row is a header)

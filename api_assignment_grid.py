@@ -44,7 +44,8 @@ class TeacherAssignmentGrid(Grid):
                 dict(text=r["name"],
                      url=URL('teacher-view-assignment', r["id"]),
                      ),
-                dict(text=r["submission_deadline"]),
+                dict(text=r["submission_deadline"].isoformat(),
+                     type='datetime'),
             ]
         )
             for r in result_rows
