@@ -22,7 +22,7 @@ def get_time():
 
 db.define_table(
     'assignment',
-    Field('owner'), # Email of owner.
+    Field('owner', default=get_user_email), # Email of owner.
     Field('name'), # Assignment name.
     Field('created_on', 'datetime', default=get_time),
     Field('source_notebook_id_gcs'),
@@ -33,13 +33,14 @@ db.define_table(
     Field('available_until', 'datetime'),
     Field('submission_deadline', 'datetime'),
     Field('max_submissions_in_24h_period', 'integer'),
+    Field('access_url'),
 )
 
 db.assignment.max_submissions_in_24h_period.requires = IS_INT_IN_RANGE(1, 3)
 
 db.define_table(
     'homework',
-    Field('student'), # Email of student.
+    Field('student', default=get_user_email), # Email of student.
     Field('assignment_id', 'reference assignment'),
     Field('created_on', 'datetime', default=get_time),
     Field('google_drive_id'),

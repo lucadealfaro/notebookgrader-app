@@ -1,4 +1,5 @@
 import datetime
+import uuid
 
 from py4web import request, URL
 from pydal.validators import *
@@ -32,12 +33,10 @@ class AssignmentForm(VueForm):
     def read_values(self, record_id):
         values = {}
         assert record_id is not None
-        row = self.db(self.db.assignment.id == record_id).select().first()
+        row = self.db.assignment[record_id]
         if row is not None:
-            for f in self.fields.values():
-                ff = f["field"]
-                values[ff.name] = ff.formatter(row.get(ff.name))
-                # print("Field", ff.name, "has value", row.get(ff.name), "formatted:", ff.formatter(row.get(ff.name)))
+            for f_name, f in self.fields.items():
+                values[f_name] = f.formatter(row.get(f_name))
         return values
 
 
@@ -99,6 +98,8 @@ class AssignmentFormCreate(AssignmentFormEdit):
         return values
 
     def process_post(self, record_id, validated_values):
+        # Creates a random URL through which the assignment can be accessed.
+        validated_values['access_url'] = str(uuid.uuid1())
         new_id = self.db.assignment.insert(**validated_values)
-        return dict(redirect_url=URL(self.redirect_url, signer=self.signer))
+        return dict(redirect_url=URL(self.redirect_url, new_id))
 

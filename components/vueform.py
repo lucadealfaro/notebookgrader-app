@@ -115,7 +115,7 @@ class VueForm(Fixture):
                 # Datetime
                 if f.type == "datetime":
                     # Converts the field to the format expected by the web interface.
-                    web_field["value"] = v.isoformat() + "Z" if v else None
+                    web_field["value"] = v + "Z" if v else None
                 # Dropdown
                 if isinstance(f.requires, IS_IN_SET):
                     if not f.writable:

@@ -1,0 +1,33 @@
+[[extend 'layout.html']]
+
+[[block page_head]]
+<link rel="stylesheet" href="[[=URL('static/components-bulma/vueform/vueform.css')]]">
+[[end]]
+
+
+<style>
+[v-cloak] {
+     display: none;
+}
+</style>
+
+<div class="section" id="vue-target" v-cloak>
+  <!-- Put here your Vue.js template -->
+  <h1 class="title">Assignment</h1>
+
+  [[=form]]
+
+</div>
+
+
+[[block page_scripts]]
+<!-- Loads the index-specific js for Vue -->
+<script src="components-bulma/vueform/luxon.min.js"></script>
+<script src="[[=URL('static/components-bulma/vueform/vueform.js')]]"></script>
+<script>
+  var app = new Vue({
+      el: "#vue-target",
+      data: {},
+  });
+</script>
+[[end]]
