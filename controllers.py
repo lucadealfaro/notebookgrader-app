@@ -110,7 +110,8 @@ def share():
     form.param.sidecar.append(A("Cancel", **attrs))
     if form.accepted:
         # We share the notebook to the current user.
-        file_path = os.path.join(APP_FOLDER, "temp_files/TestoutJuly2023.ipynb")
+        file_path = os.path.join(APP_FOLDER,
+                                 "temp_files/TestoutJuly2023assigned.ipynb")
         mime = 'application/vnd.google.colaboratory'
         media = MediaFileUpload(file_path, mimetype=mime, resumable=True)
         file_meta = {'name': form.vars["name"]}
