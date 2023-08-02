@@ -64,7 +64,7 @@ def build_drive_service():
 
 def upload_to_drive(drive_service, s, drive_file_name, id=None):
     """
-    Uploads a string to drie
+    Uploads a string to drive
     Args:
         drive_service: the drive service to use.
         s: string to upload
@@ -73,8 +73,8 @@ def upload_to_drive(drive_service, s, drive_file_name, id=None):
     Returns:
         The file id.
     """
-    sio = io.StringIO(s)
-    media = MediaIoBaseUpload(
+    sio = io.BytesIO(s.encode('utf-8'))
+    media = MediaIoBaseUpload(sio,
         mimetype='application/vnd.google.colaboratory', resumable=True)
     meta = {'name': drive_file_name}
     if id is None:

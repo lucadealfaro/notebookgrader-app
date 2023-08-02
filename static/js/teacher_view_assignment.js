@@ -41,9 +41,8 @@ let init = (app) => {
             app.vue.uploading = true;
             let file_type = file.type;
             let file_name = file.name;
-            let now = luxon.DateTime.now();
-            let date_string = now.toLocaleString(luxon.DateTime.TIME_SIMPLE)
-                + " " + now.toLocaleString(luxon.DateTime.DATE_SHORT);
+            let now = luxon.DateTime.local();
+            let date_string = now.toLocaleString(luxon.DateTime.DATETIME_SHORT);
             // Reads the file.
             let reader = new FileReader();
             reader.addEventListener("load", function () {
@@ -67,7 +66,7 @@ let init = (app) => {
     };
 
     app.get_notebook_urls = function () {
-        axios.get(notebook_versions_url).then(function (res) {
+        axios.get(notebook_version_url).then(function (res) {
             app.vue.instructor_version = res.data.instructor_version;
             app.vue.student_version = res.data.student_version;
         });
@@ -76,6 +75,7 @@ let init = (app) => {
     // This contains all the methods.
     app.methods = {
         regenerate_access_url: app.regenerate_access_url,
+        upload_file: app.upload_file,
     };
 
     // This creates the Vue instance.

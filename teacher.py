@@ -75,8 +75,8 @@ def change_access_url(id=None):
 def notebook_version(id=None):
     assignment = db.assignment[id]
     return dict(
-        instructor_version=COLAB_BASE + assignment.master_id_drive,
-        student_version=COLAB_BASE + assignment.student_id_drive,
+        instructor_version=COLAB_BASE + assignment.master_id_drive if assignment.master_id_drive else None,
+        student_version=COLAB_BASE + assignment.student_id_drive if assignment.student_id_drive else None,
     )
 
 @action('upload-notebook/<id>', method=['GET', 'POST'])
@@ -97,7 +97,7 @@ def upload_notebook(id=None):
     # Produces the student version.
     student_notebook_json = produce_student_version(master_notebook_json)
     # Puts both versions on GCS.
-    if assignment.master_notebook_id.gcs is None:
+    if assignment.master_id_gcs is None:
         create_notebooks = True
         assignment.master_id_gcs = long_random_id() + ".json"
         assignment.student_id_gcs = long_random_id() + ".json"
@@ -107,12 +107,12 @@ def upload_notebook(id=None):
               type="application/json")
     # Now shares both notebooks to drive.
     drive_service = build_drive_service()
-    master_file_name = "Assignment {}, created: {}".format(assignment.name, date_string)
-    student_file_name = "Assignment {}, created: {}".format(assignment.name, date_string)
+    master_file_name = "{}, version: {}".format(assignment.name, date_string)
+    student_file_name = "{}, version: {}".format(assignment.name, date_string)
     assignment.master_id_drive = upload_to_drive(
         drive_service, master_notebook_json, master_file_name, id=assignment.master_id_drive)
     assignment.student_id_drive = upload_to_drive(
-        drive_service, master_notebook_json, master_file_name, id=assignment.student_id_drive)
+        drive_service, student_notebook_json, student_file_name, id=assignment.student_id_drive)
     assignment.update_record()
     return dict(
         error=None,
