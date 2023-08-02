@@ -8,6 +8,9 @@ This file is provided as an example:
 import os
 from py4web.core import required_folder
 
+# Is this a testing or prod instance?
+IS_TEST = os.getcwd().startswith("/Users/")
+
 # db settings
 APP_FOLDER = os.path.dirname(__file__)
 APP_NAME = os.path.split(APP_FOLDER)[-1]
@@ -98,3 +101,9 @@ except (ImportError, ModuleNotFoundError):
     pass
 
 COLAB_BASE = "https://colab.research.google.com/drive/"
+
+if IS_TEST:
+    GCS_BUCKET = "notebookgrader-test"
+else:
+    GCS_BUCKET = "notebookgrader-prod"
+

@@ -1,0 +1,94 @@
+[[extend 'layout.html']]
+
+<style>
+div.box pre { padding: 0 0 0 0;}
+
+</style>
+
+<div class="section">
+  <h1 class="title">Notebook Guidelines</h1>
+  
+  <p>A notebook consists of four types of cells: markdown (text), read-only code, solution cells, and test cells. </p>
+  
+  <h2 class="subtitle mt-5">Markdown (text)</h2>
+  <p>Markdown cells contain text, and they are read-only, in the sense that during grading, their content is replaced with the content in the source notebook provided by the instructor. You can use markdown cells, among other things, to describe the problem to be solved.</p>
+  
+  <h2 class="subtitle mt-5">Solution Cells</h2>
+  <p>A solution cell is a cell where students can write their solution to the problems.
+  A cell is a solution cell if somewhere in it appears the string <span class="is-family-monospace has-text-primary-dark">### BEGIN SOLUTION</span>.</p>
+  <p class="mt-2">Typically, a solution cells contains one or more regions delimitated by <span class="is-family-monospace has-text-primary-dark">### BEGIN SOLUTION</span> and <span class="is-family-monospace has-text-primary-dark">### END SOLUTION</span>; each of these regions is then replaced by a <span class="is-family-monospace has-text-primary-dark">### YOUR SOLUTION HERE</span> line in the student's notebook.  For instance, if this is the cell in the source notebook:</p>
+  
+  <div class="box mt-3 has-background-white-ter">
+    <pre>
+def factorial(n):
+    ### BEGIN SOLUTION
+    return 1 if n < 2 else n * factorial(n - 1)
+    ### END SOLUTION
+    
+def fibonacci(n):
+    ### BEGIN SOLUTION
+    if n < 3:
+       return 1
+    f1, f2 = 1, 1
+    for _ in range(n - 2):
+        f1, f2 = f2, f1 + f2
+    return f2
+    ### END SOLUTION</pre>
+  </div>
+
+  <p>The cell becomes, in the student notebook:</p>
+  
+  <div class="box mt-3 has-background-white-ter">
+    <pre>
+def factorial(n):
+    ### YOUR SOLUTION HERE
+    
+def fibonacci(n):
+    ### YOUR SOLUTION HERE</pre>
+  </div>
+
+  <p>Note that students can write their solution anywhere in the cell.  This enables them to more easily define auxiliary functions.</p>
+  
+  <h2 class="subtitle mt-5">Test cells</h2>
+  
+  <p>A test cell is a cell that starts with the comment <span class="is-family-monospace has-text-primary-dark"># Tests <em>n</em> Points</span>, where <em>n</em> is the number of points a student receives if the execution of the cell raises no errors.
+  Test cells can contain both tests that are visible to students, and <em>hidden tests,</em> which are used during grading, but that are not included in the notebooks given to the students.  Hidden tests are used to ensure the students don't hard-code the values expected by the tests.  Hidden tests are included in regions delimited by <span class="is-family-monospace has-text-primary-dark">### BEGIN HIDDEN TESTS</span> and <span class="is-family-monospace has-text-primary-dark">### END HIDDEN TESTS</span></p>.
+  For example, if the source notebook contains the following tests:
+  
+    <div class="box mt-3 has-background-white-ter">
+    <pre>
+# Tests 10 points.
+
+assert fibonacci(4) == 3
+
+### BEGIN HIDDEN TESTS
+assert fibonacci(15) == 610
+### END HIDDEN TESTS</pre>
+      </div>
+  
+  <p>Then the student's version of the notebook will contain the following two cells:</p>
+
+    <div class="box mt-3 has-background-white-ter">
+      <b>Tests: 10 points.</b>
+    </div>
+    <div class="box mt-3 has-background-white-ter">
+    <pre>
+# Tests 10 points.
+
+assert fibonacci(4) == 3</pre>
+      </div>
+  
+  <p>where the hidden test is not present.</p>
+  
+  <p class="mt-3">Please look for the presence of the additional markdown cell in the student version of the notebook: its presence ensures that NotebookGrader has properly recognized the tests.</p>
+
+  <h2 class="subtitle mt-5">Read-only code</h2>
+  
+  <p class="mt-3">All other cells are read-only code cells.  If students modify them, their modifications are discarded before grading.</p>
+  
+  <h2 class="subtitle mt-5">Allowed Student Modifications</h2>
+  
+  <p class="mt-3">Students can only write code in the solution cells.  Any other cell modifications, and any cell insertions/deletions, are discarded.  If a student modifies a notebook and deletes or reorders the original cells, the notebook cannot be graded, and the student will receive no credit for it.</p>
+</div>
+
+

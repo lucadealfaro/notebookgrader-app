@@ -21,6 +21,7 @@
             rows: [],
             confirm_delete_text: '',
             confirm_delete_active: false,
+            time_zone: luxon.DateTime.local().zoneName,
         };
         grid.methods.load.call(data);
         return data;

@@ -109,6 +109,8 @@ def share():
     }
     form.param.sidecar.append(A("Cancel", **attrs))
     if form.accepted:
+        if get_user_email() != "luca.de.alfaro@gmail.com":
+            redirect(URL('index'))
         # We share the notebook to the current user.
         file_path = os.path.join(APP_FOLDER,
                                  "temp_files/TestoutJuly2023assigned.ipynb")

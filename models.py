@@ -25,10 +25,10 @@ db.define_table(
     Field('owner', default=get_user_email), # Email of owner.
     Field('name'), # Assignment name.
     Field('created_on', 'datetime', default=get_time),
-    Field('source_notebook_id_gcs'),
-    Field('student_notebook_id_gcs'),
-    Field('source_notebook_id_drive'),
-    Field('student_notebook_id_drive'),
+    Field('master_id_gcs'), # Locations of master and student notebooks
+    Field('student_id_gcs'), # in gcs and drive.
+    Field('master_id_drive'),
+    Field('student_id_drive'),
     Field('available_from', 'datetime'),
     Field('available_until', 'datetime'),
     Field('submission_deadline', 'datetime'),

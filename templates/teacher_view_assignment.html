@@ -24,13 +24,66 @@
 
   [[=form]]
   
-  <h2 class="subtitle">Access URL <span @mouseover="show_access_help = true" @mouseout="show_access_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
+  <h2 class="subtitle mt-2">Access URL <span @mouseover="show_access_help = true" @mouseout="show_access_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_access_help">
     <p>This URL can be given to students to access the assignment.
       If you regenerate it, students with the old URL will no longer be able to join the assignment.</p>
   </div>
   <p><span class="box is-family-monospace is-size-7">{{access_url}}</span>
     <button class="button is-warning" @click="regenerate_access_url"><span class="icon is-small"><i class="fa fa-refresh"></i></span><span>Regenerate</span></button></p>
+
+  <div @mouseleave="show_notebook_help = false">
+    <h2 class="subtitle mt-5">Notebook <span @mouseover="show_notebook_help = true" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
+    <div class="box has-background-primary-light has-text-primary-dark" v-if="show_notebook_help">
+      <p>To prepare the test for the students, you need to upload a notebook <a href="[[=URL('notebook-guidelines')]]">formatted according to the NotebookGrader guidelines</a>. </p>
+      <p class="mt-2">You can re-upload the notebook at any time before the test starts: the test will use the last notebook you uploaded.</p>
+      <p class="mt-2">Once the test has started (once the notebook is available to the students), you can only re-upload a notebook that is obtained from the instructor version below, and that is identical to that notebook except possibly for some hidden test. This is to ensure that all students work on the same version of the test.</p>
+    </div>
+  </div>
+
+  <div class="field has-addons mt-5">
+    <p class="control">
+      <div class="file is-info">
+        <label class="file-label">
+          <input class="file-input" type="file" @change="upload_file($event)">
+          <span class="file-cta">
+            <span class="file-icon">
+              <i v-if="uploading" class="fa fa-spinner fa-pulse fa-fw"></i>
+              <i v-else class="fa fa-upload fa-fw"></i>
+            </span>
+            <span class="file-label">
+              <span v-if="!uploading">
+                <span v-if="instructor_version">Upload New Notebook</span>
+                <span v-else>Upload Notebook</span>
+              </span>
+            </span>
+          </span>
+        </label>
+      </div>
+    </p>
+  </div>
+  
+  <div class="box has-background-danger-light has-text-danger-dark" v-if="upload_error">
+    Error in uploaded notebook: {{upload_error}}
+  </div>
+  
+  <div v-if="instructor_version"><a href="{{instructor_version}}">Test notebook, instructor version</a> <span @mouseover="show_instructor_version_help = true" @mouseout="show_instructor_version_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></div>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_instructor_version_help">
+    <p>This is the instructor version of the notebook.  <b>Do not give this version to students!</b>
+    Please check that before every test cell, there is a markdown cell reflecting the number of points of the test.
+    This indicates that the test cell is in the proper format.</p>
+    <p class="mt-2"><b>Changes to this notebook are NOT reflected in the assignment.</b>
+    To change the assignment, you need to download this (or another) notebook, and upload it
+    using the button below.</p>
+  </div>
+  
+  <div v-if="student_version"><a href="{{student_version}}">Test notebook, instructor version</a> <span @mouseover="show_student_version_help = true" @mouseout="show_student_version_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></div>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_student_version_help">
+    <p>This is the student version of the notebook.  You do not give this version to students directly: they will obtain their own version via NotebookGrader, which will allow their work to be graded.  If you give in emergency a student this version, you will be able to upload and have it graded, but it's a slow one-notebook-at-a-time process.
+    </p>
+  </div>
+  
+
 </div>
 
 
@@ -38,6 +91,8 @@
 <!-- Loads the index-specific js for Vue -->
 <script>
     const change_access_url = "[[=XML(change_access_url)]]";
+    const notebook_version_url = "[[=XML(notebook_version_url)]]";
+    const upload_url = "[[=XML(upload_url)]]";
 </script>
 <script src="components-bulma/vueform/luxon.min.js"></script>
 <script src="[[=URL('static/components-bulma/vueform/vueform.js')]]"></script>

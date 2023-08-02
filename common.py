@@ -6,6 +6,7 @@ import copy
 import os
 import sys
 import logging
+import nqgcs
 from py4web import Session, Cache, Translator, Flash, DAL, Field, action
 from py4web.utils.mailer import Mailer
 from py4web.utils.auth import Auth
@@ -16,6 +17,7 @@ from py4web.utils.form import FormStyleBulma
 from py4web.utils.url_signer import URLSigner
 
 from . import settings
+from .settings import APP_FOLDER
 
 from .google_scoped_login import GoogleScopedLogin
 
@@ -229,5 +231,10 @@ auth.enable(uses=(session, T, db), env=dict(T=T))
 unauthenticated = ActionFactory(db, session, T, flash, auth)
 authenticated = ActionFactory(db, session, T, flash, auth.user)
 
+# #######################################################
+# Creates object used throughout the app.
+# #######################################################
 url_signer = URLSigner(session)
 flash = Flash()
+json_key_path = os.path.join(APP_FOLDER, "private/notebookgrader-gcs.json")
+gcs = nqgcs.NQGCS(json_key_path=json_key_path)

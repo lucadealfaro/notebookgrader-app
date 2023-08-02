@@ -1,7 +1,18 @@
+import io
 import re
 
 import hashlib
+import json
 import uuid
+
+from py4web import redirect, URL
+from .models import get_user_email
+from .common import db
+
+from googleapiclient.discovery import build
+import google.oauth2.credentials
+from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
+
 
 email_split_pattern = re.compile('[,\s]+')
 whitespace = re.compile('\s+$')
@@ -35,3 +46,50 @@ def normalize_email_list(l):
 
 def random_id():
     return hashlib.sha1(uuid.uuid1().bytes).hexdigest()
+
+def long_random_id():
+    return hashlib.sha256(uuid.uuid1().bytes).hexdigest()
+
+def build_drive_service():
+    # Reads the credentials.
+    user_info = db(
+        db.auth_credentials.email == get_user_email()).select().first()
+    if not user_info:
+        print("No user credentials")
+        redirect(URL('index'))
+    credentials_dict = json.loads(user_info.credentials)
+    creds = google.oauth2.credentials.Credentials(**credentials_dict)
+    drive_service = build('drive', 'v3', credentials=creds)
+    return drive_service
+
+def upload_to_drive(drive_service, s, drive_file_name, id=None):
+    """
+    Uploads a string to drie
+    Args:
+        drive_service: the drive service to use.
+        s: string to upload
+        drive_file_name: file name to use in drive.
+        id: if given, uses the given id.
+    Returns:
+        The file id.
+    """
+    sio = io.StringIO(s)
+    media = MediaIoBaseUpload(
+        mimetype='application/vnd.google.colaboratory', resumable=True)
+    meta = {'name': drive_file_name}
+    if id is None:
+        # We upload a new file.
+        upfile = drive_service.files().create(
+            body=meta,
+            media_body=media,
+            fields='id').execute()
+        id = upfile.get('id')
+    else:
+        # We update an existing file.
+        drive_service.files().update(
+            body=meta,
+            media_body=media,
+            fileId=id,
+        ).execute()
+    return id
+

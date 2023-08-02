@@ -15,7 +15,6 @@
             cancel_url_: this.cancel_url,
             fields: [],
             readonly: false,
-            time_offset: luxon.DateTime.local().offsetNameShort,
             time_zone: luxon.DateTime.local().zoneName,
         };
         form.methods.load.call(data);
