@@ -62,7 +62,7 @@ def build_drive_service():
     drive_service = build('drive', 'v3', credentials=creds)
     return drive_service
 
-def upload_to_drive(drive_service, s, drive_file_name, id=None):
+def upload_to_drive(drive_service, s, drive_file_name, id=None, shared=None):
     """
     Uploads a string to drive
     Args:
@@ -70,6 +70,7 @@ def upload_to_drive(drive_service, s, drive_file_name, id=None):
         s: string to upload
         drive_file_name: file name to use in drive.
         id: if given, uses the given id.
+        shared: if given, shares the file with the given user.
     Returns:
         The file id.
     """
@@ -91,5 +92,20 @@ def upload_to_drive(drive_service, s, drive_file_name, id=None):
             media_body=media,
             fileId=id,
         ).execute()
+    # Shares the file if requested.
+    if shared:
+        user_permission = {
+            'type': 'user',
+            'role': 'writer',
+            'emailAddress': shared
+        }
+        drive_service.permissions().create(
+            fileId=id,
+            body=user_permission,
+            fields='id',
+            sendNotificationEmail=False,  # otherwise, Google throttles us
+        ).execute()
     return id
 
+def get_from_drive(drive_service, drive_file_name):
+    pass

@@ -11,6 +11,7 @@
     grid.data = function() {
         var data = {
             server_url: this.url,
+            grid_help: null,
             has_previous: false,
             has_more: false,
             has_search: false,

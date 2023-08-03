@@ -29,7 +29,7 @@ form_assignment_edit = AssignmentFormEdit('api-assignment-edit',
 teacher_assignment_grid = TeacherAssignmentGrid('api-teacher-assignment-grid')
 
 @action('teacher-home')
-@action.uses('teacher_home.html', db, auth.user)
+@action.uses('teacher_home.html', db, auth.user, teacher_assignment_grid)
 def teacher_home():
     return dict(grid=teacher_assignment_grid())
 

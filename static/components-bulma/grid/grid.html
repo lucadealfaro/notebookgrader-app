@@ -35,6 +35,9 @@
       </div>
     </div>
     <!-- Table -->
+    <div class="box has-background-primary-light has-text-primary-dark" v-if="grid_help">
+    <p>{{grid_help}}</p>
+  </div>
     <table class="table is-striped is-fullwidth">
       <tr v-for="row in rows">
         <template v-if="row.is_header">
@@ -44,6 +47,7 @@
             <i v-if="cell.sortable && cell.sort < 0" class="fa fa-sort-desc"></i>
             <i v-if="cell.sortable && cell.sort === 0" class="fa fa-sort"></i>
             {{cell.text}}
+            <span v-if="cell.help" @mouseover="grid_help = cell.help" @mouseout="grid_help = null" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span>
           </th>
           <th v-if="has_delete"></th>
         </template>

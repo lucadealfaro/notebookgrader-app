@@ -5,7 +5,7 @@ This file defines the database models
 import datetime
 from .common import db, Field, auth
 from pydal.validators import *
-
+from .util import random_id
 
 def get_user_email():
     return auth.current_user.get('email') if auth.current_user else None
@@ -33,7 +33,8 @@ db.define_table(
     Field('available_until', 'datetime'),
     Field('submission_deadline', 'datetime'),
     Field('max_submissions_in_24h_period', 'integer'),
-    Field('access_url'),
+    Field('access_url', default=random_id),
+    Field('max_points', 'integer'),
 )
 
 db.assignment.max_submissions_in_24h_period.requires = IS_INT_IN_RANGE(1, 3)
@@ -43,6 +44,7 @@ db.define_table(
     Field('student', default=get_user_email), # Email of student.
     Field('assignment_id', 'reference assignment'),
     Field('created_on', 'datetime', default=get_time),
+    Field('grade', 'float'),
     Field('google_drive_id'),
 )
 
@@ -53,6 +55,7 @@ db.define_table(
     Field('grade_date', 'datetime', default=get_time),
     Field('homework_id', 'reference homework'),
     Field('grade', 'float'),
+    Field('is_valid', 'boolean', default=False),
 )
 
 db.commit()

@@ -14,7 +14,12 @@ from .util import random_id
 from .common import url_signer
 from .models import get_user_email
 
-class TeacherAssignmentGrid(Grid):
+GRADE_HELP = """
+The grade shown here is the highest valid grade. 
+A grade is valid if it has been assigned before the due date, 
+or if the instructor has manually flagged it as valid
+"""
+class HomeworkGrid(Grid):
 
     def __init__(self, path, **kwargs):
         super().__init__(path, session, use_id=False,  auth=auth, db=db, signer=url_signer,
@@ -28,12 +33,14 @@ class TeacherAssignmentGrid(Grid):
             cells=[
                 dict(text="Assignment"),
                 dict(text="Due Date"),
+                dict(text="Grade", help="The grade")
             ],
         )
         # Parses the query.
         req = self._get_request_params(header)
         # Forms the database query.
-        query = (db.assignment.owner == get_user_email())
+        query = ((db.homework.student == get_user_email()) &
+                 (db.homework.assignment_id == db.assignment.id))
         if req.query:
             query &= (db.assignment.name.contains(req.query))
         db_rows = db(query).select(orderby=~db.assignment.submission_deadline,
@@ -42,11 +49,12 @@ class TeacherAssignmentGrid(Grid):
         # Now creates the results.
         rows = [header] + [dict(
             cells=[
-                dict(text=r["name"],
-                     url=URL('teacher-view-assignment', r["id"]),
+                dict(text=r["assignment"]["name"],
+                     url=URL('homework', r["homework"]["id"]),
                      ),
-                dict(text=r["submission_deadline"].isoformat(),
+                dict(text=r["assignment"]["submission_deadline"].isoformat(),
                      type='datetime'),
+                dict(text=r["homework"]["grade"]),
             ]
         )
             for r in result_rows
