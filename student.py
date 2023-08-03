@@ -89,11 +89,6 @@ def homework(id=None):
     if can_grade:
         form = Form([Field('grade_my_work_now', 'boolean')],
                     csrf_session=session, formstyle=FormStyleBulma)
-        attrs = {
-            "_onclick": "window.history.back(); return false;",
-            "_class": "button is-default ml-2",
-        }
-        form.param.sidecar.append(A("Cancel", **attrs))
         if form.accepted:
             if form.vars['grade_my_work_now']:
                 # ---qui--- do the grading
