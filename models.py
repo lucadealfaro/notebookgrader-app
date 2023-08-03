@@ -45,7 +45,7 @@ db.define_table(
     Field('assignment_id', 'reference assignment'),
     Field('created_on', 'datetime', default=get_time),
     Field('grade', 'float'),
-    Field('google_drive_id'),
+    Field('drive_id'),
 )
 
 db.define_table(
@@ -55,6 +55,8 @@ db.define_table(
     Field('grade_date', 'datetime', default=get_time),
     Field('homework_id', 'reference homework'),
     Field('grade', 'float'),
+    Field('input_id_gcs'), # Location in GCS of what was graded.
+    Field('drive_id'), # Location in Drive of feedback
     Field('is_valid', 'boolean', default=False),
 )
 

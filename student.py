@@ -23,8 +23,11 @@ from .common import flash, url_signer, gcs
 from .util import build_drive_service, upload_to_drive
 
 from .api_homework_grid import HomeworkGrid
+from .api_grades_grid import StudentGradesGrid
 
 homework_grid = HomeworkGrid('homework-grid')
+student_grades_grid = StudentGradesGrid('student-grades-grid')
+
 @action('invite/<access_url>')
 @action.uses(db, auth.user, flash)
 def invite(access_url=None):
@@ -59,7 +62,7 @@ def invite(access_url=None):
     db.homework.insert(
         student=get_user_email(),
         assignment_id=assignment.id,
-        google_drive_id=student_drive_id,
+        drive_id=student_drive_id,
     )
     redirect(URL('student-home'))
 
@@ -67,3 +70,40 @@ def invite(access_url=None):
 @action.uses('student_home.html', db, flash, auth.user, homework_grid)
 def student_home():
     return dict(homework_grid=homework_grid())
+
+@action('homework/<id>')
+@action.uses('homework.html', db, auth.user, student_grades_grid)
+def homework(id=None):
+    """Displays details on a student's homework."""
+    homework = db.homework[id]
+    if homework is None or homework.student != get_user_email():
+        redirect(URL('student-home'))
+    assignment = db.assignment[homework.assignment_id]
+    grid = student_grades_grid(id=id)
+    # Checks if we can grade the current version.
+    query = ((db.grade.homework_id == id) &
+             (db.grade.student == get_user_email()) &
+             (db.grade.grade_date > datetime.datetime.utcnow() - datetime.timedelta(hours=24)))
+    num_grades_past_24h = db(query).count()
+    can_grade = num_grades_past_24h < assignment.max_submissions_in_24h_period
+    if can_grade:
+        form = Form([Field('grade_my_work_now', 'boolean')],
+                    csrf_session=session, formstyle=FormStyleBulma)
+        attrs = {
+            "_onclick": "window.history.back(); return false;",
+            "_class": "button is-default ml-2",
+        }
+        form.param.sidecar.append(A("Cancel", **attrs))
+        if form.accepted:
+            if form.vars['grade_my_work_now']:
+                # ---qui--- do the grading
+                redirect(URL('homework', homework.id))
+    else:
+        form = None
+    return dict(
+        homework=homework,
+        assignment=assignment,
+        grid=grid,
+        num_grades_past_24h=num_grades_past_24h,
+        form=form,
+    )

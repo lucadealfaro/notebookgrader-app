@@ -145,8 +145,7 @@ def delete_assignment(id=None):
     if assignment is None or assignment.owner != get_user_email():
         redirect(URL('teacher-home'))
     form = Form([Field('confirm_deletion', 'boolean')],
-                csrf_session=session, formstyle=FormStyleBulma
-                )
+                csrf_session=session, formstyle=FormStyleBulma)
     attrs = {
         "_onclick": "window.history.back(); return false;",
         "_class": "button is-default ml-2",
