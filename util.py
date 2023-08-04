@@ -11,7 +11,7 @@ from .common import db
 
 from googleapiclient.discovery import build
 import google.oauth2.credentials
-from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
+from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload, MediaIoBaseDownload
 
 
 email_split_pattern = re.compile('[,\s]+')
@@ -107,5 +107,14 @@ def upload_to_drive(drive_service, s, drive_file_name, id=None, shared=None):
         ).execute()
     return id
 
-def get_from_drive(drive_service, drive_file_name):
-    pass
+def read_from_drive(drive_service, drive_id):
+    """Reads a drive id into a string."""
+    # https://developers.google.com/drive/api/guides/manage-downloads#python
+    request = drive_service.files.getMedia(fileID=drive_id)
+    file = io.BytesIO()
+    downloader = MediaIoBaseDownload(file, request)
+    done = False
+    while done is False:
+        status, done = downloader.next_chunk()
+    return file.getvalue()
+

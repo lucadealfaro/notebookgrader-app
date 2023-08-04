@@ -12,13 +12,40 @@
 
 <div class="section" id="vue-target" v-cloak>
   <!-- Put here your Vue.js template -->
-  <h1 class="title">[[=assignment.name]]</h1>
-
-  <p>You can ask for your work to be graded at most [[=assignment.max_submissions_in_24h_period]] times in a 24-hour period.</p>
+  <h1 class="title">[[=assignment.name]] <span @mouseover="show_homework_help = true" @mouseout="show_homework_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h1>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_homework_help">
+    <p v-if="drive_url">Please work on the assignment accessible via the button below, and remember to have it graded via the buttons further down before the deadline of {{date_deadline}}.
+    <p v-else>The assignment is not available yet; it will become accessible on {{date_available}}</p>
+  </div>
   
-  [[=form]]
+  <p>Submission deadline: {{submission_deadline}}</p>
+  <p>Late submission possible until:<span @mouseover="show_late_help = true" @mouseout="show_late_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span> {{date_closes}}</p>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_late_help">
+    <p>Late submissions are graded, but the grade will not be used unless the instructor manually flags it as valid.</p>
+  </div>
   
-  <h2 class="subtitle mt-3">Your Grades</h2>
+  <div v-if="drive_url">
+    <a :href="drive_url" target="_blank" class="button is_success">Access assignment</a>.
+  </div>
+  <div v-elif="Date.now() > timestamp_available">
+    <p>Please obtain the assignment by clicking on the button below:</p>
+    <p><button class="button is-success" :class="'is-loading': obtain_disabled" :disabled="obtain_disabled" :@click="obtain_assignment">Get Assignment</button></p>
+  </div>
+  <div v-else>
+    <p>The assignment will become available on {{date_available}}.</p>
+  </div>
+  
+  <div v-if="drive_url && (Date.now() < timestamp_closes)">
+    <h2 class="subtitle mt-3">Submit Your Work for Grading</h2>
+    <p>To receive credit for your work, you must submit it for grading before the deadline. You can ask for your work to be graded at most [[=assignment.max_submissions_in_24h_period]] times in a 24-hour period.</p>
+    
+    [[=form]]
+  </div>
+  
+  <h2 class="subtitle mt-3">Your Grades <span @mouseover="show_grades_help = true" @mouseout="show_grades_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_grades_help">
+    <p>Below are the grades and feedback you received.  Grades for late submissions are valid only if the instructor marks them so manually.</p>
+  </div>
   
   [[=grid]]
 </div>
@@ -26,13 +53,11 @@
 
 [[block page_scripts]]
 <!-- Loads the index-specific js for Vue -->
+<script>
+    const homework_details_url = "[[=XML(homework_details_url)]]";
+    const obtain_assignment_url = "[[=XML(obtain_assignment_url)]]";
+</script>
 <script src="components-bulma/vueform/luxon.min.js"></script>
 <script src="[[=URL('static/components-bulma/grid/grid.js')]]"></script>
-<script>
-  var app = new Vue({
-      el: "#vue-target",
-      data: {
-      },
-  });
-</script>
+<script src="js/homework.js"></script>
 [[end]]

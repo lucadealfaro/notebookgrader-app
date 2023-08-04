@@ -50,7 +50,7 @@ db.define_table(
 
 db.define_table(
     'grade',
-    Field('student'),
+    Field('student', default=get_user_email),
     Field('assignment_id', 'reference assignment'),
     Field('grade_date', 'datetime', default=get_time),
     Field('homework_id', 'reference homework'),

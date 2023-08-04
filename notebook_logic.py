@@ -1,3 +1,4 @@
+import json
 import nbformat
 import re
 from nbformat._struct import Struct
@@ -128,6 +129,22 @@ def produce_student_version(master_notebook_string):
         elif meta.get('is_solution'):
             remove_from_cell(c, SOLUTION, SOLUTION_REPLACEMENT)
     return nbformat.writes(nb, version=4)
+
+
+def match_cells(master_d, submission_d):
+    """Matches the cells of master and submission, producing a notebook
+    that is a candidate for grading."""
+    # ---qui---
+    return {}
+
+def grade_notebook(master_json, submission_json):
+    """Grades a notebook, producing a grade and a feedback notebook."""
+    master_d = json.loads(master_json)
+    submission_d = json.loads(submission_json)
+    # Produces a clean notebook by matching the cells of master and submission.
+    test_d = match_cells(master_d, submission_d)
+
+
 
 def test_produce_master_twice():
     with open("./test_files/TestoutJuly2023source.json") as f:
