@@ -7,11 +7,11 @@ from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
 from py4web.utils.url_signer import URLSigner
 from py4web.utils.form import Form, FormStyleBulma
-from .models import get_user_email
+from .models import get_user_email, build_drive_service
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET
 
 from .common import flash, url_signer, gcs
-from .util import random_id, long_random_id, build_drive_service, upload_to_drive
+from .util import random_id, long_random_id, upload_to_drive
 from .notebook_logic import create_master_notebook, produce_student_version, InvalidCell
 
 from .api_assignment_form import AssignmentFormCreate, AssignmentFormEdit, AssignmentFormView

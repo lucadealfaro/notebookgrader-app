@@ -20,8 +20,9 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 import google.oauth2.credentials
 
 from .common import flash, url_signer, gcs
-from .util import build_drive_service, upload_to_drive, read_from_drive, long_random_id
+from .util import upload_to_drive, read_from_drive, long_random_id
 from .notebook_logic import grade_notebook
+from .models import build_drive_service
 
 from .api_homework_grid import HomeworkGrid
 from .api_grades_grid import StudentGradesGrid

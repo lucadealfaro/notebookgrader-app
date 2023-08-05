@@ -3,15 +3,33 @@ This file defines the database models
 """
 
 import datetime
+import json
 from .common import db, Field, auth
 from pydal.validators import *
 from .util import random_id
+from py4web import redirect, URL
+
+from googleapiclient.discovery import build
+import google.oauth2.credentials
+
 
 def get_user_email():
     return auth.current_user.get('email') if auth.current_user else None
 
 def get_time():
     return datetime.datetime.utcnow()
+
+def build_drive_service():
+    # Reads the credentials.
+    user_info = db(
+        db.auth_credentials.email == get_user_email()).select().first()
+    if not user_info:
+        print("No user credentials")
+        redirect(URL('index'))
+    credentials_dict = json.loads(user_info.credentials)
+    creds = google.oauth2.credentials.Credentials(**credentials_dict)
+    drive_service = build('drive', 'v3', credentials=creds)
+    return drive_service
 
 
 ### Define your table below
