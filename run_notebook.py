@@ -111,7 +111,7 @@ SAFE_BUILTINS = [
     'callable',
     'chr',
     'classmethod',
-    'compile',
+    # 'compile',
     'complex',
     'copyright',
     'credits',
@@ -351,7 +351,6 @@ def run_notebook(nb, timeout=10):
 # Tests
 
 code1 = """
-import os
 import math
 from collections import defaultdict
 import numpy as np
@@ -400,31 +399,37 @@ with open("/Users/luca/.cshrc") as f:
     print(f.read())
 """
 
-# def test_exec():
-#     for code in [code1, code2, code3]:
-#         collector = OutputCollector()
-#         my_globals = get_clean_globals()
-#         my_globals["__builtins__"]["print"] = collector
-#         clean_code = ast.unparse(cleaner.visit(ast.parse(code)))
-#         cr = compile(clean_code, '<string>', 'exec')
-#         exec(cr, my_globals)
-#         print("---------")
-#         print(collector.result())
-#
-# def test_fail():
-#     for code in [code4]:
-#         try:
-#             collector = OutputCollector()
-#             my_globals = get_clean_globals()
-#             my_globals["__builtins__"]["print"] = collector
-#             clean_code = ast.unparse(cleaner.visit(ast.parse(code)))
-#             cr = compile(clean_code, '<string>', 'exec')
-#             exec(cr, my_globals)
-#             print(collector.result())
-#             print("---------")
-#         except Exception as e:
-#             traceback.print_exc()
-#
+code5 = """
+import os
+"""
+
+def test_exec():
+    for code in [code1, code2, code3]:
+        collector = OutputCollector()
+        my_globals = get_clean_globals()
+        my_globals["__builtins__"]["print"] = collector
+        clean_code = ast.unparse(cleaner.visit(ast.parse(code)))
+        cr = compile(clean_code, '<string>', 'exec')
+        exec(cr, my_globals)
+        print("---------")
+        print(collector.result())
+
+def test_fail():
+    for code in [code4, code5]:
+        try:
+            collector = OutputCollector()
+            my_globals = get_clean_globals()
+            my_globals["__builtins__"]["print"] = collector
+            clean_code = ast.unparse(cleaner.visit(ast.parse(code)))
+            cr = compile(clean_code, '<string>', 'exec')
+            exec(cr, my_globals)
+            print(collector.result())
+            print("---------")
+            result = False
+        except Exception as e:
+            result = True
+        assert result, "Let something incorrect happen."
+
 def test_run_notebook():
     from .notebook_logic import create_master_notebook
     with open("test_files/TestoutJuly2023source.ipynb") as f:
@@ -435,7 +440,7 @@ def test_run_notebook():
         f.write(nbformat.writes(nb, version=4))
     print("You got {} points".format(p))
 
-def no_test_run_bad_notebook():
+def test_run_bad_notebook():
     from .notebook_logic import create_master_notebook
     with open("test_files/notebook_w_errors.ipynb") as f:
         s = create_master_notebook(f.read())
