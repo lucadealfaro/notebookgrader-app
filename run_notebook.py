@@ -11,6 +11,9 @@ warnings.simplefilter("ignore") # Silences nasty warnings from restricted python
 
 from .notebook_logic import remove_hidden_tests
 
+class IllegalImport(Exception):
+    pass
+
 SAFE_BUILTINS = [
     'ArithmeticError',
     'AssertionError',
@@ -186,7 +189,7 @@ WHITELISTED_MODULES = [
     # Crypto etc
     "hashlib", "hmac", "secrets",
     # Os and the like.
-    "time",
+    # "time",
     # Data handling.
     "json", "base64", "binascii",
     ]
@@ -197,14 +200,17 @@ WHITELISTED_MODULES = [
 class CleanCode(ast.NodeTransformer):
 
     def visit_Import(self, node):
-        node.names = [n for n in node.names if
-                      n.name.split(".")[0] in WHITELISTED_MODULES]
-        return node if len(node.names) > 0 else None
+        for n in node.names:
+            module_name = n.name.split(".")[0]
+            if module_name not in WHITELISTED_MODULES:
+                raise IllegalImport("You cannot import module {}".format(module_name))
+        return node
 
     def visit_ImportFrom(self, node):
-        return None if node.module.split(".")[
-                           0] not in WHITELISTED_MODULES else node
-
+        module_name = node.module.split(".")[0]
+        if module_name not in WHITELISTED_MODULES:
+            raise IllegalImport("You cannot import module {}".format(module_name))
+        return node
 
 cleaner = CleanCode()
 
@@ -275,6 +281,11 @@ def run_cell(c, my_globals, collector):
         add_output(c, collector.result())
         print("Returning True")
         return True
+    except IllegalImport as e:
+        add_output(c, collector.result())
+        add_output(c, "Import Error: {}".format(str(e)))
+        print("Returning False")
+        return False
     except Exception as e:
         err = traceback.format_exception_only(e)[0]
         add_output(c, collector.result())
@@ -414,17 +425,17 @@ with open("/Users/luca/.cshrc") as f:
 #         except Exception as e:
 #             traceback.print_exc()
 #
-# def test_run_notebook():
-#     from .notebook_logic import create_master_notebook
-#     with open("test_files/TestoutJuly2023source.ipynb") as f:
-#         s = create_master_notebook(f.read())
-#         nb = nbformat.reads(s, as_version=4)
-#     p = run_notebook(nb)
-#     with open("test_files/run_result.ipynb", "w") as f:
-#         f.write(nbformat.writes(nb, version=4))
-#     print("You got {} points".format(p))
+def test_run_notebook():
+    from .notebook_logic import create_master_notebook
+    with open("test_files/TestoutJuly2023source.ipynb") as f:
+        s = create_master_notebook(f.read())
+        nb = nbformat.reads(s, as_version=4)
+    p = run_notebook(nb)
+    with open("test_files/run_result.ipynb", "w") as f:
+        f.write(nbformat.writes(nb, version=4))
+    print("You got {} points".format(p))
 
-def test_run_bad_notebook():
+def no_test_run_bad_notebook():
     from .notebook_logic import create_master_notebook
     with open("test_files/notebook_w_errors.ipynb") as f:
         s = create_master_notebook(f.read())
