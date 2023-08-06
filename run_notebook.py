@@ -310,11 +310,14 @@ def add_feedback(c, text):
         "execute_result", {"text/html": "<b>{}</b>".format(text)}
     ))
 
-def run_notebook(nb, timeout=10):
+def run_notebook(nb, timeout=10, max_num_timeouts=1):
     """Runs a notebook, returning a notebook with output cells completed.
     Args:
         nb: notebook to be run.
         timeout: cell timeout to be used.
+        max_num_timeouts: maximum number of cells that can timeout.
+            This can be used to limit how many threads are created and
+            left running.
     Returns:
         The total number of points.
         The notebook is adorned with the results of the execution.
@@ -324,6 +327,7 @@ def run_notebook(nb, timeout=10):
     my_globals["__builtins__"]["print"] = collector
     execution_count = 0
     points_earned = 0
+    num_timeouts = 0
     for c in nb.cells:
         if c.cell_type == "code":
             # Runs the cell.
@@ -336,6 +340,7 @@ def run_notebook(nb, timeout=10):
             if res == "timeout":
                 explanation = "Timeout Error: The cell timed out after {} seconds".format(timeout)
                 add_feedback(c, explanation)
+                num_timeouts += 1
             if c.metadata.notebookgrader.is_tests:
                 # Gives points for successfully completed test cells.
                 points = c.metadata.notebookgrader.test_points
@@ -349,6 +354,8 @@ def run_notebook(nb, timeout=10):
                 remove_hidden_tests(c)
             execution_count += 1
             c.execution_count = execution_count
+            if num_timeouts >= max_num_timeouts:
+                break
     return points_earned
 
 
