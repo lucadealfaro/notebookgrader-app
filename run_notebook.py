@@ -251,7 +251,7 @@ class RunCellWithTimeout(object):
 
     def worker(self):
         self.answer = self.function(*self.args)
-        print("Cell answered:", self.answer)
+        # print("Cell answered:", self.answer)
 
     def run(self, timeout=None):
         thread = threading.Thread(target=self.worker)
@@ -279,18 +279,18 @@ def run_cell(c, my_globals, collector):
         cr = compile(clean_code, '<string>', 'exec')
         exec(cr, my_globals)
         add_output(c, collector.result())
-        print("Returning True")
+        # print("Returning True")
         return True
     except IllegalImport as e:
         add_output(c, collector.result())
         add_output(c, "Import Error: {}".format(str(e)))
-        print("Returning False")
+        # print("Returning False")
         return False
     except Exception as e:
         err = traceback.format_exception_only(e)[0]
         add_output(c, collector.result())
         add_output(c, err)
-        print("Returning False")
+        # print("Returning False")
         return False
 
 
