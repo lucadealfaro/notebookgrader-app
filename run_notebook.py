@@ -237,17 +237,15 @@ class OutputCollector(object):
 
 
 class RunCellWithTimeout(object):
-    def __init__(self, function, args):
+    def __init__(self, function, collector, args):
         self.function = function
+        self.collector = collector
         self.args = args
         self.answer = "timeout"
 
     def worker(self):
-        try:
-            self.answer = self.function(*self.args)
-            print("Cell answered:", self.answer)
-        except Exception as e:
-            print("Wow, caught:", e)
+        self.answer = self.function(*self.args)
+        print("Cell answered:", self.answer)
 
     def run(self, timeout=None):
         thread = threading.Thread(target=self.worker)
@@ -280,7 +278,7 @@ def run_cell(c, my_globals, collector):
     except Exception as e:
         err = traceback.format_exception_only(e)[0]
         add_output(c, collector.result())
-        add_output(c, e)
+        add_output(c, err)
         print("Returning False")
         return False
 
@@ -313,7 +311,7 @@ def run_notebook(nb, timeout=10):
     for c in nb.cells:
         if c.cell_type == "code":
             # Runs the cell.
-            runner = RunCellWithTimeout(run_cell, (c, my_globals, collector))
+            runner = RunCellWithTimeout(run_cell, collector, (c, my_globals, collector))
             res = runner.run(timeout=timeout)
             # print("----> Result:", res) # DEBUG
             execution_count += 1
