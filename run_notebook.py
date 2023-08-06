@@ -218,21 +218,6 @@ def get_clean_globals():
     return my_globals
 
 
-class RunCellWithTimeout(object):
-    def __init__(self, function, args):
-        self.function = function
-        self.args = args
-        self.answer = "timeout"
-
-    def worker(self):
-        self.answer = self.function(*self.args)
-
-    def run(self, timeout=None):
-        thread = threading.Thread(target=self.worker)
-        thread.start()
-        thread.join(timeout=timeout)
-        return self.answer
-
 class OutputCollector(object):
 
     def __init__(self, _getattr_=None):
@@ -249,6 +234,27 @@ class OutputCollector(object):
 
     def __call__(self, *args):
         self.txt.append(" ".join([str(a) for a in args]))
+
+
+class RunCellWithTimeout(object):
+    def __init__(self, function, args):
+        self.function = function
+        self.args = args
+        self.answer = "timeout"
+
+    def worker(self):
+        try:
+            self.answer = self.function(*self.args)
+            print("Cell answered:", self.answer)
+        except Exception as e:
+            print("Wow, caught:", e)
+
+    def run(self, timeout=None):
+        thread = threading.Thread(target=self.worker)
+        thread.start()
+        thread.join(timeout=timeout)
+        return self.answer
+
 
 
 def run_cell(c, my_globals, collector):
@@ -269,11 +275,13 @@ def run_cell(c, my_globals, collector):
         cr = compile(clean_code, '<string>', 'exec')
         exec(cr, my_globals)
         add_output(c, collector.result())
+        print("Returning True")
         return True
     except Exception as e:
         err = traceback.format_exception_only(e)[0]
         add_output(c, collector.result())
         add_output(c, e)
+        print("Returning False")
         return False
 
 
@@ -383,37 +391,47 @@ with open("/Users/luca/.cshrc") as f:
     print(f.read())
 """
 
-def test_exec():
-    for code in [code1, code2, code3]:
-        collector = OutputCollector()
-        my_globals = get_clean_globals()
-        my_globals["__builtins__"]["print"] = collector
-        clean_code = ast.unparse(cleaner.visit(ast.parse(code)))
-        cr = compile(clean_code, '<string>', 'exec')
-        exec(cr, my_globals)
-        print("---------")
-        print(collector.result())
+# def test_exec():
+#     for code in [code1, code2, code3]:
+#         collector = OutputCollector()
+#         my_globals = get_clean_globals()
+#         my_globals["__builtins__"]["print"] = collector
+#         clean_code = ast.unparse(cleaner.visit(ast.parse(code)))
+#         cr = compile(clean_code, '<string>', 'exec')
+#         exec(cr, my_globals)
+#         print("---------")
+#         print(collector.result())
+#
+# def test_fail():
+#     for code in [code4]:
+#         try:
+#             collector = OutputCollector()
+#             my_globals = get_clean_globals()
+#             my_globals["__builtins__"]["print"] = collector
+#             clean_code = ast.unparse(cleaner.visit(ast.parse(code)))
+#             cr = compile(clean_code, '<string>', 'exec')
+#             exec(cr, my_globals)
+#             print(collector.result())
+#             print("---------")
+#         except Exception as e:
+#             traceback.print_exc()
+#
+# def test_run_notebook():
+#     from .notebook_logic import create_master_notebook
+#     with open("test_files/TestoutJuly2023source.ipynb") as f:
+#         s = create_master_notebook(f.read())
+#         nb = nbformat.reads(s, as_version=4)
+#     p = run_notebook(nb)
+#     with open("test_files/run_result.ipynb", "w") as f:
+#         f.write(nbformat.writes(nb, version=4))
+#     print("You got {} points".format(p))
 
-def test_fail():
-    for code in [code4]:
-        try:
-            collector = OutputCollector()
-            my_globals = get_clean_globals()
-            my_globals["__builtins__"]["print"] = collector
-            clean_code = ast.unparse(cleaner.visit(ast.parse(code)))
-            cr = compile(clean_code, '<string>', 'exec')
-            exec(cr, my_globals)
-            print(collector.result())
-            print("---------")
-        except Exception as e:
-            traceback.print_exc()
-
-def test_run_notebook():
+def test_run_bad_notebook():
     from .notebook_logic import create_master_notebook
-    with open("test_files/TestoutJuly2023source.ipynb") as f:
+    with open("test_files/notebook_w_errors.ipynb") as f:
         s = create_master_notebook(f.read())
         nb = nbformat.reads(s, as_version=4)
     p = run_notebook(nb)
-    with open("test_files/run_result.ipynb", "w") as f:
+    with open("test_files/result_w_errors.ipynb", "w") as f:
         f.write(nbformat.writes(nb, version=4))
     print("You got {} points".format(p))
