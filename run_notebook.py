@@ -228,18 +228,23 @@ class OutputCollector(object):
 
     def __init__(self, _getattr_=None):
         self.txt = []
+        self.lock = threading.Lock()
 
     def write(self, text):
-        self.txt.append(text)
+        with self.lock:
+            self.txt.append(text)
 
     def result(self):
-        return '\n'.join(self.txt)
+        with self.lock:
+            return '\n'.join(self.txt)
 
     def clear(self):
-        self.txt = []
+        with self.lock:
+            self.txt = []
 
     def __call__(self, *args):
-        self.txt.append(" ".join([str(a) for a in args]))
+        with self.lock:
+            self.txt.append(" ".join([str(a) for a in args]))
 
 
 class RunCellWithTimeout(object):
