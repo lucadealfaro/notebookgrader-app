@@ -311,20 +311,20 @@ def run_notebook(nb, timeout=10):
     for c in nb.cells:
         if c.cell_type == "code":
             # Runs the cell.
-            runner = RunCellWithTimeout(run_cell, collector, (c, my_globals, collector))
+            runner = RunCellWithTimeout(run_cell, collector,(c, my_globals, collector))
             res = runner.run(timeout=timeout)
             # print("----> Result:", res) # DEBUG
             execution_count += 1
-            c.execution_count = execution_count
+            # c.execution_count = execution_count
             # If the cell timed out, adds an explanation of it to the outputs.
             if res == "timeout":
                 explanation = "Timeout Error: The cell timed out after {} seconds".format(timeout)
-                add_output(c, explanation)
+                add_feedback(c, explanation)
             if c.metadata.notebookgrader.is_tests:
                 # Gives points for successfully completed test cells.
                 points = c.metadata.notebookgrader.test_points
                 # print("Cell worth", points, "points") # DEBUG
-                if res:
+                if res is True:
                     points_earned += points
                     add_feedback(c, "Tests passed, you earned {}/{} points".format(points, points))
                 else:
