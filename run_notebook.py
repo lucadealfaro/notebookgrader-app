@@ -278,11 +278,15 @@ def run_cell(c, my_globals, collector):
 
 
 def add_output(c, text):
-    print("Output:", text)
+    # print("Output:", text) # DEBUG
     c.outputs.append(nbformat.v4.new_output(
         "execute_result",
         {"text/plain": text}))
 
+def add_feedback(c, text):
+    c.outputs.insert(0, nbformat.v4.new_output(
+        "execute_result", {"text/html": "<b>{}</b>".format(text)}
+    ))
 
 def run_notebook(nb, timeout=10):
     """Runs a notebook, returning a notebook with output cells completed.
@@ -303,7 +307,7 @@ def run_notebook(nb, timeout=10):
             # Runs the cell.
             runner = RunCellWithTimeout(run_cell, (c, my_globals, collector))
             res = runner.run(timeout=timeout)
-            print("----> Result:", res)
+            # print("----> Result:", res) # DEBUG
             execution_count += 1
             c.execution_count = execution_count
             # If the cell timed out, adds an explanation of it to the outputs.
@@ -313,11 +317,12 @@ def run_notebook(nb, timeout=10):
             if c.metadata.notebookgrader.is_tests:
                 # Gives points for successfully completed test cells.
                 points = c.metadata.notebookgrader.test_points
-                print("Cell worth", points, "points")
+                # print("Cell worth", points, "points") # DEBUG
                 if res:
                     points_earned += points
+                    add_feedback(c, "Tests passed, you earned {}/{} points".format(points, points))
                 else:
-                    pass
+                    add_feedback(c, "Tests failed, you earned {}/{} points".format(0, points))
                 # Puts the source back removing the hidden tests.
                 remove_hidden_tests(c)
             execution_count += 1
@@ -409,5 +414,6 @@ def test_run_notebook():
         s = create_master_notebook(f.read())
         nb = nbformat.reads(s, as_version=4)
     p = run_notebook(nb)
-    # print(nbformat.writes(nb, version=4))
+    with open("test_files/run_result.ipynb", "w") as f:
+        f.write(nbformat.writes(nb, version=4))
     print("You got {} points".format(p))
