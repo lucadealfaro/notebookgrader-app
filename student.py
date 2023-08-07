@@ -102,51 +102,63 @@ def homework(id=None):
     can_grade = homework.drive_id is not None
     can_grade = can_grade and assignment.available_from < now < assignment.until
     can_grade = can_grade and num_grades_past_24h < assignment.max_submissions_in_24h_period
-    # We compute validity of a new grade now, since grading can take time.
-    is_valid = now < assignment.submission_deadline
-    if can_grade:
-        form = Form([Field('grade_my_work_now', 'boolean')],
-                    csrf_session=session, formstyle=FormStyleBulma)
-        if form.accepted:
-            if form.vars['grade_my_work_now']:
-                # Reads the master copy.
-                master_json = gcs.read(GCS_BUCKET, assignment.master_id_gcs)
-                # Reads the student assignment.
-                drive_service = build_drive_service()
-                submission_json = read_from_drive(drive_service, homework.drive_id)
-                # Saves the submission json, to have a record of what has been graded.
-                submission_id_gcs = long_random_id()
-                gcs.write(GCS_BUCKET, submission_id_gcs, submission_json,
-                          type="application/json")
-                # ---qui--- do the grading
-                new_grade, feedback_json = grade_notebook(master_json, submission_json)
-                # Uploads the feedback.
-                feedback_name = "Feedback for {} {}, on {}".format(
-                    assignment.name, get_user_email(), now.isoformat()
-                )
-                feedback_id = upload_to_drive(drive_service, feedback_json,
-                                              feedback_name, shared=assignment.owner)
-                db.grade.insert(
-                    assignment_id=assignment.id,
-                    grade_date=now,
-                    homework_id=homework.id,
-                    grade=new_grade,
-                    input_id_gcs=submission_id_gcs,
-                    drive_id=feedback_id,
-                    is_valid=is_valid,
-                )
-            redirect(URL('homework', homework.id))
-    else:
-        form = None
     return dict(
         homework=homework,
         assignment=assignment,
         grid=grid,
+        can_grade=can_grade,
+        grade_homework_url=URL('grade-homework', id, signer=url_signer),
         num_grades_past_24h=num_grades_past_24h,
-        form=form,
         obtain_assignment_url=URL('obtain-assignment', id, signer=url_signer),
         homework_details_url=URL('homework-details', id, signer=url_signer),
     )
+
+@action('grade-homework/<id>', method=["POST"])
+@action.uses(db, auth.user, url_signer.verify())
+def grade_homework(id=None):
+    homework = db.homework[id]
+    assignment = db.assignment[homework.assignment_id]
+    assert homework is not None and assignment is not None
+    now = datetime.datetime.utcnow()
+    query = ((db.grade.homework_id == id) &
+             (db.grade.student == get_user_email()) &
+             (db.grade.grade_date > now - datetime.timedelta(hours=24)))
+    num_grades_past_24h = db(query).count()
+    is_valid = now < assignment.submission_deadline
+    if homework.drive_id is None:
+        return dict(outcome="You do not have an assignment to work on.")
+    if not assignment.available_from < now < assignment.until:
+        return dict(outcome="The assignment is not available for grading.")
+    if num_grades_past_24h >= assignment.max_submissions_in_24h_period:
+        return dict(outcome="You have already asked for {} grades in the past 24h.".format(num_grades_past_24h))
+    # The assignment can be graded.
+    # Reads the master copy.
+    master_json = gcs.read(GCS_BUCKET, assignment.master_id_gcs)
+    # Reads the student assignment.
+    drive_service = build_drive_service()
+    submission_json = read_from_drive(drive_service, homework.drive_id)
+    # Saves the submission json, to have a record of what has been graded.
+    submission_id_gcs = long_random_id()
+    gcs.write(GCS_BUCKET, submission_id_gcs, submission_json,
+              type="application/json")
+    # Grades the submission.
+    new_grade, feedback_json = grade_notebook(master_json, submission_json)
+    # Uploads the feedback.
+    feedback_name = "Feedback for {} {}, on {}".format(
+        assignment.name, get_user_email(), now.isoformat()
+    )
+    feedback_id = upload_to_drive(drive_service, feedback_json,
+                                  feedback_name, shared=assignment.owner)
+    db.grade.insert(
+        assignment_id=assignment.id,
+        grade_date=now,
+        homework_id=homework.id,
+        grade=new_grade,
+        input_id_gcs=submission_id_gcs,
+        drive_id=feedback_id,
+        is_valid=is_valid,
+    )
+    return dict(outcome="ok")
 
 @action('obtain-assignment/<id>')
 @action.uses(db, auth.user, url_signer.verify())

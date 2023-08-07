@@ -15,10 +15,6 @@ HIDDEN_TESTS = (BEGIN_HIDDEN_TESTS, END_HIDDEN_TESTS)
 IS_TESTS = "# Tests"
 IS_TEST_REGEXP = "^# Tests (\d+) points"
 TESTS_MARKDOWN = "***Tests: {} points***\n"
-CELL_DELETION_NOTICE = """### Cell Removed
-
-A spurious cell has been detected in the submission, and has been removed.
-"""
 
 
 test_regexp = re.compile(IS_TEST_REGEXP)
@@ -139,77 +135,6 @@ def produce_student_version(master_notebook_string):
         elif meta.get('is_solution'):
             remove_from_cell(c, SOLUTION, SOLUTION_REPLACEMENT)
     return nbformat.writes(nb, version=4)
-
-
-def get_cell_id(c):
-    if c is None:
-        return None
-    if "metadata" not in c or "notebookgrader" not in c.metadata:
-        return None
-    if "id" not in c.metadata.notebookgrader:
-        return None
-    return c.metadata.notebookgrader.id
-
-
-def merge_cells(c_master, c_submission):
-    """Matches the cells of master and submitted notebooks,
-    creating what will be graded."""
-    if c_master.cell_type == "markdown":
-        return c_master
-    elif c_master.metadata.notebookgrader.readonly:
-        return c_master
-    else:
-        # Cleans the outputs.
-        c_submission.outputs = []
-        return clean_cell(c_submission)
-
-
-class RemoveImports(ast.NodeTransformer):
-
-    def visit_Import(self, node):
-        return None
-
-def clean_cell(cell):
-    """Cleans a cell, removing dangerous statements."""
-    # ---qui---
-    return cell
-
-def match_notebooks(master_nb, submission_nb):
-    """Matches the cells of master and submission, producing a notebook
-    that is a candidate for grading."""
-    matched_nb = nbformat.v4.new_notebook()
-    master_idx, submission_idx = 0, 0
-    while master_idx < len(master_nb.cells) and submission_idx < len(submission_nb.cells):
-        # Tries to match the cells.
-        c_master = master_nb.cells[master_idx]
-        c_submission = submission_nb.cells[submission_idx]
-        master_id = get_cell_id(c_master)
-        submission_id = get_cell_id(c_submission)
-        if master_id == submission_id:
-            # The cells match.  Merges them.
-            matched_nb.cells.append(merge_cells(c_master, c_submission))
-            master_idx += 1
-            submission_idx += 1
-        else:
-            # The IDs do not match.
-            # The reasonable thing to do is throw out the cell in the submitted
-            # notebook, because it comes before its right place, if it has
-            # a place at all.
-            matched_nb.cells.append(nbformat.v4.new_markdown_cell(source=CELL_DELETION_NOTICE))
-            submission_idx += 1
-    # If there are any leftover master cells, adds them at this point.
-    matched_nb.cells.extend(master_nb.cells[master_idx:])
-    return matched_nb
-
-
-def grade_notebook(master_json, submission_json):
-    """Grades a notebook, producing a grade and a feedback notebook."""
-    master_nb = nbformat.reads(master_json, as_version=4)
-    submission_nb = nbformat.reads(submission_json, as_version=4)
-    # Produces a clean notebook by matching the cells of master and submission.
-    test_d = match_notebooks(master_nb, submission_nb)
-
-
 
 
 def test_produce_master_twice():

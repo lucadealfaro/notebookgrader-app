@@ -35,12 +35,23 @@
     <p>The assignment will become available on {{date_available}}.</p>
   </div>
   
+  [[if can_grade:]]
   <div v-if="drive_url && (Date.now() < timestamp_closes)">
     <h2 class="subtitle mt-3">Submit Your Work for Grading</h2>
     <p>To receive credit for your work, you must submit it for grading before the deadline. You can ask for your work to be graded at most [[=assignment.max_submissions_in_24h_period]] times in a 24-hour period.</p>
     
-    [[=form]]
+    <button class="button is-warning" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Homework</button>
+    
+    <div class="box has-background-success-light has-text-success-dark" v-if="is_grading">
+      Please be patient: the grading can take a few minutes. The page will refresh automatically when grading is done.
+    </div>
+
+    <div class="box has-background-danger-light has-text-danger-dark" v-if="grading_error">
+      {{grading_error}}
+    </div>
+
   </div>
+  [[pass]]
   
   <h2 class="subtitle mt-3">Your Grades <span @mouseover="show_grades_help = true" @mouseout="show_grades_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_grades_help">
@@ -56,6 +67,7 @@
 <script>
     const homework_details_url = "[[=XML(homework_details_url)]]";
     const obtain_assignment_url = "[[=XML(obtain_assignment_url)]]";
+    const grade_homework_url = "[[=XML(grade_homework_url)]]";
 </script>
 <script src="components-bulma/vueform/luxon.min.js"></script>
 <script src="[[=URL('static/components-bulma/grid/grid.js')]]"></script>
