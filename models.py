@@ -69,6 +69,7 @@ db.define_table(
     Field('assignment_id', 'reference assignment'),
     Field('created_on', 'datetime', default=get_time),
     Field('grade', 'float'),
+    Field('has_invalid_grade', 'bool', default=False),
     Field('drive_id'),
 )
 

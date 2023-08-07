@@ -158,6 +158,10 @@ def grade_homework(id=None):
         drive_id=feedback_id,
         is_valid=is_valid,
     )
+    if not is_valid:
+        # Marks that the student has a late submission.
+        homework = db.homework[homework.id]
+        homework.update_record(has_invalid_grade=True)
     return dict(outcome="ok")
 
 @action('obtain-assignment/<id>')

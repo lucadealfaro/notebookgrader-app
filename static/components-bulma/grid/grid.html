@@ -54,13 +54,16 @@
         <template v-else>
           <!-- Non-header row -->
           <td v-for="cell in row.cells"  :class="cell.el_class">
-            <button v-if="cell.is_button" class="button">
-              <a v-if="cell.url" :href="cell.url">{{cell.text}}</a>
-              <span v-else>{{cell.text}}</span>
-            </button>
+            <span v-if="cell.html" v-html="cell.html"></span>
             <template v-else>
-              <a v-if="cell.url" :href="cell.url">{{cell.text}}</a>
-              <span v-else>{{cell.text}}</span>
+              <button v-if="cell.is_button" class="button">
+                <a v-if="cell.url" :href="cell.url">{{cell.text}}</a>
+                <span v-else>{{cell.text}}</span>
+              </button>
+              <template v-else>
+                <a v-if="cell.url" :href="cell.url">{{cell.text}}</a>
+                <span v-else>{{cell.text}}</span>
+              </template>
             </template>
           </td>
           <td v-if="row.has_delete">

@@ -134,6 +134,8 @@ class Grid(Fixture):
             - sortable: <boolean> (valid only of the row is a header)
             - sort: <int> (+1 for sort up, -1 for sort down, 0 for no sort)
             - el_class: <text> or None (class of element, if needed)
+            - html: HTML that will be inserted unquoted in place. Takes precedence
+                over text attributes, url, is_button, and type.
         All the fields except text are optional.
         This is a sample implementation only, to test code.  You should
         over-ride the api method to provide your own input for the table.

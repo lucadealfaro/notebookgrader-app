@@ -16,6 +16,8 @@ from .notebook_logic import create_master_notebook, produce_student_version, Inv
 
 from .api_assignment_form import AssignmentFormCreate, AssignmentFormEdit, AssignmentFormView
 from .api_assignment_grid import TeacherAssignmentGrid
+from .api_participants_grid import ParticipantsGrid
+from .api_homework_details_grid import HomeworkDetailsGrid
 
 
 # The ID is the ID of the course for which the assignment is created.
@@ -27,6 +29,8 @@ form_assignment_view = AssignmentFormView('api-assignment-view')
 form_assignment_edit = AssignmentFormEdit('api-assignment-edit',
                                           redirect_url='teacher-view-assignment')
 teacher_assignment_grid = TeacherAssignmentGrid('api-teacher-assignment-grid')
+grid_participants = ParticipantsGrid('api-participants-grid')
+grid_homework_details = HomeworkDetailsGrid('api-homework-details-grid')
 
 @action('teacher-home')
 @action.uses('teacher_home.html', db, auth.user, teacher_assignment_grid)
@@ -161,3 +165,55 @@ def delete_assignment(id=None):
         form=form,
         assignment=assignment,
     )
+
+
+@action('participants/<id>')
+@action.uses('participants.html', db, auth.user, grid_participants)
+def participants(id=None):
+    """Displays student notebooks and grades."""
+    assignment = db.assignment[id]
+    if assignment is None or not can_access_assignment(id):
+        redirect(URL('teacher-home'))
+    return dict(
+        assignment=assignment,
+        grid=grid_participants(id)
+    )
+
+
+@action('homework-details/<id>')
+@action.uses('homework_details.html', db, auth.user, grid_homework_details)
+def homework_details(id=None):
+    """Displays the details on a homework: its list of grades."""
+    homework = db.homework[id]
+    if homework is None:
+        redirect(URL('teacher-home'))
+    assignment = db.assignment[homework.assignment_id]
+    assert assignment is not None
+    if not can_access_assignment(assignment.id):
+        redirect(URL('teacher-home'))
+    user = db(db.auth_user.email == homework.student).select().firset()
+    return dict(
+        assignment=assignment,
+        user=user,
+        notebook_url=COLAB_BASE + homework.drive_id,
+        grid=grid_homework_details(id),
+    )
+
+
+@action('toggle-grade-validity/<id>')
+@action.uses(db, auth.user, url_signer.verify())
+def toggle_grade_validity(id=None):
+    grade = db.grade[id]
+    assert grade is not None
+    homework = db.homework[grade.homework_id]
+    assert homework is not None
+    grade.update_record(is_valid = not grade.is_valid)
+    # Recomputes the highest valid grade.
+    rows = db((db.grade.homework_id == homework.id) & (db.grade.is_valid == True)).select()
+    grades = [r.grade for r in rows] + [0]
+    homework.update_record(grade=max(grades))
+    redirect(URL('homework-details', homework.id))
+
+# TODO:
+# - Payments
+# - Download grades
