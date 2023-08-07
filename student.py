@@ -21,7 +21,7 @@ import google.oauth2.credentials
 
 from .common import flash, url_signer, gcs
 from .util import upload_to_drive, read_from_drive, long_random_id
-from .notebook_logic import grade_notebook
+from .run_notebook import grade_notebook
 from .models import build_drive_service
 
 from .api_homework_grid import HomeworkGrid

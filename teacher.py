@@ -7,7 +7,7 @@ from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
 from py4web.utils.url_signer import URLSigner
 from py4web.utils.form import Form, FormStyleBulma
-from .models import get_user_email, build_drive_service
+from .models import get_user_email, build_drive_service, can_access_assignment
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET
 
 from .common import flash, url_signer, gcs
@@ -44,17 +44,18 @@ def create_assignment():
 def teacher_view_assignment(id=None):
     # Checks permissions.
     assignment = db.assignment[id]
-    print("Assignment owner:", assignment.owner)
-    if assignment is None or assignment.owner != get_user_email():
+    if assignment is None or not can_access_assignment(id):
         redirect(URL('teacher-home'))
+    is_owner = assignment.owner == get_user_email()
     # Displays the assignment.
     form = form_assignment_view(id=id)
     return dict(
         form=form,
         assignment_id=assignment.id,
-        change_access_url=URL('change-access-url', id, signer=url_signer),
+        is_owner=is_owner,
+        change_access_url=URL('change-access-url', id, signer=url_signer) if is_owner else None,
         notebook_version_url=URL('notebook-version', id, signer=url_signer),
-        upload_url=URL('upload-notebook', id, signer=url_signer),
+        upload_url=URL('upload-notebook', id, signer=url_signer) if is_owner else None,
     )
 
 @action('change-access-url/<id>', method=["GET", "POST"])
@@ -120,7 +121,6 @@ def upload_notebook(id=None):
         student_version=COLAB_BASE + assignment.student_id_drive,
     )
 
-
 @action('notebook-guidelines')
 @action.uses('notebook_guidelines.html', db, auth)
 def notebook_guidelines():
@@ -130,7 +130,6 @@ def notebook_guidelines():
 @action.uses('edit_assignment.html', db, auth.user, form_assignment_edit)
 def edit_assignment(id=None):
     assignment = db.assignment[id]
-    print("Assignment owner:", assignment.owner)
     if assignment is None or assignment.owner != get_user_email():
         redirect(URL('teacher-home'))
     form = form_assignment_edit(id=id, cancel_url=URL('teacher-view-assignment', id))
@@ -141,7 +140,6 @@ def edit_assignment(id=None):
 def delete_assignment(id=None):
     # Checks permissions.
     assignment = db.assignment[id]
-    print("Assignment owner:", assignment.owner)
     if assignment is None or assignment.owner != get_user_email():
         redirect(URL('teacher-home'))
     form = Form([Field('confirm_deletion', 'boolean')],
@@ -154,6 +152,7 @@ def delete_assignment(id=None):
     if form.accepted:
         if form.vars['confirm_deletion']:
             db(db.assignment.id == id).delete()
+            db(db.access.assignment_id == id).delete()
             redirect(URL('teacher-home'))
         else:
             redirect(URL('teacher-view-assignment', id))

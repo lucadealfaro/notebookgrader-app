@@ -14,17 +14,16 @@
 <div class="section" id="vue-target" v-cloak>
   <!-- Put here your Vue.js template -->
   <h1 class="title">Assignment
+    [[if is_owner:]]
     <a class="button is-primary" href="[[=URL('edit-assignment', assignment_id)]]">
       <span class="icon is-small"><i class="fa fa-pencil"></i></span>
     </a>
     <a class="button is-danger" href="[[=URL('delete-assignment', assignment_id)]]">
       <span class="icon is-small"><i class="fa fa-trash"></i></span>
     </a>
-    <a class="button is-success ml-3" href="[[=URL('notebooks', assignment_id)]]">
+    [[pass]]
+    <a class="button is-success ml-3" href="[[=URL('participants', assignment_id)]]">
       <span class="icon is-small"><i class="fa fa-users"></i></span>
-    </a>
-    <a class="button is-success" href="[[=URL('grades', assignment_id)]]">
-      <span class="icon is-small"><i class="fa fa-table"></i></span>
     </a>
   </h1>
 
@@ -36,7 +35,10 @@
       If you regenerate it, students with the old URL will no longer be able to join the assignment.</p>
   </div>
   <p><span class="box is-family-monospace is-size-7">{{access_url}}</span>
-    <button class="button is-warning" @click="regenerate_access_url"><span class="icon is-small"><i class="fa fa-refresh"></i></span><span>Regenerate</span></button></p>
+    [[if is_owner:]]
+    <button class="button is-warning" @click="regenerate_access_url"><span class="icon is-small"><i class="fa fa-refresh"></i></span><span>Regenerate</span></button>
+    [[pass]]
+  </p>
 
   <div @mouseleave="show_notebook_help = false">
     <h2 class="subtitle mt-5">Notebook <span @mouseover="show_notebook_help = true" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
@@ -47,6 +49,7 @@
     </div>
   </div>
 
+  [[if is_owner:]]
   <div class="field has-addons mt-5">
     <p class="control">
       <div class="file is-info">
@@ -70,6 +73,7 @@
   <div class="box has-background-danger-light has-text-danger-dark" v-if="upload_error">
     Error in uploaded notebook: {{upload_error}}
   </div>
+  [[pass]]
   
   <div v-if="instructor_version"><a target="_blank" :href="instructor_version">Notebook, instructor version</a> <span @mouseover="show_instructor_version_help = true" @mouseout="show_instructor_version_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></div>
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_instructor_version_help">

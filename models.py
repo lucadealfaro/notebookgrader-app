@@ -58,6 +58,12 @@ db.define_table(
 db.assignment.max_submissions_in_24h_period.requires = IS_INT_IN_RANGE(1, 3)
 
 db.define_table(
+    'access',
+    Field('user'),
+    Field('assignment_id', 'reference assignment'),
+)
+
+db.define_table(
     'homework',
     Field('student', default=get_user_email), # Email of student.
     Field('assignment_id', 'reference assignment'),
@@ -79,3 +85,25 @@ db.define_table(
 )
 
 db.commit()
+
+def get_assignment_teachers(assignment_id, exclude=None):
+    """Returns the assignment teachers."""
+    q = (db.access.assignment_id == assignment_id)
+    if exclude is not None:
+        q &= (db.access.user != exclude)
+    teachers = [r.user for r in db(q).select()]
+    return sorted(teachers)
+
+def set_assignment_teachers(assignment_id, teacher_list):
+    current_rows = db(db.access.assignment_id == assignment_id).select()
+    current_users = [r.user for r in current_rows]
+    users_to_delete = [u for u in current_users if u not in teacher_list]
+    users_to_add = [u for u in teacher_list if u not in current_users]
+    db((db.access.assignment_id == assignment_id) &
+       (db.access.user.belongs(users_to_delete))).delete()
+    for u in users_to_add:
+        db.access.insert(user=u, assignment_id=assignment_id)
+
+def can_access_assignment(assignment_id):
+    return not db((db.access.assignment_id == assignment_id) &
+                  (db.access.user == get_user_email())).isempty()

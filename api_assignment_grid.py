@@ -33,7 +33,8 @@ class TeacherAssignmentGrid(Grid):
         # Parses the query.
         req = self._get_request_params(header)
         # Forms the database query.
-        query = (db.assignment.owner == get_user_email())
+        query = ((db.access.user == get_user_email()) &
+                 (db.access.assignment_id == db.assignment.id))
         if req.query:
             query &= (db.assignment.name.contains(req.query))
         db_rows = db(query).select(orderby=~db.assignment.submission_deadline,
@@ -42,10 +43,10 @@ class TeacherAssignmentGrid(Grid):
         # Now creates the results.
         rows = [header] + [dict(
             cells=[
-                dict(text=r["name"],
-                     url=URL('teacher-view-assignment', r["id"]),
+                dict(text=r["assignment"]["name"],
+                     url=URL('teacher-view-assignment', r["assignment"]["id"]),
                      ),
-                dict(text=r["submission_deadline"].isoformat(),
+                dict(text=r["assignment"]["submission_deadline"].isoformat(),
                      type='datetime'),
             ]
         )

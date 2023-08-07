@@ -11,11 +11,16 @@ from .constants import *
 from .common import db, session, auth, Field
 from .util import random_id
 from .common import url_signer
+from .models import get_assignment_teachers, set_assignment_teachers, get_user_email
+from .util import normalize_email_list
 
 FIELDS = [
     Field('name', length=STRING_FIELD_LENGTH, required=True,
           requires=[IS_NOT_EMPTY(), IS_LENGTH(STRING_FIELD_LENGTH)],
           help="Name of the assignment."),  # Assignment name.
+    Field('instructors', length=STRING_FIELD_LENGTH,
+          requires=IS_LIST_OF_EMAILS(),
+          help="List of email addresses of additional instructors.  These instructors will be able to view student submissions, but they will not be able to edit the assignment."),
     Field('available_from', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
           help="Date from which students can access the assignment."),
     Field('submission_deadline', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
@@ -39,6 +44,8 @@ class AssignmentForm(VueForm):
         if row is not None:
             for f_name, f in self.fields.items():
                 values[f_name] = f.formatter(row.get(f_name))
+            # Reads the additional instructors.
+            values['instructors'] = ", ".join(get_assignment_teachers(record_id))
         return values
 
 
@@ -66,9 +73,15 @@ class AssignmentFormEdit(AssignmentForm):
             errors['submission_deadline'] = "The submission deadline should come after the assignment is available"
         if d3 < d2:
             errors['available_until'] = "An assignment should be available at least until its deadline"
+        user = get_user_email()
+        if user not in validated_values['instructors']:
+            validated_values['instructors'].append(user)
+        validated_values['instructors'] = normalize_email_list(validated_values['instructors'])
         return errors
 
     def process_post(self, record_id, validated_values):
+        set_assignment_teachers(record_id, validated_values['instructors'])
+        del validated_values['instructors']
         self.db(self.db.assignment.id == record_id).update(**validated_values)
         return dict(redirect_url=URL(self.redirect_url, record_id))
 
@@ -100,7 +113,8 @@ class AssignmentFormCreate(AssignmentFormEdit):
         return values
 
     def process_post(self, record_id, validated_values):
-        # Creates a random URL through which the assignment can be accessed.
+        set_assignment_teachers(record_id, validated_values['instructors'])
+        del validated_values['instructors']
         new_id = self.db.assignment.insert(**validated_values)
         return dict(redirect_url=URL(self.redirect_url, new_id))
 
