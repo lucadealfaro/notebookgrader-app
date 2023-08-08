@@ -24,39 +24,38 @@
     <p>Late submissions are graded, but the grade will not be used unless the instructor manually flags it as valid.</p>
   </div>
   
-<!--  <div v-if="drive_url">-->
-<!--    <a :href="drive_url" target="_blank" class="button is_success">Access assignment</a>.-->
-<!--  </div>-->
-<!--  <div v-else-if="assignment_is_available">-->
-<!--    <p>Please obtain the assignment by clicking on the button below:</p>-->
-<!--    <p><button class="button is-success" :class="'is-loading': obtain_disabled" :disabled="obtain_disabled" :@click="obtain_assignment">Get Assignment</button></p>-->
-<!--  </div>-->
-<!--  <div v-else>-->
-<!--    <p>The assignment will become available on {{date_available}}.</p>-->
-<!--  </div>-->
-<!--  -->
-<!--  [[if can_grade:]]-->
-<!--  <div v-if="drive_url && submission_open">-->
-<!--    <h2 class="subtitle mt-3">Submit Your Work for Grading</h2>-->
-<!--    <p>To receive credit for your work, you must submit it for grading before the deadline. You can ask for your work to be graded at most [[=assignment.max_submissions_in_24h_period]] times in a 24-hour period.</p>-->
-<!--    -->
-<!--    <button class="button is-warning" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Homework</button>-->
-<!--    -->
-<!--    <div class="box has-background-success-light has-text-success-dark" v-if="is_grading">-->
-<!--      Please be patient: the grading can take a few minutes. The page will refresh automatically when grading is done.-->
-<!--    </div>-->
+  <div v-if="drive_url">
+    <a :href="drive_url" target="_blank" class="button is-success mt-3">Access assignment</a>
+  </div>
+  <div v-else-if="assignment_is_available">
+    <p>Please obtain the assignment by clicking on the button below:</p>
+    <p><button class="button is-success" :class="{'is-loading': obtain_disabled}" :disabled="obtain_disabled" :@click="obtain_assignment">Get Assignment</button></p>
+  </div>
+  <div v-else>
+    <p>The assignment will become available on {{date_available}}.</p>
+  </div>
+  
+  [[if can_grade:]]
+  <div class="mt-5" v-if="drive_url && submission_open">
+    <p >To receive credit for your work, you must submit it for grading before the deadline. You can ask for your work to be graded at most [[=assignment.max_submissions_in_24h_period]] times in a 24-hour period.</p>
+    
+    <button class="button is-warning mt-2" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Homework</button>
+    
+    <div class="box has-background-success-light has-text-success-dark" v-if="is_grading">
+      Please be patient: the grading can take a few minutes. The page will refresh automatically when grading is done.
+    </div>
 
-<!--    <div class="box has-background-danger-light has-text-danger-dark" v-if="grading_error">-->
-<!--      {{grading_error}}-->
-<!--    </div>-->
+    <div class="box has-background-danger-light has-text-danger-dark mt-2" v-if="grading_error">
+      {{grading_error}}
+    </div>
 
-<!--  </div>-->
-<!--  [[pass]]-->
-<!--  -->
-<!--  <h2 class="subtitle mt-3">Your Grades <span @mouseover="show_grades_help = true" @mouseout="show_grades_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>-->
-<!--  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_grades_help">-->
-<!--    <p>Below are the grades and feedback you received.  Grades for late submissions are valid only if the instructor marks them so manually.</p>-->
-<!--  </div>-->
+  </div>
+  [[pass]]
+  
+  <h2 class="subtitle mt-5">Your Grades <span @mouseover="show_grades_help = true" @mouseout="show_grades_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_grades_help">
+    <p>Below are the grades and feedback you received.  Grades for late submissions are valid only if the instructor marks them so manually.</p>
+  </div>
   
   [[=grid]]
 </div>
