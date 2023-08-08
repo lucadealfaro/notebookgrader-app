@@ -102,20 +102,6 @@ def create_master_notebook(notebook_string):
                 points = get_test_points(c)
                 meta.test_points = points
                 total_points += points
-                # Creates a new cell to highlight the tests, if it's not
-                # already there.
-                if i == 0 or not nb.cells[i - 1].get('metadata', {}).get('notebookgrader', {}).get('added'):
-                    new_cell = nbformat.v4.new_markdown_cell(
-                        source=TESTS_MARKDOWN.format(points)
-                    )
-                    new_cell.metadata.notebookgrader = NotebookNode()
-                    new_cell_meta = new_cell.metadata.notebookgrader
-                    new_cell_meta.id = random_id()
-                    new_cell_meta.is_tests = False
-                    new_cell_meta.is_solution = False
-                    new_cell_meta.added = True
-                    new_cell_meta.readonly = True
-                    new_nb.cells.append(new_cell)
         c.metadata.notebookgrader = meta
         new_nb.cells.append(c)
     ensure(new_nb, 'metadata')

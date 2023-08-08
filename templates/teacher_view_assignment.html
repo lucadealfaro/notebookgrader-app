@@ -44,6 +44,7 @@
     <h2 class="subtitle mt-5">Notebook <span @mouseover="show_notebook_help = true" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
     <div class="box has-background-primary-light has-text-primary-dark" v-if="show_notebook_help">
       <p>To prepare the test for the students, you need to upload a notebook <a href="[[=URL('notebook-guidelines')]]">formatted according to the NotebookGrader guidelines</a>. </p>
+      <p class="mt-2">After uploading the notebook, please check the instructor version that is produced for accuracy.</p>
       <p class="mt-2">You can re-upload the notebook at any time before the test starts: the test will use the last notebook you uploaded.</p>
       <p class="mt-2">Once the test has started (once the notebook is available to the students), you can only re-upload a notebook that is obtained from the instructor version below, and that is identical to that notebook except possibly for some hidden test. This is to ensure that all students work on the same version of the test.</p>
     </div>
@@ -78,7 +79,7 @@
   <div v-if="instructor_version"><a target="_blank" :href="instructor_version">Notebook, instructor version</a> <span @mouseover="show_instructor_version_help = true" @mouseout="show_instructor_version_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></div>
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_instructor_version_help">
     <p>This is the instructor version of the notebook.  <b>Do not give this version to students!</b>
-    Please check that before every test cell, there is a markdown cell reflecting the number of points of the test.
+    Please check that after every test cell, there is an output indicating that the tests have been executed successfully, earning the proper number of points.
     This indicates that the test cell is in the proper format.</p>
     <p class="mt-2"><b>Changes to this notebook are NOT reflected in the assignment.</b>
     To change the assignment, you need to download this (or another) notebook, and upload it

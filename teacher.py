@@ -1,5 +1,6 @@
 import datetime
-import io
+import nbformat
+from .run_notebook import run_notebook
 
 from py4web import action, request, abort, redirect, URL, Flash
 from pydal import Field
@@ -101,6 +102,10 @@ def upload_notebook(id=None):
         return dict(error=str(e))
     # Produces the student version.
     student_notebook_json = produce_student_version(master_notebook_json)
+    # Runs the instructor notebook.
+    nb = nbformat.reads(master_notebook_json, as_version=4)
+    points, has_errors = run_notebook(nb)
+    master_notebook_json = nbformat.writes(nb, 4)
     # Puts both versions on GCS.
     if assignment.master_id_gcs is None:
         create_notebooks = True
@@ -120,7 +125,7 @@ def upload_notebook(id=None):
         drive_service, student_notebook_json, student_file_name, id=assignment.student_id_drive)
     assignment.update_record()
     return dict(
-        error=None,
+        error="The notebook could not be executed correctly, please check the results." if has_errors else None,
         instructor_version=COLAB_BASE + assignment.master_id_drive,
         student_version=COLAB_BASE + assignment.student_id_drive,
     )

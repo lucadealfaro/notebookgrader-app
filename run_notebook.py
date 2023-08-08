@@ -333,6 +333,7 @@ def run_notebook(nb, timeout=10, max_num_timeouts=1):
     execution_count = 0
     points_earned = 0
     num_timeouts = 0
+    had_errors = False
     for c in nb.cells:
         if c.cell_type == "code":
             # Runs the cell.
@@ -346,6 +347,7 @@ def run_notebook(nb, timeout=10, max_num_timeouts=1):
                 explanation = "Timeout Error: The cell timed out after {} seconds".format(timeout)
                 add_feedback(c, explanation)
                 num_timeouts += 1
+                had_errors = True
             if c.metadata.notebookgrader.is_tests:
                 # Gives points for successfully completed test cells.
                 points = c.metadata.notebookgrader.test_points
@@ -355,13 +357,14 @@ def run_notebook(nb, timeout=10, max_num_timeouts=1):
                     add_feedback(c, "Tests passed, you earned {}/{} points".format(points, points))
                 else:
                     add_feedback(c, "Tests failed, you earned {}/{} points".format(0, points))
+                    had_errors = True
                 # Puts the source back removing the hidden tests.
                 remove_hidden_tests(c)
             execution_count += 1
             c.execution_count = execution_count
             if num_timeouts >= max_num_timeouts:
                 break
-    return points_earned
+    return points_earned, had_errors
 
 
 def get_cell_id(c):
@@ -423,7 +426,7 @@ def grade_notebook(master_json, submission_json):
     # Produces a clean notebook by matching the cells of master and submission.
     test_nb = match_notebooks(master_nb, submission_nb)
     # Grades it, obtaining the feedback notebook, and the grade.
-    grade = run_notebook(test_nb)
+    grade, has_errors = run_notebook(test_nb)
     feedback_json = nbformat.writes(test_nb, version=4)
     return grade, feedback_json
 
@@ -516,7 +519,8 @@ def test_run_notebook():
     with open("test_files/TestoutJuly2023source.ipynb") as f:
         s = create_master_notebook(f.read())
         nb = nbformat.reads(s, as_version=4)
-    p = run_notebook(nb)
+    p, er = run_notebook(nb)
+    assert not er
     with open("test_files/run_result.ipynb", "w") as f:
         f.write(nbformat.writes(nb, version=4))
     print("You got {} points".format(p))
@@ -526,7 +530,8 @@ def test_run_bad_notebook():
     with open("test_files/notebook_w_errors.ipynb") as f:
         s = create_master_notebook(f.read())
         nb = nbformat.reads(s, as_version=4)
-    p = run_notebook(nb)
+    p, er = run_notebook(nb)
+    assert er
     with open("test_files/result_w_errors.ipynb", "w") as f:
         f.write(nbformat.writes(nb, version=4))
     print("You got {} points".format(p))
