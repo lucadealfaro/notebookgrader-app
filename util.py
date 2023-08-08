@@ -95,7 +95,7 @@ def upload_to_drive(drive_service, s, drive_file_name, id=None, shared=None):
 def read_from_drive(drive_service, drive_id):
     """Reads a drive id into a string."""
     # https://developers.google.com/drive/api/guides/manage-downloads#python
-    request = drive_service.files.getMedia(fileID=drive_id)
+    request = drive_service.files().get_media(fileId=drive_id)
     file = io.BytesIO()
     downloader = MediaIoBaseDownload(file, request)
     done = False

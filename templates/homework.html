@@ -39,7 +39,7 @@
   <div class="mt-5" v-if="drive_url && submission_open">
     <p >To receive credit for your work, you must submit it for grading before the deadline. You can ask for your work to be graded at most [[=assignment.max_submissions_in_24h_period]] times in a 24-hour period.</p>
     
-    <button class="button is-warning mt-2" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Homework</button>
+    <button class="button is-warning mt-2" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Work</button>
     
     <div class="box has-background-success-light has-text-success-dark" v-if="is_grading">
       Please be patient: the grading can take a few minutes. The page will refresh automatically when grading is done.

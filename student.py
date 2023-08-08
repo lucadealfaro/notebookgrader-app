@@ -127,7 +127,7 @@ def grade_homework(id=None):
     is_valid = now < assignment.submission_deadline
     if homework.drive_id is None:
         return dict(outcome="You do not have an assignment to work on.")
-    if not assignment.available_from < now < assignment.until:
+    if not assignment.available_from < now < assignment.available_until:
         return dict(outcome="The assignment is not available for grading.")
     if num_grades_past_24h >= assignment.max_submissions_in_24h_period:
         return dict(outcome="You have already asked for {} grades in the past 24h.".format(num_grades_past_24h))
