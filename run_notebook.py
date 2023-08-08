@@ -517,7 +517,7 @@ def test_fail():
 def test_run_notebook():
     from .notebook_logic import create_master_notebook
     with open("test_files/TestoutJuly2023source.ipynb") as f:
-        s = create_master_notebook(f.read())
+        s, _ = create_master_notebook(f.read())
         nb = nbformat.reads(s, as_version=4)
     p, er = run_notebook(nb)
     assert not er
@@ -528,7 +528,7 @@ def test_run_notebook():
 def test_run_bad_notebook():
     from .notebook_logic import create_master_notebook
     with open("test_files/notebook_w_errors.ipynb") as f:
-        s = create_master_notebook(f.read())
+        s, _ = create_master_notebook(f.read())
         nb = nbformat.reads(s, as_version=4)
     p, er = run_notebook(nb)
     assert er

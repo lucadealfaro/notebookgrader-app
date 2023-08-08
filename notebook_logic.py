@@ -107,7 +107,7 @@ def create_master_notebook(notebook_string):
     ensure(new_nb, 'metadata')
     ensure(new_nb.metadata, 'notebookgrader')
     new_nb.metadata.notebookgrader.total_points = total_points
-    return nbformat.writes(new_nb, version=4)
+    return nbformat.writes(new_nb, version=4), total_points
 
 def produce_student_version(master_notebook_string):
     """Given a master notebook string, produces the student version.
@@ -123,17 +123,23 @@ def produce_student_version(master_notebook_string):
     return nbformat.writes(nb, version=4)
 
 
+def test_total_points():
+    with open("./test_files/TestoutJuly2023source.json") as f:
+        s0 = f.read()
+    s1, pts = create_master_notebook(s0)
+    assert pts == 65
+
 def test_produce_master_twice():
     with open("./test_files/TestoutJuly2023source.json") as f:
         s0 = f.read()
-    s1 = create_master_notebook(s0)
-    s2 = create_master_notebook(s1)
+    s1, _ = create_master_notebook(s0)
+    s2, _ = create_master_notebook(s1)
     assert s1 == s2
 
 def test_no_solution():
     with open("./test_files/TestoutJuly2023source.json") as f:
         s0 = f.read()
-    s1 = create_master_notebook(s0)
+    s1, _ = create_master_notebook(s0)
     s2 = produce_student_version(s1)
     nb = nbformat.reads(s2, as_version=4)
     for c in nb.cells:
@@ -142,7 +148,7 @@ def test_no_solution():
 def test_no_hidden_tests():
     with open("./test_files/TestoutJuly2023source.json") as f:
         s0 = f.read()
-    s1 = create_master_notebook(s0)
+    s1, _ = create_master_notebook(s0)
     s2 = produce_student_version(s1)
     nb = nbformat.reads(s2, as_version=4)
     for c in nb.cells:

@@ -97,9 +97,10 @@ def upload_notebook(id=None):
     date_string = request.params.date_string or datetime.datetime.utcnow().isoformat()
     # Tries to process the notebook
     try:
-        master_notebook_json = create_master_notebook(notebook_json)
+        master_notebook_json, total_points = create_master_notebook(notebook_json)
     except InvalidCell as e:
         return dict(error=str(e))
+    assignment.max_points = total_points
     # Produces the student version.
     student_notebook_json = produce_student_version(master_notebook_json)
     # Runs the instructor notebook.

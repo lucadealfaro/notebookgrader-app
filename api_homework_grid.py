@@ -54,7 +54,7 @@ class HomeworkGrid(Grid):
                      ),
                 dict(text=r["assignment"]["submission_deadline"].isoformat(),
                      type='datetime'),
-                dict(text=r["homework"]["grade"]),
+                dict(text="{}/{}".format(r["homework"]["grade"], r["assignment"]["max_points"])),
             ]
         )
             for r in result_rows
