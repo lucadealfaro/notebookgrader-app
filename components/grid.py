@@ -49,8 +49,8 @@ class Grid(Fixture):
         # mapped to the api method, that can be used to request pages
         # for the table.
         self.use_id = use_id
-        self.__prerequisites__ = [session]
-        args = list(filter(None, [session, db, auth, self.signer.verify()]))
+        self.__prerequisites__ = [session, self.signer]
+        args = list(filter(None, [session, db, auth, self.signer, self.signer.verify()]))
         f = action.uses(*args)(self.api)
         p = "/".join([self.path, "<id>"]) if use_id else self.path
         action(p, method=["GET"])(f)

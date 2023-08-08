@@ -35,7 +35,7 @@ def share_assignment_with_student(assignment):
     and returning its id."""
     notebook_json = gcs.read(GCS_BUCKET, assignment.student_id_gcs)
     drive_service = build_drive_service()
-    student_drive_id = upload_to_drive(drive_service, notebook_json,
+    student_drive_id = upload_to_drive(drive_service, notebook_json.decode('utf-8'),
                                        assignment.name,
                                        shared=assignment.owner)
     return student_drive_id
@@ -47,7 +47,7 @@ def invite(access_url=None):
         redirect(URL('student-home'))
     # One can try a failed invitation once a minute.
     t = time.time()
-    if t - session['last_failed_invite_time'] < 60:
+    if session.get('last_failed_invite_time') is not None and t - session.get('last_failed_invite_time') < 60:
         redirect(URL('student-home'))
     assignment = db(db.assignment.access_url == access_url).select().first()
     if assignment is None:
@@ -62,7 +62,7 @@ def invite(access_url=None):
     # If the notebook does not exist, or the assignment is not available,
     # students cannot participate.
     now = datetime.datetime.utcnow()
-    if now > assignment.available.until:
+    if now > assignment.available_until:
         flash.set("The assignment has already closed.")
         redirect(URL('student-home'))
     if assignment.student_id_gcs is None or assignment.available_from > now:
@@ -82,7 +82,7 @@ def invite(access_url=None):
 @action('student-home')
 @action.uses('student_home.html', db, flash, auth.user, homework_grid)
 def student_home():
-    return dict(homework_grid=homework_grid())
+    return dict(grid=homework_grid())
 
 @action('homework/<id>')
 @action.uses('homework.html', db, auth.user, student_grades_grid)
