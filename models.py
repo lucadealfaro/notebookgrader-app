@@ -5,7 +5,8 @@ This file defines the database models
 import datetime
 import json
 from .common import db, Field, auth
-from pydal.validators import *
+from pydal.validators import ValidationError, IS_INT_IN_RANGE, Validator, IS_EMAIL
+import re
 from .util import random_id
 from py4web import redirect, URL
 
@@ -69,7 +70,7 @@ db.define_table(
     Field('assignment_id', 'reference assignment'),
     Field('created_on', 'datetime', default=get_time),
     Field('grade', 'float'),
-    Field('has_invalid_grade', 'bool', default=False),
+    Field('has_invalid_grade', 'boolean', default=False),
     Field('drive_id'),
 )
 
@@ -108,3 +109,4 @@ def set_assignment_teachers(assignment_id, teacher_list):
 def can_access_assignment(assignment_id):
     return not db((db.access.assignment_id == assignment_id) &
                   (db.access.user == get_user_email())).isempty()
+

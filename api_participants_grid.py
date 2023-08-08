@@ -73,7 +73,7 @@ class ParticipantsGrid(Grid):
                 dict(text=r["auth_user"]["email"]),
                 dict(html=A(I(_class="fa fa-file-o"), _href=COLAB_BASE + r["homework"]["drive_id"]).xml()),
                 dict(text=r["homework"]["grade"]),
-                dict(html=A(indicator, _href=URL(r["homework-details"]["id"])).xml()),
+                dict(html=A(indicator, _href=URL("teacher-homework-details", r["homework"]["id"])).xml()),
             ])
         return dict(
             page=int(req.page),

@@ -3,7 +3,7 @@ import uuid
 
 from py4web import request, URL
 from pydal.validators import *
-from .my_validators import IS_ISO_DATETIME
+from .my_validators import IS_ISO_DATETIME, IS_REAL_LIST_OF_EMAILS
 
 from .components.vueform import VueForm
 
@@ -19,7 +19,7 @@ FIELDS = [
           requires=[IS_NOT_EMPTY(), IS_LENGTH(STRING_FIELD_LENGTH)],
           help="Name of the assignment."),  # Assignment name.
     Field('instructors', length=STRING_FIELD_LENGTH,
-          requires=IS_LIST_OF_EMAILS(),
+          requires=IS_REAL_LIST_OF_EMAILS(),
           help="List of email addresses of additional instructors.  These instructors will be able to view student submissions, but they will not be able to edit the assignment."),
     Field('available_from', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
           help="Date from which students can access the assignment."),
@@ -80,7 +80,11 @@ class AssignmentFormEdit(AssignmentForm):
         return errors
 
     def process_post(self, record_id, validated_values):
-        set_assignment_teachers(record_id, validated_values['instructors'])
+        new_instructors = validated_values['instructors']
+        user = get_user_email()
+        if user not in new_instructors:
+            new_instructors.append(user)
+        set_assignment_teachers(record_id, new_instructors)
         del validated_values['instructors']
         self.db(self.db.assignment.id == record_id).update(**validated_values)
         return dict(redirect_url=URL(self.redirect_url, record_id))
@@ -112,9 +116,13 @@ class AssignmentFormCreate(AssignmentFormEdit):
             values[f_name] = f.formatter(None)
         return values
 
-    def process_post(self, record_id, validated_values):
-        set_assignment_teachers(record_id, validated_values['instructors'])
+    def process_post(self, null_record_id, validated_values):
+        new_instructors = validated_values['instructors']
         del validated_values['instructors']
         new_id = self.db.assignment.insert(**validated_values)
+        user = get_user_email()
+        if user not in new_instructors:
+            new_instructors.append(user)
+        set_assignment_teachers(new_id, new_instructors)
         return dict(redirect_url=URL(self.redirect_url, new_id))
 

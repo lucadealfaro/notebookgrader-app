@@ -180,7 +180,7 @@ def participants(id=None):
     )
 
 
-@action('homework-details/<id>')
+@action('teacher-homework-details/<id>')
 @action.uses('homework_details.html', db, auth.user, grid_homework_details)
 def homework_details(id=None):
     """Displays the details on a homework: its list of grades."""

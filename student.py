@@ -110,7 +110,7 @@ def homework(id=None):
         grade_homework_url=URL('grade-homework', id, signer=url_signer),
         num_grades_past_24h=num_grades_past_24h,
         obtain_assignment_url=URL('obtain-assignment', id, signer=url_signer),
-        homework_details_url=URL('homework-details', id, signer=url_signer),
+        homework_details_url=URL('student-homework-details', id, signer=url_signer),
     )
 
 @action('grade-homework/<id>', method=["POST"])
@@ -184,7 +184,7 @@ def obtain_assignment(id=None):
     return dict(drive_url=None if drive_id is None else COLAB_BASE + drive_id)
 
 
-@action('homework-details/<id>')
+@action('student-homework-details/<id>')
 @action.uses(db, auth.user, url_signer.verify())
 def homework_details(id=None):
     homework = db.homework[id]

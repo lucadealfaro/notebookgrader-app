@@ -150,7 +150,7 @@ class VueForm(Fixture):
         return values
 
     def get(self, id=None):
-        """Returns the info necessary to dispay the form: a list of fields,
+        """Returns the info necessary to display the form: a list of fields,
         filled with values."""
         # Gets the values from the fields.
         record_id = None if id == "None" else id
