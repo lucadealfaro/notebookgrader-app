@@ -32,6 +32,7 @@ class ParticipantsGrid(Grid):
                              db.homework.grade,
                              db.homework.has_invalid_grade,
                          ],
+                         default_sort=[0, 0, 1, 0, 0, 0],
                          **kwargs)
 
     def api(self, id=None):
@@ -57,8 +58,7 @@ class ParticipantsGrid(Grid):
             query &= ((db.auth_user.first_name.startswith(req.query)) |
                       (db.auth_user.last_name.startswith(req.query)) |
                       (db.auth_user.email.startswith(req.query)))
-        db_rows = db(query).select(orderby=~db.grade.grade_date,
-                                   limitby=req.search_args['limitby']).as_list()
+        db_rows = db(query).select(**req.search_args).as_list()
         has_more, result_rows = self._has_more(db_rows)
         # Now creates the results.
         rows = [header]
@@ -67,14 +67,14 @@ class ParticipantsGrid(Grid):
                 indicator = SPAN(I(_class="fa fa-warning"), _class="icon is-small is-danger")
             else:
                 indicator = SPAN(I(_class="fa fa-check-square"), _class="icon is-success is-small")
-            rows.append([
+            rows.append(dict(cells=[
                 dict(text=r["auth_user"]["first_name"]),
                 dict(text=r["auth_user"]["last_name"]),
                 dict(text=r["auth_user"]["email"]),
-                dict(html=A(I(_class="fa fa-file-o"), _href=COLAB_BASE + r["homework"]["drive_id"]).xml()),
-                dict(text=r["homework"]["grade"]),
-                dict(html=A(indicator, _href=URL("teacher-homework-details", r["homework"]["id"])).xml()),
-            ])
+                dict(html=A(I(_class="fa fa-file"), _target="_blank", _href=COLAB_BASE + r["homework"]["drive_id"]).xml()),
+                dict(text=r["homework"]["grade"], url=URL("teacher-homework-details", r["homework"]["id"], signer=self.signer)),
+                dict(html=A(indicator, _href=URL("teacher-homework-details", r["homework"]["id"], signer=self.signer)).xml()),
+            ]))
         return dict(
             page=int(req.page),
             has_search=True,
