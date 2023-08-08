@@ -19,6 +19,8 @@ let init = (app) => {
         submission_deadline: null,
         date_closes: null,
         timestamp_closes: null,
+        assignment_is_available: null,
+        submission_open: null,
         // Etc.
         drive_url: null,
         obtain_disabled: false,
@@ -82,11 +84,13 @@ let init = (app) => {
             app.vue.submission_deadline = local_deadline.toLocaleString(luxon.DateTime.DATETIME_MED_WITH_WEEKDAY);
             // Closure date.
             let timestamp_closes = luxon.DateTime.fromISO(res.data.available_until, {zone: "UTC"});
-            let local_closes = timestamp_close.setZone(app.time_zone);
+            let local_closes = timestamp_closes.setZone(app.time_zone);
             app.vue.timestamp_closes = timestamp_closes;
             app.vue.date_closes = local_closes.toLocaleString(luxon.DateTime.DATETIME_MED_WITH_WEEKDAY);
             // Drive URL.
             app.vue.drive_url = res.data.drive_url;
+            app.vue.assignment_is_available = Date.now() >= timestamp_available;
+            app.vue.submission_open = Date.now() < timestamp_closes;
         });
     };
 
@@ -94,6 +98,5 @@ let init = (app) => {
     app.init();
 };
 
-// This takes the (empty) app object, and initializes it,
-// putting all the code i
+// This takes the (empty) app object, and initializes it.
 init(app);

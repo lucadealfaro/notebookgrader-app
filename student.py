@@ -100,7 +100,7 @@ def homework(id=None):
              (db.grade.grade_date > now - datetime.timedelta(hours=24)))
     num_grades_past_24h = db(query).count()
     can_grade = homework.drive_id is not None
-    can_grade = can_grade and assignment.available_from < now < assignment.until
+    can_grade = can_grade and assignment.available_from < now < assignment.available_until
     can_grade = can_grade and num_grades_past_24h < assignment.max_submissions_in_24h_period
     return dict(
         homework=homework,
@@ -192,8 +192,8 @@ def homework_details(id=None):
     assignment = db.assignment[homework.assignment_id]
     assert assignment is not None
     return dict(
-        available_from=assignment.available_from,
-        submission_deadline=assignment.submission_deadline,
-        available_until=assignment.available_until,
+        available_from=assignment.available_from.isoformat(),
+        submission_deadline=assignment.submission_deadline.isoformat(),
+        available_until=assignment.available_until.isoformat(),
         drive_url=None if homework.drive_id is None else COLAB_BASE + homework.drive_id
     )
