@@ -46,6 +46,7 @@ class HomeworkDetailsGrid(Grid):
                                    limitby=req.search_args['limitby']).as_list()
         has_more, result_rows = self._has_more(db_rows)
         # Now creates the results.
+        assignment = db.assignment[r["assignment_id"]]
         rows = [header]
         for r in result_rows:
             if r["is_valid"]:
@@ -54,9 +55,9 @@ class HomeworkDetailsGrid(Grid):
                 indicator = SPAN(I(_class="fa fa-warning"), _class="icon is-small is-danger")
             toggle = A(indicator, _href=URL('toggle-grade-validity', r["id"], signer=url_signer))
             rows.append([
-                dict(text=r["grade"]),
+                dict(text="{}/{}".format(r["grade"], assignment.grade)),
                 dict(text=r["grade_date"], type='datetime'),
-                dict(html=A(I(_class="fa fa-file-o"), _href=COLAB_BASE + r["drive_id"]).xml()),
+                dict(html=A(I(_class="fa fa-file"), _target="_blank", _href=COLAB_BASE + r["drive_id"]).xml()),
                 dict(html=toggle),
             ])
         return dict(

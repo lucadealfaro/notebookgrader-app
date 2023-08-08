@@ -32,8 +32,8 @@ class StudentGradesGrid(Grid):
         header = dict(
             is_header=True,
             cells=[
-                dict(text="Graded On"),
                 dict(text="Grade"),
+                dict(text="Graded On"),
                 dict(text="Feedback"),
                 dict(text="Valid", help=GRADE_HELP)
             ],
@@ -50,9 +50,9 @@ class StudentGradesGrid(Grid):
         # Now creates the results.
         rows = [header] + [dict(
             cells=[
+                dict(text="{}/{}".format(r["grade"]["grade"], r["assignment"]["max_points"])),
                 dict(text=r["grade"]["grade_date"].isoformat(), type='datetime'),
-                dict(text=r["grade"]["grade"]),
-                dict(html=A(I(_class="fa fa-file-o"), _href=COLAB_BASE + r["grade"]["drive_id"]).xml()),
+                dict(html=A(I(_class="fa fa-file"), _target="_blank", _href=COLAB_BASE + r["grade"]["drive_id"]).xml()),
                 dict(html=I(_class="fa fa-check").xml() if r["grade"]["is_valid"]
                 else I(_class="fa fa-warning is-danger").xml()),
             ]
