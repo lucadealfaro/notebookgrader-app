@@ -19,6 +19,10 @@ from .models import get_user_email
 
 GRADE_HELP = "Highest valid grade."
 LATE_HELP = "Does the student have a late grade that is not valid?"
+HOMEWORK_HELP = """
+This is the notebook on which the student is working. 
+Be careful if you modify it to let the student know. 
+To see the work that was graded, click on the grade, and follow the links to the feedback."""
 
 class ParticipantsGrid(Grid):
 
@@ -44,7 +48,7 @@ class ParticipantsGrid(Grid):
                 dict(text="First Name", sortable=True),
                 dict(text="Last Name", sortable=True),
                 dict(text="Email", sortable=True),
-                dict(text="Homework"),
+                dict(text="Notebook", help=HOMEWORK_HELP),
                 dict(text="Grade", sortable=True, help=GRADE_HELP),
                 dict(text="Late Grades", sortable=True, help=LATE_HELP),
             ],
@@ -64,9 +68,9 @@ class ParticipantsGrid(Grid):
         rows = [header]
         for r in result_rows:
             if r["homework"]["has_invalid_grade"]:
-                indicator = SPAN(I(_class="fa fa-warning"), _class="icon is-small is-danger")
+                indicator = SPAN(I(_class="fa fa-warning"), _class="icon is-small has-text-danger")
             else:
-                indicator = SPAN(I(_class="fa fa-check-square"), _class="icon is-success is-small")
+                indicator = SPAN(I(_class="fa fa-check-square"), _class="icon has-text-success is-small")
             rows.append(dict(cells=[
                 dict(text=r["auth_user"]["first_name"]),
                 dict(text=r["auth_user"]["last_name"]),

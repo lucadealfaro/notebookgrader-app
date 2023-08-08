@@ -197,7 +197,7 @@ def homework_details(id=None):
     assert assignment is not None
     if not can_access_assignment(assignment.id):
         redirect(URL('teacher-home'))
-    user = db(db.auth_user.email == homework.student).select().firset()
+    user = db(db.auth_user.email == homework.student).select().first()
     return dict(
         assignment=assignment,
         user=user,
@@ -215,10 +215,12 @@ def toggle_grade_validity(id=None):
     assert homework is not None
     grade.update_record(is_valid = not grade.is_valid)
     # Recomputes the highest valid grade.
-    rows = db((db.grade.homework_id == homework.id) & (db.grade.is_valid == True)).select()
-    grades = [r.grade for r in rows] + [0]
-    homework.update_record(grade=max(grades))
-    redirect(URL('homework-details', homework.id))
+    grades = db(db.grade.homework_id == homework.id).select().as_list()
+    grade_list = [r["grade"] for r in grades if r["is_valid"]] + [0]
+    homework.grade = max(filter(None, grade_list))
+    homework.has_invalid_grade = any([(not r["is_valid"]) for r in grades])
+    homework.update_record()
+    redirect(URL('teacher-homework-details', homework.id))
 
 # TODO:
 # - Payments

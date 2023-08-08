@@ -14,11 +14,15 @@
   <!-- Put here your Vue.js template -->
   <h1 class="title">Homework Details</h1>
   
-  <p><a href="[[=URL('teacher-view-assignment', assignment.id)]]">[[=assignment.name]]</a></p>
-  <p>Student: [[=user.first_name]] [[=user.last_name]], [[=user.email]]</p>
-  <p>Student work: [[=A("Student notebook", _href=notebook_url)]]</p>
+  <p><b>Assignment:</b> <a href="[[=URL('participants', assignment.id)]]">[[=assignment.name]]</a></p>
+  <p><b>Student:</b> [[=user.first_name]] [[=user.last_name]], [[=user.email]]</p>
+  <p><b>Student work:</b> <span @mouseover="show_work_help = true" @mouseout="show_work_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span> [[=A("Student notebook", _href=notebook_url)]]</p>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_work_help">
+    <p>This is the notebook on which the student is working. Be careful if you modify it, as you are modifying the student's work possibly without their knowledge or permission.
+    You can find the work that was graded under feedback, in the table below.</p>
+  </div>
   
-  <h2 class="subtitle">Grades Received</h2>
+  <h2 class="subtitle mt-5">Student Grades</h2>
   [[=grid]]
 </div>
 
@@ -32,7 +36,7 @@
   var app = new Vue({
       el: "#vue-target",
       data: {
-          show_homework_help: false,
+          show_work_help: false,
       },
   });
 </script>
