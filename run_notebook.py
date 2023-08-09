@@ -2,6 +2,7 @@
 
 import ast
 import builtins
+import importlib
 import nbformat.v4, nbformat
 import threading
 import traceback
@@ -97,10 +98,10 @@ SAFE_BUILTINS = [
     '__build_class__',
     '__debug__',
     '__doc__',
-    '__import__',
+    # '__import__',
     # '__loader__',
     '__name__',
-    '__package__',
+    # '__package__',
     '__spec__',
     'abs',
     'aiter',
@@ -222,10 +223,19 @@ cleaner = CleanCode()
 def my_setitem(d, i, x):
     d[i] = x
 
+
+
+def safeimporter(name, *args, **kwargs):
+    if name in WHITELISTED_MODULES:
+        return importlib.__import__(name, *args, **kwargs)
+    else:
+        raise IllegalImport("You cannot import module {}".format(name))
+
+
 def get_clean_globals():
     my_builtins = {k: getattr(builtins, k) for k in SAFE_BUILTINS}
     my_globals = dict(__builtins__=my_builtins)
-
+    my_builtins["__import__"] = safeimporter
     return my_globals
 
 
@@ -487,8 +497,25 @@ code5 = """
 import os
 """
 
+code6 = """
+import random
+print(random.random())
+"""
+
+code7 = """
+import random
+from collections import defaultdict
+print(random.random())
+"""
+
+code8 = """
+import random
+__import__("os")
+print(random.random())
+"""
+
 def test_exec():
-    for code in [code1, code2, code3]:
+    for code in [code1, code2, code3, code6, code7]:
         collector = OutputCollector()
         my_globals = get_clean_globals()
         my_globals["__builtins__"]["print"] = collector
@@ -499,7 +526,7 @@ def test_exec():
         print(collector.result())
 
 def test_fail():
-    for code in [code4, code5]:
+    for code in [code4, code5, code8]:
         try:
             collector = OutputCollector()
             my_globals = get_clean_globals()
