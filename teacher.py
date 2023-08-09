@@ -1,4 +1,7 @@
+import csv
 import datetime
+import io
+
 import nbformat
 from .run_notebook import run_notebook
 
@@ -6,7 +9,6 @@ from py4web import action, request, abort, redirect, URL, Flash
 from pydal import Field
 from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
-from py4web.utils.url_signer import URLSigner
 from py4web.utils.form import Form, FormStyleBulma
 from .models import get_user_email, build_drive_service, can_access_assignment
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET
@@ -182,9 +184,30 @@ def participants(id=None):
         redirect(URL('teacher-home'))
     return dict(
         assignment=assignment,
-        grid=grid_participants(id)
+        grid=grid_participants(id),
+        download_url=URL('download-grades', id, signer=url_signer),
     )
 
+@action('download-grades/<id>')
+@action.uses(db, session, url_signer.verify())
+def download_grades(id=None):
+    """Returns a csv file."""
+    s = io.StringIO()
+    fieldnames = ["First Name", "Last Name", "Email", "Grade", "Max Grade"]
+    writer = csv.DictWriter(s, fieldnames=fieldnames)
+    writer.writeheader()
+    assignment = db.assignment[id]
+    filename = assignment.name.replace(" ", "_") + ".csv"
+    for row in db((db.homework.assignment_id == id) &
+                  (db.homework.student == db.auth_user.email)).select():
+        writer.writerow({
+            "First Name": row.auth_user.first_name,
+            "Last Name": row.auth_user.last_name,
+            "Email": row.auth_user.email,
+            "Grade": row.homework.grade,
+            "Max Grade": assignment.max_points,
+        })
+    return dict(csvfile=s.getvalue(), filename=filename)
 
 @action('teacher-homework-details/<id>')
 @action.uses('homework_details.html', db, auth.user, grid_homework_details)
