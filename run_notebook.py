@@ -226,7 +226,8 @@ def my_setitem(d, i, x):
 
 
 def safeimporter(name, *args, **kwargs):
-    if name in WHITELISTED_MODULES:
+    module_name = name.split(".")[0]
+    if module_name in WHITELISTED_MODULES:
         return importlib.__import__(name, *args, **kwargs)
     else:
         raise IllegalImport("You cannot import module {}".format(name))
