@@ -247,4 +247,3 @@ def toggle_grade_validity(id=None):
 
 # TODO:
 # - Payments
-# - Download grades

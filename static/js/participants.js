@@ -22,7 +22,9 @@ let init = (app) => {
 
     app.download = function () {
         axios.get(download_url).then(function (res) {
-            let data_url = URL.createObjectURL(res.data.csvfile);
+            let blob = new Blob([res.data.csvfile],
+                {type: "text/csv"});
+            let data_url = URL.createObjectURL(blob);
             let a = document.createElement('a');
             a.href = data_url;
             a.download = res.data.filename;
