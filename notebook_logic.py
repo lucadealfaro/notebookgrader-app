@@ -63,6 +63,10 @@ def remove_from_cell(cell, delimiters, replacement=None):
 def remove_hidden_tests(cell):
     remove_from_cell(cell, HIDDEN_TESTS)
 
+def remove_all_hidden_tests(nb):
+    for cell in nb.cells:
+        remove_hidden_tests(cell)
+
 def ensure(st, a):
     """Ensures that a structure exists."""
     if a not in st:
@@ -91,6 +95,7 @@ def create_master_notebook(notebook_string):
             meta.id = random_id()
         if c.cell_type == "code":
             meta.is_tests = False
+            meta.is_solution = False
         if is_cell_solution(c):
             meta.readonly = False
             meta.is_solution = True

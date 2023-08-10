@@ -26,6 +26,7 @@ let init = (app) => {
         obtain_disabled: false,
         is_grading: false,
         grading_error: null,
+        grading_outcome: "",
     };
 
     app.time_zone = luxon.DateTime.local().zoneName;
@@ -47,13 +48,14 @@ let init = (app) => {
     app.grade_homework = function () {
         app.vue.is_grading = true;
         axios.post(grade_homework_url, {}).then(function (res) {
-            if (res.data.outcome == "ok") {
-                location.reload();
-            } else {
-                app.vue.is_grading = false;
-                app.vue.grading_error = res.data.outcome;
-            }
+            app.vue.is_grading = false;
+            app.vue.grading_outcome=res.data.outcome;
+            app.vue.grading_error=res.data.is_error;
         })
+    }
+
+    app.do_reload = function () {
+        location.reload();
     }
 
     // This contains all the methods.
@@ -61,6 +63,7 @@ let init = (app) => {
         // Complete as you see fit.
         obtain_assignment: app.obtain_assignment,
         grade_homework: app.grade_homework,
+        do_reload: app.do_reload,
     };
 
     // This creates the Vue instance.

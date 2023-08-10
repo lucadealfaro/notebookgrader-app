@@ -1,9 +1,8 @@
 import csv
 import datetime
 import io
-
 import nbformat
-from .run_notebook import run_notebook
+import requests
 
 from py4web import action, request, abort, redirect, URL, Flash
 from pydal import Field
@@ -11,7 +10,7 @@ from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
 from py4web.utils.form import Form, FormStyleBulma
 from .models import get_user_email, build_drive_service, can_access_assignment
-from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET
+from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, GRADING_URL
 
 from .common import flash, url_signer, gcs
 from .util import random_id, long_random_id, upload_to_drive
@@ -106,9 +105,17 @@ def upload_notebook(id=None):
     # Produces the student version.
     student_notebook_json = produce_student_version(master_notebook_json)
     # Runs the instructor notebook.
-    nb = nbformat.reads(master_notebook_json, as_version=4)
-    points, has_errors = run_notebook(nb)
-    master_notebook_json = nbformat.writes(nb, 4)
+    # Enqueues the request.
+    payload = dict(
+        immediate=True, # Fix later to allow for longer running times.
+        notebook_json=master_notebook_json,
+    )
+    grading_url = GRADING_URL or URL('run-notebook', scheme=True).replace('notebookgrader', 'notebookrunner')
+    r = requests.post(grading_url, json=payload)
+    r.raise_for_status()
+    points = r.json.points
+    has_errors = r.json.had_errors
+    master_notebook_json = r.json.graded_json
     # Puts both versions on GCS.
     if assignment.master_id_gcs is None:
         create_notebooks = True

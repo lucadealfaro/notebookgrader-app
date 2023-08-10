@@ -20,10 +20,11 @@ def get_user_email():
 def get_time():
     return datetime.datetime.utcnow()
 
-def build_drive_service():
+def build_drive_service(user=None):
     # Reads the credentials.
+    user = user or get_user_email()
     user_info = db(
-        db.auth_credentials.email == get_user_email()).select().first()
+        db.auth_credentials.email == user).select().first()
     if not user_info:
         print("No user credentials")
         redirect(URL('index'))
@@ -81,9 +82,20 @@ db.define_table(
     Field('grade_date', 'datetime', default=get_time),
     Field('homework_id', 'reference homework'),
     Field('grade', 'float'),
-    Field('input_id_gcs'), # Location in GCS of what was graded.
     Field('drive_id'), # Location in Drive of feedback
     Field('is_valid', 'boolean', default=False),
+)
+
+db.define_table(
+    'grading_request',
+    Field('homework_id', 'reference homework'),
+    Field('student', default=get_user_email),
+    Field('input_id_gcs'), # Location in GCS of what was graded.
+    Field('created_on', 'datetime', default=get_time),
+    Field('request_nonce', default=random_id),
+    Field('completed', 'boolean', default=False),
+    Field('grade', 'float'),
+    Field('delay', 'float'),
 )
 
 db.commit()

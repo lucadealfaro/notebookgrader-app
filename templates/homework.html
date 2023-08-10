@@ -41,20 +41,23 @@
     
     <button class="button is-warning mt-2" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Work</button>
     
-    <div class="box has-background-success-light has-text-success-dark" v-if="is_grading">
-      Please be patient: the grading can take a few minutes. The page will refresh automatically when grading is done.
+    <div class="box has-background-success-light has-text-success-dark" v-if="grading_outcome && !grading_error">
+      {{grading_outcome}}
     </div>
 
-    <div class="box has-background-danger-light has-text-danger-dark mt-2" v-if="grading_error">
-      {{grading_error}}
+    <div class="box has-background-danger-light has-text-danger-dark mt-2" v-if="grading_outcome && grading_error">
+      {{grading_outcome}}
     </div>
 
   </div>
   [[pass]]
   
-  <h2 class="subtitle mt-5">Your Grades <span @mouseover="show_grades_help = true" @mouseout="show_grades_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
+  <h2 class="subtitle mt-5">Your Grades
+    <span @mouseover="show_grades_help = true" @mouseout="show_grades_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span>
+    <button @click="do_reload" class="button is-small ml-2"><i class="fa fa-refresh"></i></button></h2>
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_grades_help">
-    <p>Below are the grades and feedback you received.  Grades for late submissions are valid only if the instructor marks them so manually.</p>
+    <p>Below are the grades and feedback you received.
+      Grades for late submissions are valid only if the instructor marks them so manually.</p>
   </div>
   
   [[=grid]]

@@ -6,7 +6,7 @@ This is an optional file that defined app level settings such as:
 This file is provided as an example:
 """
 import os
-from py4web.core import required_folder
+from py4web.core import required_folder, URL
 
 # Is this a testing or prod instance?
 IS_TEST = os.getcwd().startswith("/Users/")
@@ -104,6 +104,10 @@ COLAB_BASE = "https://colab.research.google.com/drive/"
 
 if IS_TEST:
     GCS_BUCKET = "notebookgrader-test"
+    GRADING_URL = None
 else:
     GCS_BUCKET = "notebookgrader-prod"
+    GRADING_URL = "https://some.appengine.url"
+
+MIN_TIME_BETWEEN_GRADE_REQUESTS = 12 # Seconds
 

@@ -1,6 +1,6 @@
 import datetime
-import json
-import os
+import nbformat
+import requests
 import time
 
 from py4web import action, request, abort, redirect, URL, Flash
@@ -10,19 +10,14 @@ from .common import db, session, T, cache, auth, logger, authenticated, unauthen
 from py4web.utils.url_signer import URLSigner
 from py4web.utils.form import Form, FormStyleBulma
 from .models import get_user_email
-from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET
-
-# Google imports
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
-import google.oauth2.credentials
+from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, MIN_TIME_BETWEEN_GRADE_REQUESTS
 
 from .common import flash, url_signer, gcs
-from .util import upload_to_drive, read_from_drive, long_random_id
-from .run_notebook import grade_notebook
+from .util import upload_to_drive, read_from_drive, long_random_id, random_id
+from .run_notebook import match_notebooks
+from .notebook_logic import remove_all_hidden_tests
 from .models import build_drive_service
+from .settings import GRADING_URL
 
 from .api_homework_grid import HomeworkGrid
 from .api_grades_grid import StudentGradesGrid
@@ -126,11 +121,26 @@ def grade_homework(id=None):
     num_grades_past_24h = db(query).count()
     is_valid = now < assignment.submission_deadline
     if homework.drive_id is None:
-        return dict(outcome="You do not have an assignment to work on.")
+        return dict(
+            is_error=True,
+            outcome="You do not have an assignment to work on.")
     if not assignment.available_from < now < assignment.available_until:
-        return dict(outcome="The assignment is not available for grading.")
+        return dict(
+            is_error=True,
+            outcome="The assignment is not available for grading.")
     if num_grades_past_24h >= assignment.max_submissions_in_24h_period:
-        return dict(outcome="You have already asked for {} grades in the past 24h.".format(num_grades_past_24h))
+        return dict(
+            is_error=True,
+            outcome="You have already asked for {} grades in the past 24h.".format(num_grades_past_24h))
+    # Checks previous requests for this homework.
+    last_request = db((db.grading_request.homework_id == homework.id) &
+                      (db.grading_request.student == get_user_email())).select(
+        orderby=~db.grading_request.created_on).first()
+    if (last_request is not None and
+            now - last_request.created_on < datetime.timedelta(seconds=MIN_TIME_BETWEEN_GRADE_REQUESTS)):
+        return dict(
+            is_error=True,
+            outcome="You can ask for grading only once every {} seconds.".format(MIN_TIME_BETWEEN_GRADE_REQUESTS))
     # The assignment can be graded.
     # Reads the master copy.
     master_json = gcs.read(GCS_BUCKET, assignment.master_id_gcs)
@@ -141,30 +151,82 @@ def grade_homework(id=None):
     submission_id_gcs = long_random_id()
     gcs.write(GCS_BUCKET, submission_id_gcs, submission_json,
               type="application/json")
-    # Grades the submission.
-    new_grade, feedback_json = grade_notebook(master_json, submission_json)
+    # Creates the grade request.
+    nonce = random_id()
+    db.grading_request.insert(
+        homework_id=homework.id,
+        request_nonce=nonce,
+        input_id_gcs=submission_id_gcs,
+    )
+    db.commit() # So no db work pending.
+    # Matches the notebooks.
+    master_nb = nbformat.reads(master_json, as_version=4)
+    submission_nb = nbformat.reads(submission_json, as_version=4)
+    # Produces a clean notebook by matching the cells of master and submission.
+    test_nb = match_notebooks(master_nb, submission_nb)
+    # Enqueues the grade request.
+    payload = dict(
+        nonce=nonce,
+        notebook_json=nbformat.writes(test_nb, 4)
+    )
+    grading_url = GRADING_URL or URL('run-notebook', scheme=True).replace('notebookgrader', 'notebookrunner')
+    r = requests.post(grading_url, json=payload)
+    r.raise_for_status()
+    return dict(is_error=False,
+                watch=True,
+                outcome="Your request has been enqueued, and a new grade will be available soon.")
+
+
+@action('receive-grade', method=["POST"])
+@action.uses(db)
+def receive_grade():
+    nonce = request.params.nonce
+    graded_json = request.params.graded_json
+    points = request.params.points
+    had_errors = request.params.had_errors
+    grading_request = db(db.grading_request.request_nonce == nonce).select().first()
+    if grading_request is None:
+        return "No request"
+    if grading_request.completed:
+        return "Already done"
+    homework = db.homework[grading_request.homework_id]
+    assignment = db.assignment[homework.assignment_id]
+    now = datetime.datetime.utcnow()
+    # Removes the hidden tests from the feedback.
+    feedback_nb = nbformat.reads(graded_json, as_version=4)
+    remove_all_hidden_tests(feedback_nb)
+    feedback_json = nbformat.writes(feedback_nb, 4)
     # Uploads the feedback.
     feedback_name = "Feedback for {} {}, on {}".format(
         assignment.name, get_user_email(), now.isoformat()
     )
+    drive_service = build_drive_service(user=grading_request.student)
     feedback_id = upload_to_drive(drive_service, feedback_json,
                                   feedback_name, shared=assignment.owner)
+    # We use the time of submission to determine validity.
+    is_valid = grading_request.created_on < assignment.submission_deadline
     db.grade.insert(
+        student=grading_request.student,
         assignment_id=assignment.id,
         grade_date=now,
         homework_id=homework.id,
-        grade=new_grade,
-        input_id_gcs=submission_id_gcs,
+        grade=points,
         drive_id=feedback_id,
         is_valid=is_valid,
     )
     # Updates the grade in the homework.
     if is_valid:
-        homework.grade = max(filter(None, [homework.grade, new_grade]))
+        homework.grade = max(filter(None, [homework.grade, points]))
     else:
         homework.has_invalid_grade = True
     homework.update_record()
-    return dict(outcome="ok")
+    # Marks that the request has been done.
+    grading_request.completed = True
+    grading_request.grade = points
+    grading_request.delay = (now - grading_request.created_on).total_seconds()
+    grading_request.update_record()
+    return "ok"
+
 
 @action('obtain-assignment/<id>')
 @action.uses(db, auth.user, url_signer.verify())
