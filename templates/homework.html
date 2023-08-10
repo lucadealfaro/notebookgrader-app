@@ -14,11 +14,12 @@
   <!-- Put here your Vue.js template -->
   <h1 class="title">[[=assignment.name]] <span @mouseover="show_homework_help = true" @mouseout="show_homework_help = false" class="icon is-small has-text-primary ml-3"><i class="fa fa-info-circle"></i></span></h1>
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_homework_help">
-    <p v-if="drive_url">Please work on the assignment accessible via the button below, and remember to have it graded via the buttons further down before the deadline of {{date_deadline}}.
-    <p v-else>The assignment is not available yet; it will become accessible on {{date_available}}</p>
+    <p v-if="drive_url">Please work on the assignment accessible via the button below, and remember to have it graded before {{submission_deadline}}.
+    <p v-else>The assignment is not available yet; it will become accessible on {{date_available}}.</p>
   </div>
   
-  <p><b>Submission deadline:</b> {{submission_deadline}}</p>
+  <p><b>Grading limit:</b> You can have your assignment graded at most [[=num_grades_past_24h]] times in 24h.</p>
+  <p class="mt-2"><b>Submission deadline:</b> {{submission_deadline}}</p>
   <p class="mt-2"><b>Late submission possible until:</b> <span @mouseover="show_late_help = true" @mouseout="show_late_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span> {{date_closes}}</p>
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_late_help">
     <p>Late submissions are graded, but the grade will not be used unless the instructor manually flags it as valid.</p>
@@ -50,11 +51,15 @@
     </div>
 
   </div>
+  [[else:]]
+  <div class="box has-text-danger-dark has-background-danger-light mt-4">
+    [[=reason]]
+  </div>
   [[pass]]
   
   <h2 class="subtitle mt-5">Your Grades
     <span @mouseover="show_grades_help = true" @mouseout="show_grades_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span>
-    <button @click="do_reload" class="button is-small ml-2"><i class="fa fa-refresh"></i></button></h2>
+<!--    <button @click="do_reload" class="button is-small ml-2"><i class="fa fa-refresh"></i></button></h2>-->
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_grades_help">
     <p>Below are the grades and feedback you received.
       Grades for late submissions are valid only if the instructor marks them so manually.</p>
@@ -70,6 +75,7 @@
     const homework_details_url = "[[=XML(homework_details_url)]]";
     const obtain_assignment_url = "[[=XML(obtain_assignment_url)]]";
     const grade_homework_url = "[[=XML(grade_homework_url)]]";
+    const recent_grade_date_url = "[[=XML(recent_grade_date_url)]]";
 </script>
 <script src="components-bulma/vueform/luxon.min.js"></script>
 <script src="[[=URL('static/components-bulma/grid/grid.js')]]"></script>
