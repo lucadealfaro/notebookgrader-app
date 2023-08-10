@@ -42,7 +42,7 @@
     
     <button class="button is-warning mt-2" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Work</button>
     
-    <div class="box has-background-success-light has-text-success-dark" v-if="grading_outcome && !grading_error">
+    <div class="box has-background-success-light has-text-success-dark mt-2" v-if="grading_outcome && !grading_error">
       {{grading_outcome}}
     </div>
 

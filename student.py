@@ -105,7 +105,7 @@ def homework(id=None):
         can_grade = False
         reason = "You have already had your assignment graded {} times in the last 24h.".format(
             assignment.max_submissions_in_24h_period)
-    # can_grade = True # DEBUG
+    can_grade = True # DEBUG
     return dict(
         homework=homework,
         assignment=assignment,
@@ -148,10 +148,11 @@ def grade_homework(id=None):
         return dict(
             is_error=True,
             outcome="The assignment is not available for grading.")
-    if num_grades_past_24h >= assignment.max_submissions_in_24h_period:
-        return dict(
-            is_error=True,
-            outcome="You have already asked for {} grades in the past 24h.".format(num_grades_past_24h))
+    # DEBUG
+    # if num_grades_past_24h >= assignment.max_submissions_in_24h_period:
+    #     return dict(
+    #         is_error=True,
+    #         outcome="You have already asked for {} grades in the past 24h.".format(num_grades_past_24h))
     # Checks previous requests for this homework.
     last_request = db((db.grading_request.homework_id == homework.id) &
                       (db.grading_request.student == student)).select(

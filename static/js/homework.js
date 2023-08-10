@@ -46,7 +46,7 @@ let init = (app) => {
     };
 
     app.check_new_grade = function (last_grade_date) {
-        app.checker = setinterval(() => {
+        app.checker = setInterval(() => {
             axios.get(recent_grade_date_url).then(function (res) {
                 if (last_grade_date < res.data.last_grade_date) {
                     location.reload();
@@ -55,26 +55,20 @@ let init = (app) => {
         }, 5000);
     };
 
-    app.watch_for_new_grade = function () {
-        // Gets the last grade date.
-        axios.get(recent_grade_date_url).then(function (res) {
-           let last_grade_date = res.data.last_grade_date;
-           app.check_new_grade(last_grade_date);
-        });
-    };
-
     app.grade_homework = function () {
         app.vue.is_grading = true;
         axios.post(grade_homework_url, {}).then(function (res) {
-            app.vue.is_grading = false;
             app.vue.grading_outcome=res.data.outcome;
             app.vue.grading_error=res.data.is_error;
             if (res.data.watch) {
                 // We have to watch for changes.
-                app.watch_for_new_grade();
+                app.check_new_grade(app.last_grade_date);
             } else {
-                // The new grade has arrived.
-                location.reload();
+                app.vue.is_grading = false;
+                if (!res.data.error) {
+                    // The new grade has arrived.
+                    location.reload();
+                }
             }
         })
     }
@@ -119,6 +113,9 @@ let init = (app) => {
             app.vue.drive_url = res.data.drive_url;
             app.vue.assignment_is_available = Date.now() >= timestamp_available;
             app.vue.submission_open = Date.now() < timestamp_closes;
+        });
+        axios.get(recent_grade_date_url).then(function (res) {
+            app.last_grade_date = res.data.last_grade_date;
         });
     };
 
