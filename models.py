@@ -5,7 +5,7 @@ This file defines the database models
 import datetime
 import json
 from .common import db, Field, auth
-from pydal.validators import ValidationError, IS_INT_IN_RANGE, Validator, IS_EMAIL
+from pydal.validators import IS_INT_IN_RANGE
 import re
 from .util import random_id
 from py4web import redirect, URL
@@ -44,6 +44,7 @@ db.define_table(
     'assignment',
     Field('owner', default=get_user_email), # Email of owner.
     Field('name'), # Assignment name.
+    Field('domain_restriction'),
     Field('created_on', 'datetime', default=get_time),
     Field('master_id_gcs'), # Locations of master and student notebooks
     Field('student_id_gcs'), # in gcs and drive.

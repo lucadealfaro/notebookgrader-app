@@ -104,7 +104,7 @@ COLAB_BASE = "https://colab.research.google.com/drive/"
 
 if IS_TEST:
     GCS_BUCKET = "notebookgrader-test"
-    GRADING_URL = None
+    GRADING_URL = "http://localhost:8080"
 else:
     GCS_BUCKET = "notebookgrader-prod"
     GRADING_URL = "https://some.appengine.url"

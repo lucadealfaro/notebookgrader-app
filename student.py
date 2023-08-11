@@ -36,7 +36,7 @@ def share_assignment_with_student(assignment):
     return student_drive_id
 
 @action('invite/<access_url>')
-@action.uses(db, auth.user, flash)
+@action.uses('invite.html', db, auth.user, flash)
 def invite(access_url=None):
     if access_url is None:
         redirect(URL('student-home'))
@@ -52,14 +52,24 @@ def invite(access_url=None):
     membership = db((db.homework.student == get_user_email()) &
                     (db.homework.assignment_id == assignment.id)).select().first()
     if membership is not None:
-        flash.set("You are already participating in this assignment.")
-        redirect(URL('student-home'))
+        return dict(
+            name=assignment.name,
+            message="You are already participating in this assignment.")
+    # Checks for any domain restrictions.
+    if assignment.domain_restriction:
+        user_domain = get_user_email().split("@")[-1]
+        if user_domain != assignment.domain_restriction:
+            dom = assignment.domain_restriction
+            msg = """This assignment is only available to students in the {} domain.
+            To access it, please log out, and log in again using an account of the form
+            yourname@{}. 
+            """.format(dom, dom)
+            return dict(name=assignment.name, message=msg)
     # If the notebook does not exist, or the assignment is not available,
     # students cannot participate.
     now = datetime.datetime.utcnow()
     if now > assignment.available_until:
-        flash.set("The assignment has already closed.")
-        redirect(URL('student-home'))
+        return dict(name=assignment.name, message="The assignment has already closed.")
     if assignment.student_id_gcs is None or assignment.available_from > now:
         # The notebook is not accessible from the student yet.
         student_drive_id = None
@@ -95,17 +105,17 @@ def homework(id=None):
              (db.grade.grade_date > now - datetime.timedelta(hours=24)))
     num_grades_past_24h = db(query).count()
     can_grade = True
+    reason = None
     if homework.drive_id is None:
         can_grade = False
-        no_grade_reason = "You have not submitted anything that can be graded."
+        reason = "You have not submitted anything that can be graded."
     elif not (assignment.available_from < now < assignment.available_until):
         can_grade = False
-        no_grade_reason = "The assignment is not open."
+        reason = "The assignment is not open."
     elif num_grades_past_24h >= assignment.max_submissions_in_24h_period:
         can_grade = False
         reason = "You have already had your assignment graded {} times in the last 24h.".format(
             assignment.max_submissions_in_24h_period)
-    can_grade = True # DEBUG
     return dict(
         homework=homework,
         assignment=assignment,
@@ -148,11 +158,10 @@ def grade_homework(id=None):
         return dict(
             is_error=True,
             outcome="The assignment is not available for grading.")
-    # DEBUG
-    # if num_grades_past_24h >= assignment.max_submissions_in_24h_period:
-    #     return dict(
-    #         is_error=True,
-    #         outcome="You have already asked for {} grades in the past 24h.".format(num_grades_past_24h))
+    if num_grades_past_24h >= assignment.max_submissions_in_24h_period:
+        return dict(
+            is_error=True,
+            outcome="You have already asked for {} grades in the past 24h.".format(num_grades_past_24h))
     # Checks previous requests for this homework.
     last_request = db((db.grading_request.homework_id == homework.id) &
                       (db.grading_request.student == student)).select(
@@ -190,7 +199,8 @@ def grade_homework(id=None):
         # Enqueues the grade request.
         payload = dict(
             nonce=nonce,
-            notebook_json=nbformat.writes(test_nb, 4)
+            notebook_json=nbformat.writes(test_nb, 4),
+            callback_url = URL('receive-grade')
         )
         grading_url = GRADING_URL or URL('run-notebook', scheme=True).replace('notebookgrader', 'notebookrunner')
         r = requests.post(grading_url, json=payload)
@@ -201,7 +211,6 @@ def grade_homework(id=None):
     else:
         # The grading is immediate.
         payload = dict(
-            immediate=True,
             notebook_json=nbformat.writes(test_nb, 4)
         )
         grading_url = GRADING_URL or URL('run-notebook', scheme=True).replace('notebookgrader', 'notebookrunner')

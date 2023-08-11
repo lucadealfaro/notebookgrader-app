@@ -3,7 +3,7 @@ import uuid
 
 from py4web import request, URL
 from pydal.validators import *
-from .my_validators import IS_ISO_DATETIME, IS_REAL_LIST_OF_EMAILS
+from .my_validators import IS_ISO_DATETIME, IS_REAL_LIST_OF_EMAILS, IS_DOMAIN
 
 from .components.vueform import VueForm
 
@@ -18,6 +18,9 @@ FIELDS = [
     Field('name', length=STRING_FIELD_LENGTH, required=True,
           requires=[IS_NOT_EMPTY(), IS_LENGTH(STRING_FIELD_LENGTH)],
           help="Name of the assignment."),  # Assignment name.
+    Field('domain_restriction', length=STRING_FIELD_LENGTH,
+          requires=IS_DOMAIN(),
+          help="If specified, students must use Google accounts from the domain.  For instance, if you specify ucsc.edu as domain restrictions, students must use accounts of the form name@ucsc.edu to participate in the assignment."),
     Field('instructors', length=STRING_FIELD_LENGTH,
           requires=IS_REAL_LIST_OF_EMAILS(),
           help="List of email addresses of additional instructors.  These instructors will be able to view student submissions, but they will not be able to edit the assignment."),

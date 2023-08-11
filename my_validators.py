@@ -66,6 +66,26 @@ class IS_REAL_LIST_OF_EMAILS(Validator):
         return ", ".join(value or [])
 
 
+class IS_DOMAIN(Validator):
+
+    REGEX_DOMAIN = r"[a-zA-z.]+"
+
+    def __init__(self, error_message="Invalid domain, must be a dot-separated string (e.g., ucsc.edu): %s"):
+        self.error_message = error_message
+
+    def validate(self, value, record_id=None):
+        v = value.strip()
+        if re.fullmatch(self.REGEX_DOMAIN, v):
+            return v
+        else:
+            raise ValidationError(
+                self.translator(self.error_message).format(value)
+            )
+
+    def formatter(self, value, row=None):
+        return value
+
+
 def represent_percentage(v, r):
     if v is None:
         return 'None'

@@ -107,15 +107,15 @@ def upload_notebook(id=None):
     # Runs the instructor notebook.
     # Enqueues the request.
     payload = dict(
-        immediate=True, # Fix later to allow for longer running times.
         notebook_json=master_notebook_json,
     )
     grading_url = GRADING_URL or URL('run-notebook', scheme=True).replace('notebookgrader', 'notebookrunner')
     r = requests.post(grading_url, json=payload)
     r.raise_for_status()
-    points = r.json.points
-    has_errors = r.json.had_errors
-    master_notebook_json = r.json.graded_json
+    res = r.json()
+    points = res.get("points")
+    has_errors = res.get("had_errors")
+    master_notebook_json = res.get("graded_json")
     # Puts both versions on GCS.
     if assignment.master_id_gcs is None:
         create_notebooks = True
