@@ -112,3 +112,16 @@ else:
 MIN_TIME_BETWEEN_GRADE_REQUESTS = 12 # Seconds
 
 STUDENT_GRADING_CALLBACK = False
+
+from .private.private_settings import *
+
+# Google Cloud Database
+CLOUD_DB_URI = "google:MySQLdb://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}?unix_socket=/cloudsql/{DB_CONNECTION}".format(
+    DB_USER=DB_USER,
+    DB_NAME=DB_NAME,
+    DB_PASSWORD=DB_PASSWORD,
+    DB_CONNECTION=DB_CONNECTION
+)
+CLOUD_DB_POOL_SIZE = 1
+CLOUD_DB_MIGRATE = True # False # IMPORTANT!
+CLOUD_DB_FAKE_MIGRATE = False
