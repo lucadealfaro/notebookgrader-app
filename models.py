@@ -89,7 +89,7 @@ db.define_table(
 
 db.define_table(
     'grading_request',
-    Field('homework_id', 'reference homework'),
+    Field('homework_id', 'reference homework', ondelete="SET NULL"),
     Field('student', default=get_user_email),
     Field('input_id_gcs'), # Location in GCS of what was graded.
     Field('created_on', 'datetime', default=get_time),

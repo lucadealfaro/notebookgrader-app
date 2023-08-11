@@ -34,7 +34,7 @@ from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
 from py4web.utils.form import Form, FormStyleBulma
 from .models import get_user_email
-from .settings import APP_FOLDER, COLAB_BASE
+from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET
 
 # Google imports
 from googleapiclient.discovery import build
@@ -43,7 +43,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 import google.oauth2.credentials
 
-from .common import url_signer, flash
+from .common import url_signer, flash, gcs
 
 @action('index')
 @action.uses('index.html', db, auth, url_signer, flash)
@@ -79,12 +79,24 @@ def delete_personal_information():
             # Deletes all user info.
             email = auth.current_user.get('email') if auth.current_user else None
             if email is not None:
+                # Deletes the assignments owned.
+                for row in db(db.assignment.owner == email).select():
+                    delete_gcs(row.master_id_gcs)
+                    delete_gcs(row.student_id_gcs)
+                    # NOT the drive ones.
+                db(db.assignment.owner == email).delete()
+                # Deletes the things one can access (but not the things).
+                db(db.access.user == email).delete()
+                # Deletes the homework.  This also deletes all grades.
+                db(db.homework.student == email).delete()
+                # We leave the grading requests, as these are our logs and are
+                # necessary to track abuse, but we delete the grades.
+                db(db.grading_request.student == email).update(grade=None)
                 # Credentials for Google.
                 db(db.auth_credentials.email == email).delete()
                 # Login information.
                 db(db.auth_user.email == email).delete()
-                # INSERT HERE DELETION FROM ALL OTHER TABLES.
-                # Finally, we delete teh session information.
+                # Finally, we delete the session information.
                 # This logs the user out.
                 auth.session.clear()
                 flash.set("All your personal information has been deleted.", sanitize=True)
@@ -95,6 +107,12 @@ def delete_personal_information():
             redirect(URL('delete_personal_information'))
         redirect(URL('index'))
     return dict(form=form)
+
+
+def delete_gcs(gcs_id):
+    """Deletes an id from GCS."""
+    if gcs_id is not None:
+        gcs.delete(GCS_BUCKET, gcs_id)
 
 
 @action('share', method=["GET", "POST"])

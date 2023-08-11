@@ -107,7 +107,7 @@ if IS_TEST:
     GRADING_URL = "http://localhost:8080"
 else:
     GCS_BUCKET = "notebookgrader-prod"
-    GRADING_URL = "https://some.appengine.url"
+    GRADING_URL = "https://us-west1-notebookgrader.cloudfunctions.net/grade-notebook"
 
 MIN_TIME_BETWEEN_GRADE_REQUESTS = 12 # Seconds
 
