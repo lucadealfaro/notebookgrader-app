@@ -10,7 +10,6 @@ import nqgcs
 from py4web import Session, Cache, Translator, Flash, DAL, Field, action
 from py4web.utils.mailer import Mailer
 from py4web.utils.auth import Auth
-from py4web.utils.downloader import downloader
 from pydal.tools.tags import Tags
 from py4web.utils.factories import ActionFactory
 from py4web.utils.form import FormStyleBulma
@@ -200,20 +199,6 @@ if settings.OAUTH2OKTA_CLIENT_ID:
         )
     )
 
-# #######################################################
-# Define a convenience action to allow users to download
-# files uploaded and reference by Field(type='upload')
-# #######################################################
-if settings.UPLOAD_FOLDER:
-    @action('download/<filename>')
-    @action.uses(db)
-    def download(filename):
-        return downloader(db, settings.UPLOAD_FOLDER, filename)
-    # To take advantage of this in Form(s)
-    # for every field of type upload you MUST specify:
-    #
-    # field.upload_path = settings.UPLOAD_FOLDER
-    # field.download_url = lambda filename: URL('download/%s' % filename)
 
 # #######################################################
 # Optionally configure celery

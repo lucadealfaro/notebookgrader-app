@@ -26,10 +26,10 @@ DB_FAKE_MIGRATE = False  # maybe?
 STATIC_FOLDER = required_folder(APP_FOLDER, "static")
 
 # location where to store uploaded files:
-UPLOAD_FOLDER = required_folder(APP_FOLDER, "uploads")
+# UPLOAD_FOLDER = required_folder(APP_FOLDER, "uploads")
 
-# send email on regstration
-VERIFY_EMAIL = True
+# send email on registration
+VERIFY_EMAIL = False
 
 # account requires to be approved ?
 REQUIRES_APPROVAL = False
