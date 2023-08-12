@@ -13,11 +13,11 @@ from .models import get_user_email
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, MIN_TIME_BETWEEN_GRADE_REQUESTS
 
 from .common import flash, url_signer, gcs
-from .util import upload_to_drive, read_from_drive, long_random_id, random_id
+from .util import upload_to_drive, read_from_drive, long_random_id, random_id, grading_request
 from .run_notebook import match_notebooks
 from .notebook_logic import remove_all_hidden_tests
 from .models import build_drive_service
-from .settings import GRADING_URL, STUDENT_GRADING_CALLBACK
+from .settings import STUDENT_GRADING_CALLBACK
 
 from .api_homework_grid import HomeworkGrid
 from .api_grades_grid import StudentGradesGrid
@@ -202,9 +202,7 @@ def grade_homework(id=None):
             notebook_json=nbformat.writes(test_nb, 4),
             callback_url = URL('receive-grade')
         )
-        grading_url = GRADING_URL or URL('run-notebook', scheme=True).replace('notebookgrader', 'notebookrunner')
-        r = requests.post(grading_url, json=payload)
-        r.raise_for_status()
+        r = grading_request(payload)
         return dict(is_error=False,
                     watch=True,
                     outcome="Your request has been enqueued, and a new grade will be available soon.")
@@ -213,9 +211,7 @@ def grade_homework(id=None):
         payload = dict(
             notebook_json=nbformat.writes(test_nb, 4)
         )
-        grading_url = GRADING_URL or URL('run-notebook', scheme=True).replace('notebookgrader', 'notebookrunner')
-        r = requests.post(grading_url, json=payload)
-        r.raise_for_status()
+        r = grading_request(payload)
         res = r.json()
         points = res.get("points")
         notebook_json = res.get("graded_json")

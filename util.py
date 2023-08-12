@@ -2,14 +2,16 @@ import io
 import re
 
 import hashlib
-import json
+import requests
 import uuid
 
 
-from googleapiclient.discovery import build
-import google.oauth2.credentials
-from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload, MediaIoBaseDownload
+import google.auth.transport.requests
+import google.oauth2.id_token
 
+from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
+
+from .settings import IS_TEST, GRADING_URL
 
 email_split_pattern = re.compile('[,\s]+')
 whitespace = re.compile('\s+$')
@@ -103,3 +105,15 @@ def read_from_drive(drive_service, drive_id):
         status, done = downloader.next_chunk()
     return file.getvalue()
 
+
+def grading_request(payload):
+    if IS_TEST:
+        r = requests.post(GRADING_URL, json=payload)
+    else:
+        # Generates the auth token.
+        auth_req = google.auth.transport.requests.Request()
+        id_token = google.oauth2.id_token.fetch_id_token(auth_req, GRADING_URL)
+        headers = {"Authorization": "Bearer {}".format(id_token)}
+        r = requests.post(GRADING_URL, headers=headers, json=payload)
+    r.raise_for_status()
+    return r

@@ -10,10 +10,10 @@ from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
 from py4web.utils.form import Form, FormStyleBulma
 from .models import get_user_email, build_drive_service, can_access_assignment
-from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, GRADING_URL
+from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET
 
 from .common import flash, url_signer, gcs
-from .util import random_id, long_random_id, upload_to_drive
+from .util import random_id, long_random_id, upload_to_drive, grading_request
 from .notebook_logic import create_master_notebook, produce_student_version, InvalidCell
 
 from .api_assignment_form import AssignmentFormCreate, AssignmentFormEdit, AssignmentFormView
@@ -109,9 +109,7 @@ def upload_notebook(id=None):
     payload = dict(
         notebook_json=master_notebook_json,
     )
-    grading_url = GRADING_URL or URL('run-notebook', scheme=True).replace('notebookgrader', 'notebookrunner')
-    r = requests.post(grading_url, json=payload)
-    r.raise_for_status()
+    r = grading_request(payload)
     res = r.json()
     points = res.get("points")
     has_errors = res.get("had_errors")
