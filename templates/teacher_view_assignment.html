@@ -31,7 +31,7 @@
   
   <h2 class="subtitle mt-2">Access URL <span @mouseover="show_access_help = true" @mouseout="show_access_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_access_help">
-    <p>This URL can be given to students to access the assignment.
+    <p>Students can use this URL to join the assignment.
       If you regenerate it, students with the old URL will no longer be able to join the assignment.</p>
   </div>
   <p><span class="box is-family-monospace is-size-7">{{access_url}}</span>
@@ -44,7 +44,7 @@
     <h2 class="subtitle mt-5">Notebook <span @mouseover="show_notebook_help = true" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
     <div class="box has-background-primary-light has-text-primary-dark" v-if="show_notebook_help">
       <p>To prepare the test for the students, you need to upload a notebook <a href="[[=URL('notebook-guidelines')]]">formatted according to the NotebookGrader guidelines</a>. </p>
-      <p class="mt-2">After uploading the notebook, please check the instructor version that is produced for accuracy.</p>
+      <p class="mt-2">After uploading the notebook, please check the instructor version that is produced and check for errors.</p>
       <p class="mt-2">You can re-upload the notebook at any time before the test starts: the test will use the last notebook you uploaded.</p>
       <p class="mt-2">Once the test has started (once the notebook is available to the students), you can only re-upload a notebook that is obtained from the instructor version below, and that is identical to that notebook except possibly for some hidden test. This is to ensure that all students work on the same version of the test.</p>
     </div>
