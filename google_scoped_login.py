@@ -63,7 +63,7 @@ class GoogleScopedLogin(object):
             Field('email'),
             Field('name'), # First and last names, all together.
             Field('profile_pic'), # URL of profile pic.
-            Field('credentials') # Credentials for access, stored in Json for generality.
+            Field('credentials', 'text') # Credentials for access, stored in Json for generality.
         ])
 
 

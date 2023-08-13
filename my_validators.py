@@ -74,7 +74,11 @@ class IS_DOMAIN(Validator):
         self.error_message = error_message
 
     def validate(self, value, record_id=None):
+        if value is None:
+            return None
         v = value.strip()
+        if not v:
+            return None
         if re.fullmatch(self.REGEX_DOMAIN, v):
             return v
         else:
