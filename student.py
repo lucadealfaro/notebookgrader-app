@@ -10,14 +10,14 @@ from .common import db, session, T, cache, auth, logger, authenticated, unauthen
 from py4web.utils.url_signer import URLSigner
 from py4web.utils.form import Form, FormStyleBulma
 from .models import get_user_email
-from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, MIN_TIME_BETWEEN_GRADE_REQUESTS
+from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, GCS_SUBMISSIONS_BUCKET
+from .settings import STUDENT_GRADING_CALLBACK, MIN_TIME_BETWEEN_GRADE_REQUESTS
 
 from .common import flash, url_signer, gcs
 from .util import upload_to_drive, read_from_drive, long_random_id, random_id, grading_request
 from .run_notebook import match_notebooks
 from .notebook_logic import remove_all_hidden_tests
 from .models import build_drive_service
-from .settings import STUDENT_GRADING_CALLBACK
 
 from .api_homework_grid import HomeworkGrid
 from .api_grades_grid import StudentGradesGrid
@@ -179,7 +179,7 @@ def grade_homework(id=None):
     submission_json = read_from_drive(drive_service, homework.drive_id)
     # Saves the submission json, to have a record of what has been graded.
     submission_id_gcs = long_random_id()
-    gcs.write(GCS_BUCKET, submission_id_gcs, submission_json,
+    gcs.write(GCS_SUBMISSIONS_BUCKET, submission_id_gcs, submission_json,
               type="application/json")
     # Matches the notebooks.
     master_nb = nbformat.reads(master_json, as_version=4)
