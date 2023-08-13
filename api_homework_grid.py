@@ -16,8 +16,9 @@ from .models import get_user_email
 
 GRADE_HELP = """
 The grade shown here is the highest valid grade. 
-A grade is valid if it has been assigned before the due date, 
-or if the instructor has manually flagged it as valid
+If the grade is shown as None, you do not have a (valid) grade
+for this assignment. 
+Click on the assignment to see the details. 
 """
 class HomeworkGrid(Grid):
 
