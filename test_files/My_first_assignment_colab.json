@@ -1,0 +1,970 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "nbgrader": {
+          "grade": false,
+          "grade_id": "cell-fb44849a3bfbe66e",
+          "locked": true,
+          "schema_version": 3,
+          "solution": false
+        },
+        "notebookgrader": {
+          "id": "ba24b4736671021cbff888a8c71a36b6acc48222",
+          "readonly": true
+        },
+        "id": "1lwRfD_tRXnd"
+      },
+      "source": [
+        "# CSE 20 Testout, July 2023\n",
+        "\n",
+        "## Submission Instructions\n",
+        "\n",
+        "Please download the notebook file via [File > Download > Download .ipynb] and **upload it to [this form](https://docs.google.com/forms/d/e/1FAIpQLSeet0nV7dD_polFOq_K-6Pkw71Byh6g2uhIO82sUGsnrLGODA/viewform?usp=sf_link).**  \n",
+        "\n",
+        "## Exam Instructions\n",
+        "\n",
+        "### Starting your work\n",
+        "\n",
+        "This notebook is shared with you read-only.  To work on it, you need to make a copy, via File > Save a copy to Drive.  \n",
+        "\n",
+        "### Question format\n",
+        "\n",
+        "For each question, there is:\n",
+        "\n",
+        "* A text description of the problem.\n",
+        "* One or more places where you have to insert your solution.  You need to complete every place marked:\n",
+        "\n",
+        "    `# YOUR CODE HERE`\n",
+        "    \n",
+        "    and you should not modify any other place.\n",
+        "* One or more test cells.  Each cell is worth some number of points, marked at the top.  You should not modify these tests cells.  The tests pass if no error is printed out: when there is a statement that says, for instance:\n",
+        "\n",
+        "    `assert x == 2`\n",
+        "    \n",
+        "    then the test passes if `x` has value 2, and fails (raises an exception) otherwise.\n",
+        "\n",
+        "* **Please do not delete or add cells!** The test is autograded, and if you modify the test by adding or deleting cells, even if you re-add cells you delete, you may not receive credit.\n",
+        "\n",
+        "* **Please do not import non-standard modules.** You do not need any, and if you import a module that is not available in the grading environment, you code will fail. You can use any module in the [Python Standard Library](https://docs.python.org/3/library/).\n",
+        "\n",
+        "* **Write your solution only in the solution cell.** Write your solution only in the cell with `# YOUR CODE HERE`; if you need import statements, write them in the same cell (for instance, at the top). Any modifications you do to other cells will be discarded while grading.\n",
+        "\n",
+        "* You can write out print statements in your code, to help you test/debug it. But remember: the code is graded on the basis of what it returns, and not on the basis of what it prints.\n",
+        "\n",
+        "### Solve the problems\n",
+        "\n",
+        "If some tests break (raise an exception), it means that there is some error in your code, and you may want to fix it if you can before submitting your solution.\n",
+        "\n",
+        "On the other hand, even if all tests pass, this does not necessarily mean that you will get full credit.  During grading, we will check your code against additional tests, to ensure that your code solves the true problem, rather than being hard-coded to solve the examples you see.\n",
+        "\n",
+        "For instance, suppose we ask you to write a function `primes(n)` that outputs all prime numbers no larger than `n`.  In the assignment, you may see tests for `primes(10)` and `primes(20)`; these tests are there to help you develop the code. During grading, we may include additional tests, such as one for `primes(100)`, to check that your code works on general inputs.\n",
+        "\n",
+        "So focus on solving the problems, and treat the tests simply as an aid.\n",
+        "\n",
+        "### Hints\n",
+        "\n",
+        "* Your code is graded according to what it _returns_, not according to what it _prints_.\n",
+        "* A statement `assert x == y` will check that `x == y`, and raise an exception if `x` is different from `y`.  We use these statements to test your code.  If they do raise an exception, it means there is something wrong with your code.\n",
+        "* If you work with Colab, occasionally you may get disconnected; this happens especially if you are inactive.  In that case, you need to rerun the notebook from the beginning, as the server has \"forgotten\" its state.\n",
+        "* Colab keeps a revision history of your work (`[File > Revision history]`), so if something happens, your work should not be lost.\n",
+        "\n",
+        "### Submitting your work\n",
+        "\n",
+        "Before you turn this problem in, make sure everything runs as expected. First, **restart the kernel** (in the menubar, select Kernel$\\rightarrow$Restart) and then **run all cells** (in the menubar, select Cell$\\rightarrow$Run All).\n",
+        "\n",
+        "**You have three hours to complete this exam (unless you requested an accommodation).** The deadline is 3pm PDT, September 6, 2022.\n",
+        "\n",
+        "Note: if you requested an accommodation that gives you 2x time, the deadline will be 6pm PDT, and so forth.\n",
+        "\n",
+        "**You can submit multiple times:** If you click multiple times on the form link, you can submit multiple times.  The last submission that is not late will be graded.  If you do submit multiple times, please be extra careful to submit the latest version of your work.\n",
+        "\n",
+        "### Code of Conduct\n",
+        "\n",
+        "* Work on the test by yourself.\n",
+        "* You can search documentation on the web, on sites such as the Python documentation sites, Stackoverflow, and similar, and you can use the results.\n",
+        "* You cannot share your work with others or solicit their help.\n",
+        "* **If you cheat, you cheat only yourself.  You will end up in a higher-level class without the proper background.  It is in your interest to take this test honestly.**\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "nbgrader": {
+          "grade": false,
+          "grade_id": "cell-2f64d09d4c99ab15",
+          "locked": true,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "db65a0dcc49149a6a8e98fc121e00dd535919087",
+          "readonly": true
+        },
+        "id": "MIWmwBwTRXng"
+      },
+      "source": [
+        "## Question 1\n",
+        "\n",
+        "Write a function `split_list` that, given a list `l`, splits `l` into two smaller lists: the list consisting of the even-position elements of `l`, and the list consisting of the odd-position elements of `l`.  For instance,\n",
+        "\n",
+        "    split_list(['a', 'b', 'c', 'd', 'e'])\n",
+        "\n",
+        "should give as result:\n",
+        "\n",
+        "    ['a', 'c', 'e'], ['b', 'd']\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": false,
+          "grade_id": "cell-d6cdd49835a10972",
+          "locked": false,
+          "schema_version": 3,
+          "solution": true,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "4462b3fdd61cd708de307c4ddca00df3ee1159be",
+          "is_solution": true,
+          "is_tests": false,
+          "readonly": false
+        },
+        "id": "e2a11VljRXnh"
+      },
+      "outputs": [],
+      "source": [
+        "def split_list(l):\n",
+        "    \"\"\"Splits the list l into the two list of elements appearing\n",
+        "    in the even positions of l, and in the odd positions of l.\"\"\"\n",
+        "    ### YOUR SOLUTION HERE"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": true,
+          "grade_id": "cell-122e22c86fba7535",
+          "locked": true,
+          "points": 5,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "441a079453c61d32c43dd2e2e24c72b66a6f711d",
+          "is_solution": false,
+          "is_tests": true,
+          "readonly": true,
+          "test_points": 5
+        },
+        "id": "zlvWewfkRXnj"
+      },
+      "outputs": [],
+      "source": [
+        "# Tests 5 points\n",
+        "def assert_eq(a, b):\n",
+        "    assert a == b, \"{} != {}\".format(a, b)\n",
+        "\n",
+        "assert_eq(split_list([1, 2, 3, 4]), ([1, 3], [2, 4]))\n",
+        "assert_eq(split_list(['a', 'b', 'c', 'd', 'e']), (['a', 'c', 'e'], ['b', 'd']))\n",
+        "assert_eq(split_list([]), ([], []))\n",
+        "\n",
+        "\n",
+        "print(\"All tests pass!\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "nbgrader": {
+          "grade": false,
+          "grade_id": "cell-de9b87722ea847a0",
+          "locked": true,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "cbad78194830a1256a134f74cfb3cfd8482df9a8",
+          "readonly": true
+        },
+        "id": "Sd6O8CLzRXnj"
+      },
+      "source": [
+        "## Question 2\n",
+        "\n",
+        "Write a function `merge_lists` that undoes the previous split, so that:\n",
+        "\n",
+        "    merge_lists(['a', 'c', 'e'], ['b', 'd'])\n",
+        "\n",
+        "gives as result\n",
+        "\n",
+        "    ['a', 'b', 'c', 'd', 'e']"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": false,
+          "grade_id": "cell-c77964d9b1c5bcf6",
+          "locked": false,
+          "schema_version": 3,
+          "solution": true,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "91e365535070a9917a33ba8729f60b80061a954b",
+          "is_solution": true,
+          "is_tests": false,
+          "readonly": false
+        },
+        "id": "EMbzsJJXRXnk"
+      },
+      "outputs": [],
+      "source": [
+        "def merge_lists(l1, l2):\n",
+        "    \"\"\"Merge the lists l1 and l2, picking alternating elements\n",
+        "    from the lists, starting from l1.\"\"\"\n",
+        "    # You don't need to worry about lists of the wrong lengths.\n",
+        "    assert len(l2) <= len(l1) <= len(l2) + 1\n",
+        "    ### YOUR SOLUTION HERE"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": true,
+          "grade_id": "cell-c72e2966719c56f2",
+          "locked": true,
+          "points": 5,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "19c0ee4eff20c20cb60003783980659172db30f5",
+          "is_solution": false,
+          "is_tests": true,
+          "readonly": true,
+          "test_points": 5
+        },
+        "id": "oiRZYFmyRXnl"
+      },
+      "outputs": [],
+      "source": [
+        "# Tests 5 points\n",
+        "def assert_eq(a, b):\n",
+        "    assert a == b, \"{} != {}\".format(a, b)\n",
+        "\n",
+        "# Same length.\n",
+        "assert_eq(merge_lists(['a', 'b', 'c'], ['d', 'e', 'f']),\n",
+        "          ['a', 'd', 'b', 'e', 'c', 'f'])\n",
+        "\n",
+        "# Longer by one.\n",
+        "assert_eq(merge_lists(['a', 'b', 'c'], ['d', 'e']),\n",
+        "          ['a', 'd', 'b', 'e', 'c'])\n",
+        "\n",
+        "print(\"All tests pass!\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "nbgrader": {
+          "grade": false,
+          "grade_id": "cell-6cf812030edff836",
+          "locked": true,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "0715f5daf7aa406b3397a13771b254cfde2b71de",
+          "readonly": true
+        },
+        "id": "CS3oxDFJRXnl"
+      },
+      "source": [
+        "Now for a bit of random testing."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": true,
+          "grade_id": "cell-62144e13728f0d43",
+          "locked": true,
+          "points": 5,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "9728e002834c7acc3e386d18e2da3039f4b074d3",
+          "is_solution": false,
+          "is_tests": true,
+          "readonly": true,
+          "test_points": 5
+        },
+        "id": "4RwJJN9nRXnm"
+      },
+      "outputs": [],
+      "source": [
+        "# Tests 5 points\n",
+        "\n",
+        "import random\n",
+        "\n",
+        "def assert_eq(a, b):\n",
+        "    assert a == b, \"{} != {}\".format(a, b)\n",
+        "\n",
+        "for _ in range(100):\n",
+        "    l = random.choices(range(100), k=random.randint(0, 50))\n",
+        "    l1, l2 = split_list(l)\n",
+        "    assert len(l1) == len(l2) or len(l1) == len(l2) + 1\n",
+        "    assert_eq(l, merge_lists(l1, l2))\n",
+        "\n",
+        "print(\"All tests pass!\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "nbgrader": {
+          "grade": false,
+          "grade_id": "cell-8fdafe663f72c4a9",
+          "locked": true,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "66950d81a5e5f590ccc3f956599da6164f1d3f3a",
+          "readonly": true
+        },
+        "id": "Cdoa_95XRXnn"
+      },
+      "source": [
+        "## Question 2: List Compression\n",
+        "\n",
+        "Consider a list containing repeated elements, such as:\n",
+        "\n",
+        "    ['a', 'a', 'b', 'b', 'b', 'c', 'd', 'd', 'd', 'd']\n",
+        "    \n",
+        "To save space, it may be convenient to represent the list as a list of pairs _(n. of repetitions, element),_ rather than as a list of elements.  \n",
+        "In this representation, the list above would be:\n",
+        "\n",
+        "    [(2, 'a'), (3, 'b'), (1, 'c'), (4, 'd')]\n",
+        "\n",
+        "meaning:\n",
+        "\n",
+        "* 2 repetitions of 'a'\n",
+        "* 3 repetitions of 'b'\n",
+        "* 1 repetition of 'c'\n",
+        "* 4 repetitions of 'd'\n",
+        "\n",
+        "Precisely, we say that a _compressed list_ is a list consisting of pairs $(n, a)$, each indicating that element $a$ is repeated $n$ consecutive times.  \n",
+        "\n",
+        "We ask you to write two functions, `compress` and `decompress`, that compress and decompress a list to/from such a representation.  Of course, you should produce efficient representations, so that:\n",
+        "\n",
+        "* There are no $(0, a)$ elements in the compressed list (zero occurrences don't matter),\n",
+        "* If the list contains $\\ldots, (n, a), (m, b), \\ldots$, then $a \\neq b$, or else you could replace the two elements by $(n+m, a)$.\n",
+        "\n",
+        "The second point implies that you should not compress the list `['a', 'a', 'b']` into `[(1, 'a'), (1, 'a'), (1, 'b')]`; you should instead compress it into `[(2, 'a'), (1, 'b')]`."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": false,
+          "grade_id": "cell-5b8c436d1544bd35",
+          "locked": false,
+          "schema_version": 3,
+          "solution": true,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "cee0ec0a13cf74419cf9bafec784e420bf42467e",
+          "is_solution": true,
+          "is_tests": false,
+          "readonly": false
+        },
+        "id": "ozb7NpmqRXno"
+      },
+      "outputs": [],
+      "source": [
+        "def compress(l):\n",
+        "    \"\"\"Compresses a list into a list of pairs (num_repetitions, element).\"\"\"\n",
+        "    ### YOUR SOLUTION HERE"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": true,
+          "grade_id": "cell-e9d9d53b26cd3d4c",
+          "locked": true,
+          "points": 5,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "30ac7ade2b48749afc5b6f2654164b7bee17481c",
+          "is_solution": false,
+          "is_tests": true,
+          "readonly": true,
+          "test_points": 5
+        },
+        "id": "5VV34NjfRXno"
+      },
+      "outputs": [],
+      "source": [
+        "# Tests 5 points.\n",
+        "\n",
+        "def assert_eq(a, b):\n",
+        "    assert a == b, \"{} != {}\".format(a, b)\n",
+        "\n",
+        "# Let us test simple cases first.  These tests should pass (not print an error):\n",
+        "assert_eq(compress([]), [])\n",
+        "assert_eq(compress(['a']), [(1, 'a')])\n",
+        "assert_eq(compress(['a', 'a']), [(2, 'a')])\n",
+        "\n",
+        "\n",
+        "print(\"All tests pass!\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": true,
+          "grade_id": "cell-dde1de5680e4661e",
+          "locked": true,
+          "points": 5,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "10cd6d012414c94239ee6148ca3a09270964d218",
+          "is_solution": false,
+          "is_tests": true,
+          "readonly": true,
+          "test_points": 5
+        },
+        "id": "WI7eUHrqRXno"
+      },
+      "outputs": [],
+      "source": [
+        "# Tests 5 points.\n",
+        "\n",
+        "def assert_eq(a, b):\n",
+        "    assert a == b, \"{} != {}\".format(a, b)\n",
+        "\n",
+        "# Now some more complicated cases.\n",
+        "assert_eq(compress([1, 2, 2, 3, 3, 3, 0, 'cat']), [(1, 1), (2, 2), (3, 3), (1, 0), (1, 'cat')])\n",
+        "\n",
+        "print(\"All tests pass!\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": false,
+          "grade_id": "cell-504e6704ee5aaf0e",
+          "locked": false,
+          "schema_version": 3,
+          "solution": true,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "be2e9e2b8ad97da129dcf7fccc5271bd95dd7e68",
+          "is_solution": true,
+          "is_tests": false,
+          "readonly": false
+        },
+        "id": "rlwL86uiRXno"
+      },
+      "outputs": [],
+      "source": [
+        "def decompress(c):\n",
+        "    \"\"\"Decompresses the compressed list c in to the list of its elements.\"\"\"\n",
+        "    ### YOUR SOLUTION HERE"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": true,
+          "grade_id": "cell-3109cc25958fe857",
+          "locked": true,
+          "points": 5,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "c1625cd5a9b236819064952237bd2129397c2386",
+          "is_solution": false,
+          "is_tests": true,
+          "readonly": true,
+          "test_points": 5
+        },
+        "id": "89Q2biOMRXnp"
+      },
+      "outputs": [],
+      "source": [
+        "# Tests 5 points.\n",
+        "\n",
+        "def assert_eq(a, b):\n",
+        "    assert a == b, \"{} != {}\".format(a, b)\n",
+        "\n",
+        "# Here are some simple tests.\n",
+        "assert_eq(decompress([]), [])\n",
+        "assert_eq(decompress([(1, 'a')]), ['a'])\n",
+        "assert_eq(decompress([(2, 'a')]), ['a', 'a'])\n",
+        "print(\"All tests pass!\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": true,
+          "grade_id": "cell-03efa63a8c189d78",
+          "locked": true,
+          "points": 5,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "19c2e02fc675d1f603bde6d3113a8b977e87ebc9",
+          "is_solution": false,
+          "is_tests": true,
+          "readonly": true,
+          "test_points": 5
+        },
+        "id": "VHONST7bRXnp"
+      },
+      "outputs": [],
+      "source": [
+        "# Tests 5 points.\n",
+        "# Here are some random tests.\n",
+        "\n",
+        "def assert_eq(a, b):\n",
+        "    assert a == b, \"{} != {}\".format(a, b)\n",
+        "\n",
+        "import random\n",
+        "for _ in range(100):\n",
+        "    l = random.choices(range(4), k=random.randint(0, 40))\n",
+        "    assert_eq(decompress(compress(l)), l)\n",
+        "print(\"All tests pass!\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "notebookgrader": {
+          "id": "ca2e19c3551ac5fab39e12f104e5989bfb147dfd",
+          "readonly": true
+        },
+        "id": "t7MIfVcoRXnp"
+      },
+      "source": [
+        "## Question 3: Function composition via dictionaries\n",
+        "\n",
+        "A dictionary implements a function, as a lookup table: for instance, if you have a function $f$ that has values\n",
+        "\n",
+        "$$\n",
+        "f(1) = 4, \\quad f(2) = 7, \\quad f(5) = 7\n",
+        "$$\n",
+        "\n",
+        "you can implement it via the dictionary:\n",
+        "\n",
+        "```\n",
+        "f = {1: 4, 2: 7, 5: 7}\n",
+        "```\n",
+        "\n",
+        "Given two functions `f` and `g`, represented as dictionaries, `compose(f, g)` should return the dictionary `h` representing the function $h = g \\circ f$, defined by:\n",
+        "\n",
+        "$$\n",
+        "h(x) = g(f(x))\n",
+        "$$\n",
+        "\n",
+        "That is, the dictionary `h` associates to each $x$ the value $g(f(x))$.\n",
+        "This value can be computed by first looking up $x$ in `f`, and then by looking up the result in `g`.\n",
+        "If any lookup fails, the function is undefined, and there is no entry in the result dictionary.\n",
+        "\n",
+        "In the example above, if\n",
+        "\n",
+        "```\n",
+        "g = {7: 8, 9: 10}\n",
+        "```\n",
+        "\n",
+        "then `compose(f, g)` should return the dictionary:\n",
+        "\n",
+        "```\n",
+        "{2: 8, 5: 8}\n",
+        "```\n",
+        "\n",
+        "because `f[2] == 7` and `g[7] == 8`, and `f[5] == 7`, `g[7] == 8`.\n",
+        "The key `1` is missing from the result, because `f[1] == 4`, but `4` is not a key in `g`.\n",
+        "\n",
+        "Write the function `compose`.\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "nbgrader": {
+          "grade": false,
+          "grade_id": "cell-3a3236d042ea5766",
+          "locked": false,
+          "schema_version": 3,
+          "solution": true,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "fac2302a557621715bcf9da818a7dd7aa179abba",
+          "is_solution": true,
+          "is_tests": false,
+          "readonly": false
+        },
+        "id": "Cw4_slXERXnq"
+      },
+      "outputs": [],
+      "source": [
+        "def compose(f, g):\n",
+        "    return {x: g.get(f.get(x)) for x in f if g.get(f.get(x)) is not None}\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 2,
+      "metadata": {
+        "nbgrader": {
+          "grade": true,
+          "grade_id": "cell-f095e5394c59f282",
+          "locked": true,
+          "points": 10,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "d4c9372aef04a55d7f41052cbeb55c41c078a42c",
+          "is_solution": false,
+          "is_tests": true,
+          "readonly": true,
+          "test_points": 10
+        },
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "wDmP-_1rRXnq",
+        "outputId": "61edc809-9bb7-4a8d-8b92-d3dec1c99a46"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "All tests pass!\n"
+          ]
+        }
+      ],
+      "source": [
+        "# Tests 10 points\n",
+        "\n",
+        "def assert_eq(a, b):\n",
+        "    assert a == b, \"{} != {}\".format(a, b)\n",
+        "\n",
+        "f = {1: 4, 2: 7, 5: 7}\n",
+        "g = {7: 8, 9: 10}\n",
+        "\n",
+        "assert_eq(compose(f, g), {2: 8, 5: 8})\n",
+        "assert_eq(compose(g, f), dict())\n",
+        "\n",
+        "f = {2: 3, 3: 2}\n",
+        "assert_eq(compose(f, f), {2: 2, 3: 3})\n",
+        "\n",
+        "f = {1: 2, 3: 4, 4: 5}\n",
+        "g = {2: 3, 5: 1}\n",
+        "assert_eq(compose(f, g), {1: 3, 4: 1})\n",
+        "\n",
+        "\n",
+        "print(\"All tests pass!\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "nbgrader": {
+          "grade": false,
+          "grade_id": "cell-719d5687a1ca4735",
+          "locked": true,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "bdca6e17fe088d4412ce6e9206e29582d1989242",
+          "readonly": true
+        },
+        "id": "4iLv7YMrRXnq"
+      },
+      "source": [
+        "## Question 4: Representing segments\n",
+        "\n",
+        "We are going to define a class to represent segments (or if you prefer, intervals in the real line).\n",
+        "You will create a segment from the endpoints, like so:\n",
+        "\n",
+        "```\n",
+        "s = Segment(4, 6)\n",
+        "```\n",
+        "\n",
+        "so that `s` is a segment from 4 to 6.\n",
+        "\n",
+        "Given a segment `s` and a segment `t`, one should be able to compute:\n",
+        "\n",
+        "\n",
+        "### Intersection\n",
+        "\n",
+        "The **intersection** `s.intersect(t)`.  The value is `None` if the segments do not intersect, and is a `Segment` if they do.  For instance:\n",
+        "\n",
+        "```\n",
+        "s = Segment(4, 6)\n",
+        "t = Segment(5, 10)\n",
+        "r = Segment(6, 10)\n",
+        "q = Segment(7, 10)\n",
+        "```\n",
+        "then:\n",
+        "```\n",
+        "s.intersect(t) == Segment(5, 6)\n",
+        "t.intersect(s) == Segment(5, 6)\n",
+        "\n",
+        "s.intersect(r) == Segment(6, 6) # It's ok if the endpoints coincide!\n",
+        "r.intersect(s) == Segment(6, 6)\n",
+        "\n",
+        "s.intersect(q) == None\n",
+        "q.intersect(s) == None\n",
+        "```\n",
+        "\n",
+        "### Merge\n",
+        "\n",
+        "The **merge** `s.merge(t)`.\n",
+        "The merge between two segments is the smallest segment that contains them both. So, if\n",
+        "\n",
+        "```\n",
+        "s = Segment(4, 6)\n",
+        "t = Segment(5, 10)\n",
+        "r = Segment(7, 11)\n",
+        "q = Segment(3, 12)\n",
+        "\n",
+        "s.merge(t) == Segment(4, 10)\n",
+        "s.merge(q) == q\n",
+        "r.merge(s) == Segment(4, 11)\n",
+        "```\n",
+        "\n",
+        "We are defining for you the object initializer, and a method to print and compare segments.\n",
+        "You need to define the intersect and merge methods."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": false,
+          "grade_id": "cell-5b1e7ae95d11f930",
+          "locked": false,
+          "schema_version": 3,
+          "solution": true,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "60735891cb5cbc3e4465b8025465d1824b593fc7",
+          "is_solution": true,
+          "is_tests": false,
+          "readonly": false
+        },
+        "id": "zB6ZmUB2RXnr"
+      },
+      "outputs": [],
+      "source": [
+        "class Segment(object):\n",
+        "\n",
+        "    def __init__(self, a, b):\n",
+        "        self.l = min(a, b) # Left endpoint\n",
+        "        self.r = max(a, b) # Right endpoint\n",
+        "\n",
+        "    def intersect(self, other):\n",
+        "        ### YOUR SOLUTION HERE\n",
+        "\n",
+        "    def merge(self, other):\n",
+        "        ### YOUR SOLUTION HERE\n",
+        ""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": true,
+          "grade_id": "cell-514c833b4d5eade4",
+          "locked": true,
+          "points": 10,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "99a2ac16295f5c6db9cd3478b733b5966692e1e3",
+          "is_solution": false,
+          "is_tests": true,
+          "readonly": true,
+          "test_points": 10
+        },
+        "id": "DZhprD6XRXns"
+      },
+      "outputs": [],
+      "source": [
+        "# Tests 10 points: tests for intersection\n",
+        "\n",
+        "Segment.__repr__ = lambda self: \"[{}, {}]\".format(self.l, self.r)\n",
+        "Segment.__eq__ = lambda self, other: other is not None and self.l == other.l and self.r == other.r\n",
+        "\n",
+        "def assert_eq(a, b):\n",
+        "    assert a == b, \"{} != {}\".format(a, b)\n",
+        "\n",
+        "s = Segment(4, 6)\n",
+        "t = Segment(5, 10)\n",
+        "r = Segment(6, 10)\n",
+        "q = Segment(7, 10)\n",
+        "\n",
+        "assert_eq(s.intersect(t), Segment(5, 6))\n",
+        "assert_eq(t.intersect(s), Segment(5, 6))\n",
+        "\n",
+        "assert_eq(s.intersect(r), Segment(6, 6)) # It's ok if the endpoints coincide!\n",
+        "assert_eq(r.intersect(s), Segment(6, 6))\n",
+        "\n",
+        "assert_eq(s.intersect(q), None)\n",
+        "assert_eq(q.intersect(s), None)\n",
+        "\n",
+        "assert_eq(Segment(28, 60).intersect(Segment(2, 40)), Segment(28, 40))\n",
+        "\n",
+        "# You should not modify the segments\n",
+        "assert_eq(s, Segment(4, 6))\n",
+        "assert_eq(t, Segment(5, 10))\n",
+        "assert_eq(r, Segment(6, 10))\n",
+        "assert_eq(q, Segment(7, 10))\n",
+        "\n",
+        "\n",
+        "print(\"All tests pass!\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "nbgrader": {
+          "grade": true,
+          "grade_id": "cell-bc79afc272113876",
+          "locked": true,
+          "points": 10,
+          "schema_version": 3,
+          "solution": false,
+          "task": false
+        },
+        "notebookgrader": {
+          "id": "1e74151de2e804247d2564660f94ca515cff5169",
+          "is_solution": false,
+          "is_tests": true,
+          "readonly": true,
+          "test_points": 10
+        },
+        "id": "rZlSAh4XRXns"
+      },
+      "outputs": [],
+      "source": [
+        "# Tests 10 points: tests for merge\n",
+        "\n",
+        "Segment.__repr__ = lambda self: \"[{}, {}]\".format(self.l, self.r)\n",
+        "Segment.__eq__ = lambda self, other: other is not None and self.l == other.l and self.r == other.r\n",
+        "\n",
+        "def assert_eq(a, b):\n",
+        "    assert a == b, \"{} != {}\".format(a, b)\n",
+        "\n",
+        "s = Segment(4, 6)\n",
+        "t = Segment(5, 10)\n",
+        "r = Segment(6, 10)\n",
+        "q = Segment(7, 12)\n",
+        "h = Segment(8, 10)\n",
+        "\n",
+        "assert_eq(s.merge(t), Segment(4, 10))\n",
+        "assert_eq(t.merge(s), Segment(4, 10))\n",
+        "\n",
+        "assert_eq(q.merge(h), q)\n",
+        "assert_eq(h.merge(q), q)\n",
+        "\n",
+        "\n",
+        "print(\"All tests pass!\")"
+      ]
+    }
+  ],
+  "metadata": {
+    "celltoolbar": "Create Assignment",
+    "kernelspec": {
+      "display_name": "conda-env-teaching37-py",
+      "language": "python",
+      "name": "conda-env-teaching37-py"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.7.3"
+    },
+    "notebookgrader": {
+      "total_points": 65
+    },
+    "colab": {
+      "provenance": []
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}

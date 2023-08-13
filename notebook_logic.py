@@ -110,6 +110,13 @@ def create_master_notebook(notebook_string):
         c.metadata.notebookgrader = meta
         new_nb.cells.append(c)
     ensure(new_nb, 'metadata')
+    # Changes the kernel to the one used by Colab.
+    new_nb.metadata.kernelspec = NotebookNode()
+    new_nb.metadata.kernelspec.name = "python3"
+    new_nb.metadata.kernelspec.display_name = "Python 3"
+    new_nb.metadata.language_info = NotebookNode()
+    new_nb.metadata.language_info.name = "python"
+    # Adds total points into notebook.
     ensure(new_nb.metadata, 'notebookgrader')
     new_nb.metadata.notebookgrader.total_points = total_points
     return nbformat.writes(new_nb, version=4), total_points
