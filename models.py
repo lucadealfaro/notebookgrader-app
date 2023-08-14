@@ -12,6 +12,7 @@ from py4web import redirect, URL
 
 from googleapiclient.discovery import build
 import google.oauth2.credentials
+from .settings import ADMIN_EMAIL
 
 
 def get_user_email():
