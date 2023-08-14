@@ -94,12 +94,6 @@ T_FOLDER = required_folder(APP_FOLDER, "translations")
 USE_CELERY = False
 CELERY_BROKER = "redis://localhost:6379/0"
 
-# try import private settings
-try:
-    from .settings_private import *
-except (ImportError, ModuleNotFoundError):
-    pass
-
 COLAB_BASE = "https://colab.research.google.com/drive/"
 
 if IS_TEST:
@@ -126,3 +120,5 @@ CLOUD_DB_URI = "google:MySQLdb://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}?unix_socket=
 CLOUD_DB_POOL_SIZE = 1
 CLOUD_DB_MIGRATE = False # IMPORTANT!
 CLOUD_DB_FAKE_MIGRATE = False
+
+from .private.private_settings import ADMIN_EMAIL

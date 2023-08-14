@@ -10,7 +10,7 @@ from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
 from py4web.utils.form import Form, FormStyleBulma
 from .models import get_user_email, build_drive_service, can_access_assignment
-from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET
+from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, ADMIN_EMAIL
 
 from .common import flash, url_signer, gcs
 from .util import random_id, long_random_id, upload_to_drive, grading_request
@@ -168,8 +168,9 @@ def delete_assignment(id=None):
     form.param.sidecar.append(A("Cancel", **attrs))
     if form.accepted:
         if form.vars['confirm_deletion']:
+            gcs.delete(GCS_BUCKET, assignment.master_id_gcs)
+            gcs.delete(GCS_BUCKET, assignment.student_id_gcs)
             db(db.assignment.id == id).delete()
-            db(db.access.assignment_id == id).delete()
             redirect(URL('teacher-home'))
         else:
             redirect(URL('teacher-view-assignment', id))

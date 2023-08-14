@@ -120,6 +120,7 @@ def set_assignment_teachers(assignment_id, teacher_list):
         db.access.insert(user=u, assignment_id=assignment_id)
 
 def can_access_assignment(assignment_id):
-    return not db((db.access.assignment_id == assignment_id) &
-                  (db.access.user == get_user_email())).isempty()
+    return get_user_email() == ADMIN_EMAIL or (
+        not db((db.access.assignment_id == assignment_id) &
+               (db.access.user == get_user_email())).isempty())
 
