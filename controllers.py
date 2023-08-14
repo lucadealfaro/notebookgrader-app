@@ -63,6 +63,11 @@ def privacy_policy():
 def terms_of_use():
     return dict()
 
+@action('about')
+@action.uses('about.html')
+def terms_of_use():
+    return dict()
+
 @action('delete_personal_information', method=["GET", "POST"])
 @action.uses('delete_personal_information.html', db, auth.user)
 def delete_personal_information():
