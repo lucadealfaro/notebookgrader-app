@@ -7,7 +7,9 @@
 </style>
 
 <section class="section">
-  <p>NotebookGrader is a tool that makes it easy for instructors to assign homework consisting of Python Jupyter Notebooks, and for students to work on such homework.</p>
+  <p>NotebookGrader is a tool that makes it easy for instructors to assign homework consisting of Python Jupyter Notebooks, and for students to work on such homework.  The notebooks are shared on Google Drive, and students can work on their homework using <a href="https://colab.research.google.com">Google Colab</a>.  In particular, students do not need to install anything on their laptops to work: all they need is a browser.</p>
+  
+  <p class="mt-4">When users (teachers or students) log in, NotebookGrader asks for the permission to access <em>the files it creates</em> in Google Drive so that it can share the homework with the students, and grade it.  NotebookGrader <em>only</em> has access to these notebooks it creates, and does <em>not</em> have access to any other files on Google Drive.</p>
   
   <p class="mt-4">Instructors can upload a Python Jupyter notebook that specifies the homework assignment.  In these notebooks, some cells are read-only, in others the students can write their solutions, and other cells contain tests. Students get points if their solutions pass the tests. You can read the <a href="[[=URL('notebook-guidelines')]]">NotebookGrader note book format</a>, which is similar to the one used by <a href="https://nbgrader.readthedocs.io/en/stable/">nbgrader</a>.</p>
   
@@ -18,4 +20,5 @@
   <p class="mt-4">Instructors can download all grades, and they also have access to the Colab Notebooks on which the students are working, so they can see in real-time how students are approaching the problems, and help them if needed.</p>
   
   <p class="mt-4">NotebookGrader can be used by instructors and students: please choose your role using the top bar.</p>
+  
 </section>
