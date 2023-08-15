@@ -17,7 +17,11 @@ from .settings import COLAB_BASE
 from .common import url_signer
 from .models import get_user_email
 
-GRADE_HELP = "Highest valid grade."
+GRADE_HELP = """Highest valid grade.  
+If you click on the grade, you can see the list of all grades the student has received 
+for this assignment, along with the validity of each.  You can then decide which 
+grades should be considered valid. 
+"""
 LATE_HELP = "Does the student have a late grade that is not valid?"
 HOMEWORK_HELP = """
 This is the notebook on which the student is working. 

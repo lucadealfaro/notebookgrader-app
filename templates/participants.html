@@ -13,8 +13,15 @@
 <div class="section" id="vue-target" v-cloak>
   <!-- Put here your Vue.js template -->
   <h1 class="title"><a href="[[=URL('teacher-view-assignment', assignment.id)]]">[[=assignment.name]]</a>
-    <button class="button is-success ml-2" @click="download"><span class="icon is-small"><i class="fa fa-download"></i></span></button>
+     <span @mouseover="show_participants_help = true" @mouseout="show_participants_help = false" class="icon is-small has-text-primary ml-3"><i class="fa fa-info-circle"></i></span>
+    <button class="button is-success ml-4" @click="download"><span class="icon is-small"><i class="fa fa-download"></i></span></button>
   </h1>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_participants_help">
+    <p>Below is the list of students who are working on this assignment.</p>
+    <p class="mt-2">For each student, you can find a link to the notebook on which they are working (which is shared individually with them).</p>
+    <p class="mt-2">You can also see the highest valid grade for the student, along with an indication if the student has late submissions which are not considered valid.  If you click on the student grade, you can see the details of all the grades the student received, including late ones, and you can decide which ones of these should be considered valid grades.</p>
+    <p class="mt-2">You can download all grades by clicking on the download button.</p>
+  </div>
   
   [[=grid]]
 </div>

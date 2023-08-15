@@ -10,7 +10,7 @@ let init = (app) => {
     // This is the Vue data.
     app.data = {
         // Complete as you see fit.
-
+        show_participants_help: false,
     };
 
     app.enumerate = (a) => {
