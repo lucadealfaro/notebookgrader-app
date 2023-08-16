@@ -14,18 +14,18 @@
     <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
       <div class="navbar-brand">
         <a class="navbar-item" href="[[=URL('index')]]">
-          <span class="icon"><i class="fa fa-home"></i></span> <span class="ml-1">NotebookGrader</span>
+          <span class="icon"><i class="fa fa-home"></i></span> <span class="ml-1 is-hidden-mobile">NotebookGrader</span>
           <!-- <img class="logo" width="150" src="images/site_icon.png"> -->
         </a>
         <a class="navbar-item" href="[[=URL('student-home')]]">
-          <span class="icon"><i class="fa fa-graduation-cap"></i></span> <span class="ml-1">Student</span>
+          <span class="icon"><i class="fa fa-graduation-cap"></i></span> <span class="ml-1 is-hidden-mobile">Student</span>
         </a>
         <a class="navbar-item" href="[[=URL('teacher-home')]]">
-          <span class="icon"><i class="fa fa-institution"></i></span> <span class="ml-1">Teacher</span>
+          <span class="icon"><i class="fa fa-institution"></i></span> <span class="ml-1 is-hidden-mobile">Teacher</span>
         </a>
         [[if globals().get('user') and globals().get('user').get('email') == "luca.de.alfaro@gmail.com":]]
         <a class="navbar-item" href="[[=URL('admin-home')]]">
-          <span class="icon"><i class="fa fa-gears"></i></span> <span class="ml-1">Admin</span>
+          <span class="icon"><i class="fa fa-gears"></i></span> <span class="ml-1 is-hidden-mobile">Admin</span>
         </a>
         [[pass]]
         
