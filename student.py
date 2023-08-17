@@ -14,7 +14,7 @@ from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, GCS_SUBMISSIONS_BUCKET
 from .settings import STUDENT_GRADING_CALLBACK, MIN_TIME_BETWEEN_GRADE_REQUESTS
 
 from .common import flash, url_signer, gcs
-from .util import upload_to_drive, read_from_drive, long_random_id, random_id, grading_request
+from .util import upload_to_drive, read_from_drive, long_random_id, random_id, send_grading_request
 from .run_notebook import match_notebooks
 from .notebook_logic import remove_all_hidden_tests
 from .models import build_drive_service
@@ -200,9 +200,9 @@ def grade_homework(id=None):
         payload = dict(
             nonce=nonce,
             notebook_json=nbformat.writes(test_nb, 4),
-            callback_url = URL('receive-grade')
+            callback_url = URL('receive-grade', scheme=True)
         )
-        r = grading_request(payload)
+        send_grading_request(payload)
         return dict(is_error=False,
                     watch=True,
                     outcome="Your request has been enqueued, and a new grade will be available soon.")
@@ -211,7 +211,7 @@ def grade_homework(id=None):
         payload = dict(
             notebook_json=nbformat.writes(test_nb, 4)
         )
-        r = grading_request(payload)
+        r = send_grading_request(payload,  immediate=True)
         res = r.json()
         points = res.get("points")
         notebook_json = res.get("graded_json")
@@ -272,7 +272,7 @@ def process_grade(homework, assignment, grade_date, student, is_valid, points, n
     )
     # Updates the grade in the homework.
     if is_valid:
-        homework.grade = max(filter(None, [homework.grade, points]))
+        homework.grade = max([0] + list(filter(None, [homework.grade, points])))
     else:
         homework.has_invalid_grade = True
     homework.update_record()

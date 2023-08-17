@@ -13,7 +13,7 @@ from .models import get_user_email, build_drive_service, can_access_assignment
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, ADMIN_EMAIL
 
 from .common import flash, url_signer, gcs
-from .util import random_id, long_random_id, upload_to_drive, grading_request
+from .util import random_id, long_random_id, upload_to_drive, send_grading_request
 from .notebook_logic import create_master_notebook, produce_student_version, InvalidCell
 
 from .api_assignment_form import AssignmentFormCreate, AssignmentFormEdit, AssignmentFormView
@@ -109,7 +109,7 @@ def upload_notebook(id=None):
     payload = dict(
         notebook_json=master_notebook_json,
     )
-    r = grading_request(payload)
+    r = send_grading_request(payload, is_student=False)
     res = r.json()
     points = res.get("points")
     has_errors = res.get("had_errors")
@@ -246,7 +246,7 @@ def toggle_grade_validity(id=None):
     # Recomputes the highest valid grade.
     grades = db(db.grade.homework_id == homework.id).select().as_list()
     grade_list = [r["grade"] for r in grades if r["is_valid"]] + [0]
-    homework.grade = max(filter(None, grade_list))
+    homework.grade = max([0] + list(filter(None, grade_list)))
     homework.has_invalid_grade = any([(not r["is_valid"]) for r in grades])
     homework.update_record()
     redirect(URL('teacher-homework-details', homework.id))

@@ -18,7 +18,7 @@
     <p v-else>The assignment is not available yet; it will become accessible on {{date_available}}.</p>
   </div>
   
-  <p><b>Grading limit:</b> You can have your assignment graded at most [[=num_grades_past_24h]] times in 24h.</p>
+  <p><b>Grading limit:</b> You can have your assignment graded at most [[=assignment.max_submissions_in_24h_period]] times in 24h.</p>
   <p class="mt-2"><b>Submission deadline:</b> {{submission_deadline}}</p>
   <p class="mt-2"><b>Late submission possible until:</b> <span @mouseover="show_late_help = true" @mouseout="show_late_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span> {{date_closes}}</p>
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_late_help">
@@ -38,7 +38,8 @@
   
   [[if can_grade:]]
   <div class="mt-5" v-if="drive_url && submission_open">
-    <p >To receive credit for your work, you must submit it for grading before the deadline. You can ask for your work to be graded at most [[=assignment.max_submissions_in_24h_period]] times in a 24-hour period.</p>
+    <p >To receive credit for your work, you must submit it for grading before the deadline.
+    <b>You can still request [[=assignment.max_submissions_in_24h_period - num_grades_past_24h]] gradings</b> in these 24h.</p>
     
     <button class="button is-warning mt-2" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Work</button>
     

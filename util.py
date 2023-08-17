@@ -8,10 +8,13 @@ import uuid
 
 import google.auth.transport.requests
 import google.oauth2.id_token
+from google.cloud import tasks_v2
 
 from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
 
-from .settings import IS_TEST, GRADING_URL
+from .settings import IS_TEST, GRADING_URL, STUDENT_GRADING_USES_QUEUE
+from .settings import QUEUE_SERVICE_ACCOUNT, STUDENT_GRADING_QUEUE_LOCATION
+from .settings import STUDENT_GRADING_QUEUE_NAME, STUDENT_GRADING_QUEUE_PROJECT
 
 email_split_pattern = re.compile('[,\s]+')
 whitespace = re.compile('\s+$')
@@ -106,14 +109,62 @@ def read_from_drive(drive_service, drive_id):
     return file.getvalue()
 
 
-def grading_request(payload):
+def send_grading_request(payload, is_student=True):
+    """
+    Sends a grading request.
+    Args:
+        payload: The payload of the request. Consisting of:
+            nonce: a nonce for the callback
+            notebook_json: to be graded
+            callback_url: to report the results
+        is_student: The request comes from a student.
+    Returns: the result of the request.
+
+    """
     if IS_TEST:
+        # This request can use a callback.
         r = requests.post(GRADING_URL, json=payload)
+        r.raise_for_status()
+        return r
     else:
-        # Generates the auth token.
-        auth_req = google.auth.transport.requests.Request()
-        id_token = google.oauth2.id_token.fetch_id_token(auth_req, GRADING_URL)
-        headers = {"Authorization": "Bearer {}".format(id_token)}
-        r = requests.post(GRADING_URL, headers=headers, json=payload)
-    r.raise_for_status()
-    return r
+        if is_student and STUDENT_GRADING_USES_QUEUE:
+            # Enqueues the request.
+            return enqueue_request(payload)
+        else:
+            # Performs the request without queue.
+            auth_req = google.auth.transport.requests.Request()
+            id_token = google.oauth2.id_token.fetch_id_token(auth_req, GRADING_URL)
+            headers = {"Authorization": "Bearer {}".format(id_token)}
+            r = requests.post(GRADING_URL, headers=headers, json=payload)
+            r.raise_for_status()
+            return r
+
+
+def enqueue_request(payload):
+    """See https://cloud.google.com/tasks/docs/creating-http-target-tasks"""
+    # Create a client.
+    client = tasks_v2.CloudTasksClient()
+# Construct the request body.
+    task = tasks_v2.Task(
+        http_request=tasks_v2.HttpRequest(
+            http_method=tasks_v2.HttpMethod.POST,
+            url=GRADING_URL,
+            oidc_token=tasks_v2.OidcToken(
+                service_account_email=QUEUE_SERVICE_ACCOUNT,
+                audience=GRADING_URL,
+            ),
+            body=payload,
+        ),
+    )
+
+    # Use the client to build and send the task.
+    return client.create_task(
+        tasks_v2.CreateTaskRequest(
+            parent=client.queue_path(
+                STUDENT_GRADING_QUEUE_PROJECT,
+                STUDENT_GRADING_QUEUE_LOCATION,
+                STUDENT_GRADING_QUEUE_NAME),
+            task=task,
+        )
+    )
+

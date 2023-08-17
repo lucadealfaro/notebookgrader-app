@@ -45,10 +45,10 @@ let init = (app) => {
         });
     };
 
-    app.check_new_grade = function (last_grade_date) {
+    app.check_new_grade = function () {
         app.checker = setInterval(() => {
             axios.get(recent_grade_date_url).then(function (res) {
-                if (last_grade_date < res.data.last_grade_date) {
+                if (app.last_grade_date < res.data.last_grade_date) {
                     location.reload();
                 }
             })
@@ -62,7 +62,7 @@ let init = (app) => {
             app.vue.grading_error=res.data.is_error;
             if (res.data.watch) {
                 // We have to watch for changes.
-                app.check_new_grade(app.last_grade_date);
+                app.check_new_grade();
             } else {
                 app.vue.is_grading = false;
                 if (!res.data.error) {

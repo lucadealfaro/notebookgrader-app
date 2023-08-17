@@ -97,16 +97,19 @@ CELERY_BROKER = "redis://localhost:6379/0"
 COLAB_BASE = "https://colab.research.google.com/drive/"
 
 if IS_TEST:
+    IS_CLOUD = False
     GCS_BUCKET = "notebookgrader-test"
     GRADING_URL = "http://localhost:8080"
 else:
+    IS_CLOUD = True
     GCS_BUCKET = "notebookgrader-prod"
     GRADING_URL = "https://us-west1-notebookgrader.cloudfunctions.net/grade-notebook"
 GCS_SUBMISSIONS_BUCKET = "notebookgrader-submissions"
 
 MIN_TIME_BETWEEN_GRADE_REQUESTS = 12 # Seconds
 
-STUDENT_GRADING_CALLBACK = False
+STUDENT_GRADING_CALLBACK = True
+STUDENT_GRADING_USES_QUEUE = IS_CLOUD
 
 from .private.private_settings import *
 
