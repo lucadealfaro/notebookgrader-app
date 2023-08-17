@@ -1,4 +1,5 @@
 import io
+import json
 import re
 
 import hashlib
@@ -153,10 +154,10 @@ def enqueue_request(payload):
                 service_account_email=QUEUE_SERVICE_ACCOUNT,
                 audience=GRADING_URL,
             ),
-            body=payload,
+            headers={"Content-Type": "application/json"},
+            body=json.dumps(payload).encode('utf-8'),
         ),
     )
-
     # Use the client to build and send the task.
     return client.create_task(
         tasks_v2.CreateTaskRequest(
