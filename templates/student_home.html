@@ -12,13 +12,17 @@
 
 <section class="section" id="vue-target" v-cloak>
   <!-- Put here your Vue.js template -->
-  <h1 class="title">Homework <span @mouseover="show_homework_help = true" @mouseout="show_homework_help = false" class="icon is-small has-text-primary ml-3"><i class="fa fa-info-circle"></i></span></h1>
-  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_homework_help">
-    <p>This is your homework.  To add homework, you need to click on invitation links provided by your teacher.</p>
-  </div>
+  [[if has_no_homework:]]
+    <h1 class="title">Homework</h1>
   
-  [[=grid]]
-  
+    <p>You do not have any homework. To access homework, you need to click on invitation links provided by your instructor.</p>
+  [[else:]]
+    <h1 class="title">Homework <span @mouseover="show_homework_help = true" @mouseout="show_homework_help = false" class="icon is-small has-text-primary ml-3"><i class="fa fa-info-circle"></i></span></h1>
+    <div class="box has-background-primary-light has-text-primary-dark" v-if="show_homework_help">
+      <p>This is your homework.  To add homework, you need to click on invitation links provided by your insructor.</p>
+    </div>
+    [[=grid]]
+  [[pass]]
 </section>
 
 

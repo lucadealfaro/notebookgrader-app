@@ -87,7 +87,10 @@ def invite(access_url=None):
 @action('student-home')
 @action.uses('student_home.html', db, flash, auth.user, homework_grid)
 def student_home():
-    return dict(grid=homework_grid())
+    return dict(
+        has_no_homework=db(db.homework.student == get_user_email()).isempty(),
+        grid=homework_grid(),
+    )
 
 @action('homework/<id>')
 @action.uses('homework.html', db, auth.user, student_grades_grid)
@@ -114,7 +117,7 @@ def homework(id=None):
         reason = "The assignment is not open."
     elif num_grades_past_24h >= assignment.max_submissions_in_24h_period:
         can_grade = False
-        reason = "You have already had your assignment graded {} times in the last 24h.".format(
+        reason = "You have already had your assignment graded the maximum number of {} times in the last 24h".format(
             assignment.max_submissions_in_24h_period)
     return dict(
         homework=homework,
