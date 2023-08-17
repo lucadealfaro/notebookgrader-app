@@ -10,6 +10,9 @@ import json
 import time
 import uuid
 
+import warnings
+warnings.filterwarnings("ignore")
+
 import google_auth_oauthlib.flow
 import google.oauth2.credentials
 from googleapiclient.discovery import build
@@ -107,7 +110,9 @@ class GoogleScopedLogin(object):
 
     def _handle_callback(self, auth, get_vars):
         # Builds a flow again, this time with the state in it.
-        state = auth.session["oauth2googlescoped:state"]
+        state = auth.session.get("oauth2googlescoped:state")
+        if state is None:
+            raise HTTP(401, "Stale request")
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             self.secrets_file, scopes=self.scopes, state=state)
         flow.redirect_uri = URL(self.callback_url, scheme=True)
@@ -125,7 +130,10 @@ class GoogleScopedLogin(object):
         if not 'code' in get_vars:
             raise HTTP(401, "Missing code parameter in response.")
         code = get_vars.get('code')
-        flow.fetch_token(code=code)
+        try:
+            flow.fetch_token(code=code)
+        except Exception as e:
+            raise HTTP(401, "You granted insufficient permissions.")
         # We got the credentials!
         credentials = flow.credentials
         # Now we must use the credentials to check the user identity.
