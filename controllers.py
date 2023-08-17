@@ -65,8 +65,9 @@ def terms_of_use():
 
 @action('about')
 @action.uses('about.html')
-def terms_of_use():
+def about():
     return dict()
+
 
 @action('delete_personal_information', method=["GET", "POST"])
 @action.uses('delete_personal_information.html', db, auth.user)
@@ -119,41 +120,3 @@ def delete_gcs(gcs_id):
     if gcs_id is not None:
         gcs.delete(GCS_BUCKET, gcs_id)
 
-
-@action('share', method=["GET", "POST"])
-@action.uses('share.html', db, auth.user)
-def share():
-    form = Form([Field('name')],
-        csrf_session=session, formstyle=FormStyleBulma
-    )
-    attrs = {
-        "_onclick": "window.history.back(); return false;",
-        "_class": "button is-default ml-2",
-    }
-    form.param.sidecar.append(A("Cancel", **attrs))
-    if form.accepted:
-        if get_user_email() != "luca.de.alfaro@gmail.com":
-            redirect(URL('index'))
-        # We share the notebook to the current user.
-        file_path = os.path.join(APP_FOLDER,
-                                 "temp_files/TestoutJuly2023assigned.ipynb")
-        mime = 'application/vnd.google.colaboratory'
-        media = MediaFileUpload(file_path, mimetype=mime, resumable=True)
-        file_meta = {'name': form.vars["name"]}
-        # Reads the credentials.
-        user_info = db(db.auth_credentials.email == get_user_email()).select().first()
-        if not user_info:
-            print("No user credentials")
-            redirect(URL('index'))
-        credentials_dict = json.loads(user_info.credentials)
-        creds = google.oauth2.credentials.Credentials(**credentials_dict)
-        drive_service = build('drive', 'v3', credentials=creds)
-        upfile = drive_service.files().create(
-            body=file_meta,
-            media_body=media,
-            fields='id').execute()
-        file_id = upfile.get('id')
-        print("file_id:", file_id)
-        redirect(COLAB_BASE + file_id)
-
-    return dict(form=form)

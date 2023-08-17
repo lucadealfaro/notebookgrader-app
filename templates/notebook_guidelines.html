@@ -8,6 +8,27 @@ div.box pre { padding: 0 0 0 0;}
 <div class="section">
   <h1 class="title">Notebook Guidelines</h1>
   
+  <h2 class="subtitle mt-4">TL;DR</h2>
+  
+  <p>NotebookGrader uses the same format as <a target="_blank" href="https://nbgrader.readthedocs.io/en/stable/">nbgrader</a>, except that test cells have to begin with a comment with the format:</p>
+
+    <div class="box mt-3 has-background-white-ter">
+      <pre>
+# Tests 10 points.
+
+...</pre>
+    </div>
+    
+  <p>The prefix <span class="is-family-monospace"># Tests</span> <em>n</em> <span class="is-family-monospace">points</span> has to appear exactly in that format, with <em>n</em> being the number of points of the tests cell.
+  </p>
+  
+  <p class="mt-3">The comment is useful to the students: it tells them how many points the cell is worth!</p>
+  
+</div>
+
+<div class="section">
+  <h1 class="title">Details</h1>
+  
   <p>A notebook consists of four types of cells: markdown (text), read-only code, solution cells, and test cells. </p>
   
   <h2 class="subtitle mt-5">Markdown (text)</h2>
