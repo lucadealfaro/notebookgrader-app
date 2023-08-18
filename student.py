@@ -137,7 +137,9 @@ def homework(id=None):
 def recent_grade_checker(id=None):
     recent_grade = db((db.grade.homework_id == id) &
                       (db.grade.student == get_user_email())).select(orderby=~db.grade.grade_date).first()
-    return dict(last_grade_date=recent_grade.grade_date if recent_grade is not None else None)
+    return dict(last_grade_date=
+                recent_grade.grade_date if recent_grade is not None 
+                else "0000-00-00 00:00:00")
 
 
 @action('grade-homework/<id>', method=["POST"])
