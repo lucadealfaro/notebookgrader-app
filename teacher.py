@@ -170,7 +170,7 @@ def delete_assignment(id=None):
         if form.vars['confirm_deletion']:
             if assignment.master_id_gcs is not None:
                 gcs.delete(GCS_BUCKET, assignment.master_id_gcs)
-            if assignment.student_id.gcs is not None:
+            if assignment.student_id_gcs is not None:
                 gcs.delete(GCS_BUCKET, assignment.student_id_gcs)
             db(db.assignment.id == id).delete()
             redirect(URL('teacher-home'))
