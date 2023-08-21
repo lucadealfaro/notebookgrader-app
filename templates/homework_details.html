@@ -15,7 +15,7 @@
   <h1 class="title">Homework Details</h1>
   
   <p><b>Assignment:</b> <a href="[[=URL('participants', assignment.id)]]">[[=assignment.name]]</a></p>
-  <p><b>Student:</b> [[=user.first_name]] [[=user.last_name]], [[=user.email]]</p>
+  <p><b>Student:</b> [[=student.first_name]] [[=student.last_name]], [[=student.email]]</p>
   <p><b>Student work:</b> <span @mouseover="show_work_help = true" @mouseout="show_work_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span> [[=A("Student notebook", _href=notebook_url)]]</p>
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_work_help">
     <p>This is the notebook on which the student is working. Be careful if you modify it, as you are modifying the student's work possibly without their knowledge or permission.

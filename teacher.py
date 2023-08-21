@@ -228,10 +228,10 @@ def homework_details(id=None):
     assert assignment is not None
     if not can_access_assignment(assignment.id):
         redirect(URL('teacher-home'))
-    user = db(db.auth_user.email == homework.student).select().first()
+    student = db(db.auth_user.email == homework.student).select().first()
     return dict(
         assignment=assignment,
-        user=user,
+        student=student,
         notebook_url=COLAB_BASE + homework.drive_id,
         grid=grid_homework_details(id),
     )
