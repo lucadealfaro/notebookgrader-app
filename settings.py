@@ -96,7 +96,19 @@ CELERY_BROKER = "redis://localhost:6379/0"
 
 COLAB_BASE = "https://colab.research.google.com/drive/"
 
-from .private.private_settings import *
+# You need to provide your own private settings :-)
+from .private.private_settings import (
+    # These are the DB parameters.
+    DB_USER, DB_PASSWORD, DB_CONNECTION, DB_NAME,
+    # Email of admin.
+    ADMIN_EMAIL,
+    # GCS buckets
+    GCS_TEST_BUCKET, GCS_PROD_BUCKET, GCS_SUBMISSIONS_BUCKET,
+    # Queue info.
+    STUDENT_GRADING_QUEUE_NAME, STUDENT_GRADING_QUEUE_PROJECT, STUDENT_GRADING_QUEUE_LOCATION,
+    FEEDBACK_QUEUE_NAME, FEEDBACK_QUEUE_LOCATION, FEEDBACK_QUEUE_PROJECT,
+    QUEUE_SERVICE_ACCOUNT, GRADING_FUNCITON_URL,
+)
 
 if IS_TEST:
     IS_CLOUD = False
