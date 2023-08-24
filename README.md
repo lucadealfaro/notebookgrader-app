@@ -86,10 +86,10 @@ submissions, all the instructor has to do is click to validate them.
 
 ## Deployment
 
-Deployment is not for the faint of heart, this is not an app meant to run on 
-a server under someone's desk.  To use it, you will need: 
+To deploy this app, you need:
 
-* A [Google Cloud project](https://cloud.google.com/?hl=en) with [Oauth setup](https://support.google.com/cloud/answer/6158849?hl=en). 
+* A [Google Cloud project](https://cloud.google.com/?hl=en) with [Oauth 
+  setup](https://support.google.com/cloud/answer/6158849?hl=en). 
 * [Py4web](https://py4web.com). 
 * An SQL database server.  The database object `db` is created in `common.py` 
   using parameters that describe a connection to the database; see the [pydal 
@@ -111,9 +111,13 @@ In particular, these are things you need to do for deployment:
 
 * You should create a `private` folder, and put in it: 
   * An `__init__.py` file. 
-  * `about.html`, `privacy_policy.html`, and `terms_of_use.html` templates. 
-  * The json keys for GCS access. 
-  * The OAuth secrets.
+  * `about.html`, `privacy_policy.html`, and `terms_of_use.html` templates 
+    that specify who is behind your side, what is its privacy policy, and 
+    what are the terms of use. 
+  * The json keys for GCS access; these are read in `common.py` to create 
+    the `gcs` object.   
+  * The OAuth secrets, as a json file. These secrets are passed to the 
+    Google scoped login plugin in `common.py`.
   * A file `private_settings.py` containing constant declarations; look at 
     `settings.py` to see what is imported from `private_settings.py`. 
 * Deployment instructions for Google App Engine can be found in the [Learn 
