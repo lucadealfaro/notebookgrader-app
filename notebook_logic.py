@@ -41,7 +41,6 @@ def get_test_points(cell):
 def get_test_name(cell):
     """Returns the name the user assigned to the tests."""
     g = re.match(test_name_regexp, cell.source)
-    print("Cell source:", repr(cell.source))
     try:
         return g[1].strip().capitalize()
     except Exception as e:
