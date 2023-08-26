@@ -1,5 +1,7 @@
 import ast
 import json
+import traceback
+
 import nbformat
 import re
 from nbformat.notebooknode import NotebookNode
@@ -13,11 +15,12 @@ BEGIN_HIDDEN_TESTS = "### BEGIN HIDDEN TESTS"
 END_HIDDEN_TESTS = "### END HIDDEN TESTS"
 HIDDEN_TESTS = (BEGIN_HIDDEN_TESTS, END_HIDDEN_TESTS)
 IS_TESTS = "# Tests"
-IS_TEST_REGEXP = "^# Tests (\d+) points"
-TESTS_MARKDOWN = "***Tests: {} points***\n"
+IS_TEST_REGEXP = r"^# *Tests? (\d+) points"
+TEST_NAME_REGEXP = r"^# *Tests \d+ points *: *([^\n]*)"
 
 
 test_regexp = re.compile(IS_TEST_REGEXP)
+test_name_regexp = re.compile(TEST_NAME_REGEXP)
 
 class InvalidCell(Exception):
     pass
@@ -34,6 +37,15 @@ def get_test_points(cell):
         return 0
     g = re.match(test_regexp, cell.source)
     return int(g[1])
+
+def get_test_name(cell):
+    """Returns the name the user assigned to the tests."""
+    g = re.match(test_name_regexp, cell.source)
+    print("Cell source:", repr(cell.source))
+    try:
+        return g[1].strip().capitalize()
+    except Exception as e:
+        return "Unnamed"
 
 def check_cell_valid(cell):
     if is_cell_solution(cell) and is_cell_tests(cell):
@@ -78,11 +90,17 @@ def create_master_notebook(notebook_string):
     The grading master looks like a normal notebook, but contains the metadata
     that can be used for grading.
     From the grading master, it is possible to derive the notebook that is
-    assigned to students."""
+    assigned to students.
+    Returns:
+        - Json of master notebook
+        - total points
+        - list of (test_id, test_name, test_points) in the notebook.
+    """
     nb = nbformat.reads(notebook_string, as_version=4)
     new_nb = nbformat.reads(notebook_string, as_version=4)
     new_nb.cells = []
     total_points = 0
+    test_list = []
     for i, c in enumerate(nb.cells):
         if "outputs" in c:
             c.outputs = ""
@@ -107,6 +125,8 @@ def create_master_notebook(notebook_string):
                 points = get_test_points(c)
                 meta.test_points = points
                 total_points += points
+                test_name = get_test_name(c)
+                test_list.append((meta.id, test_name, points))
         c.metadata.notebookgrader = meta
         new_nb.cells.append(c)
     ensure(new_nb, 'metadata')
@@ -119,7 +139,7 @@ def create_master_notebook(notebook_string):
     # Adds total points into notebook.
     ensure(new_nb.metadata, 'notebookgrader')
     new_nb.metadata.notebookgrader.total_points = total_points
-    return nbformat.writes(new_nb, version=4), total_points
+    return nbformat.writes(new_nb, version=4), total_points, test_list
 
 def produce_student_version(master_notebook_string):
     """Given a master notebook string, produces the student version.
@@ -134,6 +154,16 @@ def produce_student_version(master_notebook_string):
             remove_from_cell(c, SOLUTION, SOLUTION_REPLACEMENT)
     return nbformat.writes(nb, version=4)
 
+
+def extract_awarded_points(nb):
+    """Returns a dictionary mapping cell id to awarded points."""
+    d = {}
+    for c in nb.cells:
+        if c.cell_type == "code":
+            meta = c.metadata.notebookgrader
+            if hasattr(meta, "is_tests") and meta.is_tests:
+                d[meta.id] = meta.points_earned
+    return d
 
 def test_total_points():
     with open("./test_files/TestoutJuly2023source.json") as f:

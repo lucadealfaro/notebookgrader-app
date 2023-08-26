@@ -1,4 +1,5 @@
 import datetime
+import json
 import nbformat
 import requests
 import time
@@ -16,7 +17,7 @@ from .settings import STUDENT_GRADING_CALLBACK, MIN_TIME_BETWEEN_GRADE_REQUESTS
 from .common import flash, url_signer, gcs
 from .util import upload_to_drive, read_from_drive, long_random_id, random_id, send_grading_request
 from .run_notebook import match_notebooks
-from .notebook_logic import remove_all_hidden_tests
+from .notebook_logic import remove_all_hidden_tests, extract_awarded_points
 from .models import build_drive_service
 
 from .api_homework_grid import HomeworkGrid
@@ -138,7 +139,7 @@ def recent_grade_checker(id=None):
     recent_grade = db((db.grade.homework_id == id) &
                       (db.grade.student == get_user_email())).select(orderby=~db.grade.grade_date).first()
     return dict(last_grade_date=
-                recent_grade.grade_date if recent_grade is not None 
+                recent_grade.grade_date if recent_grade is not None
                 else "0000-00-00 00:00:00")
 
 
@@ -274,6 +275,7 @@ def process_grade(homework, assignment, grade_date, student, is_valid, points, n
         grade=points,
         drive_id=feedback_id,
         is_valid=is_valid,
+        cell_id_to_points=json.dumps(extract_awarded_points(feedback_nb)),
     )
     # Updates the grade in the homework.
     if is_valid:

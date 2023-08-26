@@ -57,6 +57,7 @@ db.define_table(
     Field('max_submissions_in_24h_period', 'integer'),
     Field('access_url', default=random_id),
     Field('max_points', 'integer'),
+    Field('test_ids', 'text'), # Json string of pairs [(id, name, points), ...] of tests.
 )
 
 db.assignment.max_submissions_in_24h_period.requires = IS_INT_IN_RANGE(1, 3)
@@ -86,6 +87,7 @@ db.define_table(
     Field('grade', 'float'),
     Field('drive_id'), # Location in Drive of feedback
     Field('is_valid', 'boolean', default=False),
+    Field('cell_id_to_points', 'text'), # Json dictionary of grade breakdown.
 )
 
 db.define_table(

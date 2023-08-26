@@ -54,12 +54,15 @@ of course.
 
 ### Test cells
 
-A test cell must begin with `# Tests 10 points` (or whatever the number of 
-points is) as its very first line.  You can include hidden tests between 
+A test cell must begin with `# Tests 10 points: What-you-are-testing` (or 
+whatever the number of points is) as its very first line.  
+The What-you-are-testing is used so you can see later how many points 
+students got, on average, on that test. 
+You can include hidden tests between 
 pairs of ### BEGIN/END HIDDEN TESTS as follows: 
 
 ```python
-# Tests 10 points. 
+# Tests 10 points: Tests for factorial 
 
 assert factorial(2) == 2
 assert factorial(3) == 6

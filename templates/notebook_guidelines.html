@@ -10,11 +10,11 @@ div.box pre { padding: 0 0 0 0;}
   
   <h2 class="subtitle mt-4">TL;DR</h2>
   
-  <p>NotebookGrader uses the same format as <a target="_blank" href="https://nbgrader.readthedocs.io/en/stable/">nbgrader</a>, except that test cells have to begin with a comment with the format:</p>
+  <p>NotebookGrader uses the same format as <a target="_blank" href="https://nbgrader.readthedocs.io/en/stable/">nbgrader</a>, except that test cells have to begin with a comment with the following format (you can change the number of points and the description):</p>
 
     <div class="box mt-3 has-background-white-ter">
       <pre>
-# Tests 10 points.
+# Tests 10 points: Tests for something.
 
 ...</pre>
     </div>
@@ -79,7 +79,7 @@ def fibonacci(n):
   
     <div class="box mt-3 has-background-white-ter">
     <pre>
-# Tests 10 points.
+# Tests 10 points: Fibonacci
 
 assert fibonacci(4) == 3
 
@@ -91,7 +91,7 @@ assert fibonacci(15) == 610
   <p>Then the student's version of the notebook will contain the following two cells:</p>
 
     <div class="box mt-3 has-background-white-ter">
-      <b>Tests: 10 points.</b>
+      <b>Tests: 10 points: Fibonacci</b>
     </div>
     <div class="box mt-3 has-background-white-ter">
     <pre>
@@ -101,6 +101,8 @@ assert fibonacci(4) == 3</pre>
       </div>
   
   <p>where the hidden test is not present.</p>
+  
+  <p class="mt-3">The <span class="is-family-monospace">Fibonacci</span> name is used as the name of the test in reporting statistics.</p>
   
   <p class="mt-3">Please look for the presence of the additional markdown cell in the student version of the notebook: its presence ensures that NotebookGrader has properly recognized the tests.</p>
 
