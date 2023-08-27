@@ -37,7 +37,7 @@ def share_assignment_with_student(assignment):
     return student_drive_id
 
 @action('invite/<access_url>')
-@action.uses('invite.html', db, auth.user, flash)
+@action.uses('invite.html', db, auth.user)
 def invite(access_url=None):
     if access_url is None:
         redirect(URL('student-home'))
@@ -83,6 +83,7 @@ def invite(access_url=None):
         assignment_id=assignment.id,
         drive_id=student_drive_id,
     )
+    print("Redirect 3")
     redirect(URL('student-home'))
 
 @action('student-home')

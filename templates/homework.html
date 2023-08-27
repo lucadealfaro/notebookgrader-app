@@ -40,7 +40,7 @@
   <div class="mt-5" v-if="drive_url && submission_open">
     <p >To receive credit for your work, you must submit it for grading before the deadline.
     <b>You can still request [[=assignment.max_submissions_in_24h_period - num_grades_past_24h]] gradings</b> in these 24h.</p>
-    
+    <p class="mt-3"><b>Save your Colab notebook</b> before requesting grading.</p>
     <button class="button is-warning mt-2" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Work</button>
     
     <div class="box has-background-success-light has-text-success-dark mt-2" v-if="grading_outcome && !grading_error">
