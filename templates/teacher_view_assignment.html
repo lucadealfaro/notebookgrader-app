@@ -34,11 +34,14 @@
     <p>Students can use this URL to join the assignment.
       If you regenerate it, students with the old URL will no longer be able to join the assignment.</p>
   </div>
-  <p><span class="box is-family-monospace is-size-7">{{access_url}}</span>
-    [[if is_owner:]]
+  <div class="control">
+    <input class="input is-family-monospace is-family-monospace is-size-7" type="text" :value="access_url" readonly>
+  </div>
+  [[if is_owner:]]
+  <p class="mt-3">
     <button class="button is-warning" @click="regenerate_access_url"><span class="icon is-small"><i class="fa fa-refresh"></i></span><span>Regenerate</span></button>
-    [[pass]]
   </p>
+  [[pass]]
 
   <div @mouseleave="show_notebook_help = false">
     <h2 class="subtitle mt-5">Notebook <span @mouseover="show_notebook_help = true" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
