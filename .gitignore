@@ -4,3 +4,5 @@ databases/*
 !databases/README.md
 private/*
 temp_files/*
+private
+test_files
