@@ -28,12 +28,12 @@
   <div v-if="drive_url">
     <a :href="drive_url" target="_blank" class="button is-success mt-3">Access assignment</a>
   </div>
-  <div v-else-if="assignment_is_available">
-    <p>Please obtain the assignment by clicking on the button below:</p>
-    <p><button class="button is-success" :class="{'is-loading': obtain_disabled}" :disabled="obtain_disabled" :@click="obtain_assignment">Get Assignment</button></p>
+  <div v-if="!drive_url && assignment_is_available">
+    <p class="has-text-weight-semibold mt-2">Please obtain the assignment by clicking on the button below:</p>
+    <p><button class="button is-success" :class="{'is-loading': obtain_disabled}" :disabled="obtain_disabled" @click="obtain_assignment">Get Assignment</button></p>
   </div>
   <div v-else>
-    <p>The assignment will become available on {{date_available}}.</p>
+    <p class="has-text-weight-semibold mt-2">The assignment will become available on {{date_available}}.</p>
   </div>
   
   [[if can_grade:]]

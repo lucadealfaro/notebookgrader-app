@@ -113,7 +113,7 @@ def homework(id=None):
     reason = None
     if homework.drive_id is None:
         can_grade = False
-        reason = "You have not submitted anything that can be graded."
+        reason = "You have not submitted anything yet."
     elif not (assignment.available_from < now < assignment.available_until):
         can_grade = False
         reason = "The assignment is not open."
@@ -286,7 +286,7 @@ def process_grade(homework, assignment, grade_date, student, is_valid, points, n
     homework.update_record()
 
 
-@action('obtain-assignment/<id>')
+@action('obtain-assignment/<id>', method=["POST"])
 @action.uses(db, auth.user, url_signer.verify())
 def obtain_assignment(id=None):
     homework = db.homework[id]
