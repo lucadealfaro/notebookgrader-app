@@ -62,7 +62,7 @@ class ParticipantsGrid(Grid):
         # Forms the database query.
         query = ((db.homework.assignment_id == id) &
                  (db.homework.student == db.auth_user.email))
-        if req.query is not None:
+        if req.query:
             query &= ((db.auth_user.first_name.startswith(req.query)) |
                       (db.auth_user.last_name.startswith(req.query)) |
                       (db.auth_user.email.startswith(req.query)))
