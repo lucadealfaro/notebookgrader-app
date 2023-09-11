@@ -79,7 +79,8 @@ class ParticipantsGrid(Grid):
                 dict(text=r["auth_user"]["first_name"]),
                 dict(text=r["auth_user"]["last_name"]),
                 dict(text=r["auth_user"]["email"]),
-                dict(html=A(I(_class="fa fa-file"), _target="_blank", _href=COLAB_BASE + r["homework"]["drive_id"]).xml()),
+                (dict(html=A(I(_class="fa fa-file"), _target="_blank", _href=COLAB_BASE + r["homework"]["drive_id"]).xml())
+                 if r["homework"]["drive_id"] is not None else ""),
                 dict(text=r["homework"]["grade"], url=URL("teacher-homework-details", r["homework"]["id"], signer=self.signer)),
                 dict(html=A(indicator, _href=URL("teacher-homework-details", r["homework"]["id"], signer=self.signer)).xml()),
             ]))
