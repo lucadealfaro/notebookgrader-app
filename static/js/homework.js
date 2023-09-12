@@ -44,6 +44,8 @@ let init = (app) => {
         app.vue.obtain_disabled = true; // To avoid double clicks.
         axios.post(obtain_assignment_url).then(function (res) {
             app.vue.drive_url = res.data.drive_url;
+        }).catch(function (err) {
+            location.reload();
         });
     };
 
@@ -53,6 +55,8 @@ let init = (app) => {
                 if (app.last_grade_date < res.data.last_grade_date) {
                     location.reload();
                 }
+            }).catch(function(err) {
+                location.reload();
             })
         }, 5000);
     };
@@ -72,6 +76,8 @@ let init = (app) => {
                     location.reload();
                 }
             }
+        }).catch(function (err) {
+            location.reload();
         })
     }
 
