@@ -20,6 +20,8 @@ let init = (app) => {
         date_closes: null,
         timestamp_closes: null,
         assignment_is_available: null,
+        assignment_not_yet_open: false,
+        can_obtain_notebook: false,
         submission_open: null,
         // Etc.
         drive_url: null,
@@ -111,7 +113,9 @@ let init = (app) => {
             app.vue.date_closes = local_closes.toLocaleString(luxon.DateTime.DATETIME_MED_WITH_WEEKDAY);
             // Drive URL.
             app.vue.drive_url = res.data.drive_url;
-            app.vue.assignment_is_available = Date.now() >= timestamp_available;
+            app.vue.can_obtain_notebook = res.data.can_obtain_notebook;
+            app.vue.assignment_is_available = Date.now() >= timestamp_available && app.vue.can_obtain_notebook;
+            app.vue.assignment_not_yet_open = Date.now() < timestamp_available;
             app.vue.submission_open = Date.now() < timestamp_closes;
         });
         axios.get(recent_grade_date_url).then(function (res) {

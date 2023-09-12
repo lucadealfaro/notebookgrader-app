@@ -317,5 +317,6 @@ def homework_details(id=None):
         available_from=assignment.available_from.isoformat(),
         submission_deadline=assignment.submission_deadline.isoformat(),
         available_until=assignment.available_until.isoformat(),
+        can_obtain_notebook=assignment.master_id_gcs is not None,
         drive_url=None if homework.drive_id is None else COLAB_BASE + homework.drive_id
     )

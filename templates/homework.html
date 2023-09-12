@@ -32,9 +32,13 @@
     <p class="has-text-weight-semibold mt-2">Please obtain the assignment by clicking on the button below:</p>
     <p><button class="button is-success" :class="{'is-loading': obtain_disabled}" :disabled="obtain_disabled" @click="obtain_assignment">Get Assignment</button></p>
   </div>
-  <div v-else>
+  <div v-else-if="assignment_not_yet_open">
     <p class="has-text-weight-semibold mt-2">The assignment will become available on {{date_available}}.</p>
   </div>
+  <div v-else>
+    <p class="has-text-weight-semibold mt-2">The instructor has not finalized the assignment yet. Check back later.</p>
+  </div>
+  
   
   [[if can_grade:]]
   <div class="mt-5" v-if="drive_url && submission_open">
