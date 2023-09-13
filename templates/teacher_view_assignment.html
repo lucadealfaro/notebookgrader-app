@@ -102,9 +102,17 @@
 [[block page_scripts]]
 <!-- Loads the index-specific js for Vue -->
 <script>
+    [[if change_access_url is not None:]]
     const change_access_url = "[[=XML(change_access_url)]]";
+    [[else:]]
+    const change_access_url = null;
+    [[pass]]
     const notebook_version_url = "[[=XML(notebook_version_url)]]";
+    [[if upload_url is not None:]]
     const upload_url = "[[=XML(upload_url)]]";
+    [[else:]]
+    const upload_url = null;
+    [[pass]]
 </script>
 <script src="components-bulma/vueform/luxon.min.js"></script>
 <script src="[[=URL('static/components-bulma/vueform/vueform.js')]]"></script>

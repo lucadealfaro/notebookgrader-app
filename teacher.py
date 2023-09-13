@@ -60,7 +60,7 @@ def teacher_view_assignment(id=None):
         form=form,
         assignment_id=assignment.id,
         is_owner=is_owner,
-        change_access_url=URL('change-access-url', id, signer=url_signer) if is_owner else None,
+        change_access_url=URL('change-access-url', id, signer=url_signer),
         notebook_version_url=URL('notebook-version', id, signer=url_signer),
         upload_url=URL('upload-notebook', id, signer=url_signer) if is_owner else None,
     )
@@ -74,8 +74,10 @@ def change_access_url(id=None):
         assignment = db.assignment[id]
         if assignment is None:
             return dict(access_url=None)
-        assignment.access_url = random_id()
-        assignment.update_record()
+        is_owner = assignment.owner == get_user_email()
+        if is_owner:
+            assignment.access_url = random_id()
+            assignment.update_record()
     return dict(access_url=URL('invite', assignment.access_url, scheme=True))
 
 @action('notebook-version/<id>', method=['GET'])
