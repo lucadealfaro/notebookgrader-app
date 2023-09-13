@@ -29,8 +29,7 @@ class GoogleScopedLogin(object):
     label = "Google Scoped"
     callback_url = "auth/plugin/oauth2googlescoped/callback"
 
-    def __init__(self, secrets_file=None, scopes=None, db=None,
-                 define_tables=True, delete_credentials_on_logout=True):
+    def __init__(self, secrets_file=None, scopes=None, db=None, define_tables=True):
         """
         Creates an authorization object for Google with Oauth2 and paramters.
         Args:
@@ -58,7 +57,6 @@ class GoogleScopedLogin(object):
         self.db = db
         if db and define_tables:
             self._define_tables()
-            self.delete_credentials_on_logout = delete_credentials_on_logout
 
 
     def _define_tables(self):
@@ -78,12 +76,6 @@ class GoogleScopedLogin(object):
         elif path == "callback":
             self._handle_callback(auth, get_vars)
         elif path == "logout":
-            # Deletes the credentials, and clears the session.
-            if self.delete_credentials_on_logout:
-                email = auth.current_user.get('email') if auth.current_user else None
-                if email is not None:
-                    self.db(self.db.auth_credentials.email == email).delete()
-                    self.db.commit()
             auth.session.clear()
             next = request.query.get("next") or URL("index")
             redirect(next)
