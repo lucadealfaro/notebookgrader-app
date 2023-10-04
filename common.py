@@ -14,6 +14,7 @@ from pydal.tools.tags import Tags
 from py4web.utils.factories import ActionFactory
 from py4web.utils.form import FormStyleBulma
 from py4web.utils.url_signer import URLSigner
+from py4web.utils.auth_plugins.oauth2google_scoped import AuthEnforcerGoogleScoped
 
 from . import settings
 from .settings import APP_FOLDER, IS_TEST
@@ -154,6 +155,8 @@ auth.register_plugin(GoogleScopedLogin(
         "https://www.googleapis.com/auth/drive.file",
     ]
 ))
+
+auth.param.auth_enforcer = AuthEnforcerGoogleScoped(auth, error_page="credentials_error")
 
 # Below are the standard py4web plugins.
 

@@ -120,3 +120,7 @@ def delete_gcs(gcs_id):
     if gcs_id is not None:
         gcs.delete(GCS_BUCKET, gcs_id)
 
+@action("credentials_error")
+@action.uses("credentials_error.html")
+def credentials_errors():
+    return dict()

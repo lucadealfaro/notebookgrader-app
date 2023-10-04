@@ -23,6 +23,9 @@ from .models import build_drive_service
 from .api_homework_grid import HomeworkGrid
 from .api_grades_grid import StudentGradesGrid
 
+# Debug
+# from google.auth.exceptions import RefreshError
+
 homework_grid = HomeworkGrid('homework-grid')
 student_grades_grid = StudentGradesGrid('student-grades-grid')
 
