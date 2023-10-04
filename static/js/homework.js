@@ -45,7 +45,7 @@ let init = (app) => {
         axios.post(obtain_assignment_url).then(function (res) {
             app.vue.drive_url = res.data.drive_url;
         }).catch(function (err) {
-            location.reload();
+            location.assign(error_url);
         });
     };
 
@@ -53,10 +53,10 @@ let init = (app) => {
         app.checker = setInterval(() => {
             axios.get(recent_grade_date_url).then(function (res) {
                 if (app.last_grade_date < res.data.last_grade_date) {
-                    location.reload();
+                    location.assign(error_url);
                 }
             }).catch(function(err) {
-                location.reload();
+                location.assign(error_url);
             })
         }, 5000);
     };
@@ -73,11 +73,11 @@ let init = (app) => {
                 app.vue.is_grading = false;
                 if (!res.data.error) {
                     // The new grade has arrived.
-                    location.reload();
+                    location.assign(error_url);
                 }
             }
         }).catch(function (err) {
-            location.reload();
+            location.assign(error_url);
         })
     }
 
