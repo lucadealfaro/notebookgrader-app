@@ -55,8 +55,9 @@
       {{grading_outcome}}
     </div>
     <div v-if="cell_source" class="control">
-      <p>Please fix the error in the code below and request grading again:</p>
-      <textarea class="textarea is-danger" type="text" :value="cell_source" readonly></textarea>
+      <p class="has-text-danger-dark">Go to <a :href="drive_url" target="_blank">your assignment</a>,
+        fix the error in the code cell depicted below, and request grading again:</p>
+      <textarea class="textarea is-danger is-family-monospace is-size-7" type="text" :value="cell_source" readonly></textarea>
     </div>
 
   </div>
