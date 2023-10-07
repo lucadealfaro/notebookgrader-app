@@ -45,6 +45,8 @@ let init = (app) => {
         app.vue.obtain_disabled = true; // To avoid double clicks.
         axios.post(obtain_assignment_url).then(function (res) {
             app.vue.drive_url = res.data.drive_url;
+            // We reload the page.
+            location.reload();
         }).catch(function (err) {
             location.assign(error_url);
         });

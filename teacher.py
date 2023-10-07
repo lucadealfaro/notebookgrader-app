@@ -107,9 +107,9 @@ def upload_notebook(id=None):
     student_notebook_json = produce_student_version(master_notebook_json)
     # Are there already students working on the assignment?
     # If so, we can change it only if the student version has not changed.
-    if ((not db(db.homework.assignment_id == assignment.id).isempty())
-        and assignment.available_from < datetime.datetime.utcnow()
-        and assignment.student_id_gcs is not None):
+    not_started = db((db.homework.assignment_id == assignment.id)
+                     & (db.homework.drive_id != None)).isempty()
+    if not not_started:
         # There are already students that can access it.
         # Gets previous student version.
         previous_student_version = gcs.read(GCS_BUCKET, assignment.student_id_gcs)
