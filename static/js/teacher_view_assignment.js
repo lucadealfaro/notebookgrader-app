@@ -39,6 +39,7 @@ let init = (app) => {
         let file = input.files[0];
         if (file) {
             app.vue.uploading = true;
+            app.vue.upload_error = null;
             let file_type = file.type;
             let file_name = file.name;
             let now = luxon.DateTime.local();

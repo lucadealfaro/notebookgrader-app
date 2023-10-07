@@ -10,7 +10,7 @@ from pydal import Field
 from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
 from py4web.utils.form import Form, FormStyleBulma
-from .models import get_user_email, build_drive_service, can_access_assignment
+from .models import get_user_email, build_drive_service, can_access_assignment, get_assignment_teachers
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, ADMIN_EMAIL
 
 from .common import flash, url_signer, gcs
@@ -98,16 +98,30 @@ def upload_notebook(id=None):
         return "ok"
     # This is a POST for the file.
     notebook_json = request.params.notebook_content
-    date_string = request.params.date_string or datetime.datetime.utcnow().isoformat()
     # Tries to process the notebook
     try:
         master_notebook_json, total_points, test_list = create_master_notebook(notebook_json)
     except InvalidCell as e:
         return dict(error=str(e))
-    assignment.max_points = total_points
-    assignment.test_ids = json.dumps(test_list)
     # Produces the student version.
     student_notebook_json = produce_student_version(master_notebook_json)
+    # Are there already students working on the assignment?
+    # If so, we can change it only if the student version has not changed.
+    if ((not db(db.homework.assignment_id == assignment.id).isempty())
+        and assignment.available_from < datetime.datetime.utcnow()
+        and assignment.student_id_gcs is not None):
+        # There are already students that can access it.
+        # Gets previous student version.
+        previous_student_version = gcs.read(GCS_BUCKET, assignment.student_id_gcs)
+        if student_notebook_json != previous_student_version:
+            return dict(
+                error="You cannot change the assignment in a way that modifies the student version once the students have started working on it.",
+                instructor_version=COLAB_BASE + assignment.master_id_drive,
+                student_version=COLAB_BASE + assignment.student_id_drive,
+            )
+    date_string = request.params.date_string or datetime.datetime.utcnow().isoformat()
+    assignment.max_points = total_points
+    assignment.test_ids = json.dumps(test_list)
     # Runs the instructor notebook.
     # Enqueues the request.
     payload = dict(
@@ -131,10 +145,13 @@ def upload_notebook(id=None):
     drive_service = build_drive_service()
     master_file_name = "{}, version: {}".format(assignment.name, date_string)
     student_file_name = "{}, version: {}".format(assignment.name, date_string)
+    tas = get_assignment_teachers(assignment.id, exclude=assignment.owner)
     assignment.master_id_drive = upload_to_drive(
-        drive_service, master_notebook_json, master_file_name, id=assignment.master_id_drive)
+        drive_service, master_notebook_json, master_file_name,
+        read_share=tas, id=assignment.master_id_drive)
     assignment.student_id_drive = upload_to_drive(
-        drive_service, student_notebook_json, student_file_name, id=assignment.student_id_drive)
+        drive_service, student_notebook_json, student_file_name,
+        read_share=tas, id=assignment.student_id_drive)
     assignment.update_record()
     return dict(
         error="The notebook could not be executed correctly, please check the results." if has_errors else None,

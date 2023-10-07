@@ -53,7 +53,8 @@ def random_id():
 def long_random_id():
     return hashlib.sha256(uuid.uuid1().bytes).hexdigest()
 
-def upload_to_drive(drive_service, s, drive_file_name, id=None, shared=None):
+def upload_to_drive(drive_service, s, drive_file_name, id=None,
+                    write_share=None, read_share=None):
     """
     Uploads a string to drive
     Args:
@@ -61,7 +62,8 @@ def upload_to_drive(drive_service, s, drive_file_name, id=None, shared=None):
         s: string to upload
         drive_file_name: file name to use in drive.
         id: if given, uses the given id.
-        shared: if given, shares the file with the given user.
+        write_share: Optional list of people with whom to share in write mode.
+        read_share: Optional list of people with whom to share in read mode.
     Returns:
         The file id.
     """
@@ -84,19 +86,27 @@ def upload_to_drive(drive_service, s, drive_file_name, id=None, shared=None):
             fileId=id,
         ).execute()
     # Shares the file if requested.
-    if shared:
-        user_permission = {
-            'type': 'user',
-            'role': 'writer',
-            'emailAddress': shared
-        }
-        drive_service.permissions().create(
-            fileId=id,
-            body=user_permission,
-            fields='id',
-            sendNotificationEmail=False,  # otherwise, Google throttles us
-        ).execute()
+    for user in (write_share or []):
+        share_drive_file(drive_service, id, user, "writer")
+    for user in (read_share or []):
+        share_drive_file(drive_service, id, user, "reader")
     return id
+
+
+def share_drive_file(drive_service, file_id, user, mode):
+    """Shares a drive file with a user in the requested mode."""
+    user_permission = {
+        'type': 'user',
+        'role': mode,
+        'emailAddress': user
+    }
+    drive_service.permissions().create(
+        fileId=file_id,
+        body=user_permission,
+        fields='id',
+        sendNotificationEmail=False,  # otherwise, Google throttles us
+    ).execute()
+
 
 def read_from_drive(drive_service, drive_id):
     """Reads a drive id into a string."""

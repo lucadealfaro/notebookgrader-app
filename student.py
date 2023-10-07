@@ -18,7 +18,7 @@ from .common import flash, url_signer, gcs
 from .util import upload_to_drive, read_from_drive, long_random_id, random_id, send_grading_request
 from .run_notebook import match_notebooks
 from .notebook_logic import remove_all_hidden_tests, extract_awarded_points, is_notebook_well_formed
-from .models import build_drive_service
+from .models import build_drive_service, get_assignment_teachers
 
 from .api_homework_grid import HomeworkGrid
 from .api_grades_grid import StudentGradesGrid
@@ -36,7 +36,7 @@ def share_assignment_with_student(assignment):
     drive_service = build_drive_service()
     student_drive_id = upload_to_drive(drive_service, notebook_json.decode('utf-8'),
                                        assignment.name,
-                                       shared=assignment.owner)
+                                       write_share=get_assignment_teachers(assignment.id))
     return student_drive_id
 
 @action('invite/<access_url>')
@@ -279,9 +279,15 @@ def process_grade(homework, assignment, grade_date, student, is_valid, points, n
     feedback_name = "Feedback for {} {}, on {}".format(
         assignment.name, get_user_email(), grade_date.isoformat()
     )
-    drive_service = build_drive_service(user=student)
+    drive_service = build_drive_service(user=assignment.owner)
+    # The file will be shared with the student in read mode.
+    # In this way, the student cannot modify the feedback (e.g. by running it)
+    # which is a common fallacy, as it deletes feedback information.
+    read_share = [student]
+    # ... and also with the TAs.
+    read_share.extend(get_assignment_teachers(assignment.id, exclude=assignment.owner))
     feedback_id = upload_to_drive(drive_service, feedback_json,
-                                  feedback_name, shared=assignment.owner)
+                                  feedback_name, read_share=read_share)
     # We use the time of submission to determine validity.
     db.grade.insert(
         student=student,
