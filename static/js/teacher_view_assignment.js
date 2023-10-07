@@ -55,10 +55,8 @@ let init = (app) => {
                 ).then(function (res) {
                     app.vue.uploading = false;
                     app.vue.upload_error = res.data.error;
-                    if (!res.data.error) {
-                        app.vue.instructor_version = res.data.instructor_version;
-                        app.vue.student_version = res.data.student_version;
-                    }
+                    app.vue.instructor_version = res.data.instructor_version;
+                    app.vue.student_version = res.data.student_version;
                 })
             });
             reader.readAsText(file);

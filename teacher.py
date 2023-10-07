@@ -102,8 +102,8 @@ def upload_notebook(id=None):
     # Tries to process the notebook
     try:
         master_notebook_json, total_points, test_list = create_master_notebook(notebook_json)
-    except InvalidCell as e:
-        return dict(error=str(e))
+    except Exception as e:
+        return dict(error="Your notebook is in an invalid format. Please upload a valid notebook.")
     assignment.max_points = total_points
     assignment.test_ids = json.dumps(test_list)
     # Produces the student version.
