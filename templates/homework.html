@@ -54,6 +54,11 @@
     <div class="box has-background-danger-light has-text-danger-dark mt-2" v-if="grading_outcome && grading_error">
       {{grading_outcome}}
     </div>
+    <div v-if="cell_source" class="control">
+      <p>Please fix the error in the code below and request grading again:</p>
+      <textarea class="textarea is-danger" type="text" :value="cell_source" readonly></textarea>
+    </div>
+</div>
 
   </div>
   [[else:]]

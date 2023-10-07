@@ -29,6 +29,7 @@ let init = (app) => {
         is_grading: false,
         grading_error: null,
         grading_outcome: "",
+        cell_source: null,
     };
 
     app.time_zone = luxon.DateTime.local().zoneName;
@@ -53,7 +54,8 @@ let init = (app) => {
         app.checker = setInterval(() => {
             axios.get(recent_grade_date_url).then(function (res) {
                 if (app.last_grade_date < res.data.last_grade_date) {
-                    location.assign(error_url);
+                    // There is a new grade now.
+                    location.reload();
                 }
             }).catch(function(err) {
                 location.assign(error_url);
@@ -63,17 +65,21 @@ let init = (app) => {
 
     app.grade_homework = function () {
         app.vue.is_grading = true;
+        app.vue.grading_outcome = null;
+        app.vue.cell_source = null;
+        app.vue.is_error = null;
         axios.post(grade_homework_url, {}).then(function (res) {
             app.vue.grading_outcome=res.data.outcome;
             app.vue.grading_error=res.data.is_error;
+            app.vue.cell_source = res.data.cell_source;
             if (res.data.watch) {
                 // We have to watch for changes.
                 app.check_new_grade();
             } else {
                 app.vue.is_grading = false;
-                if (!res.data.error) {
+                if (!res.data.is_error) {
                     // The new grade has arrived.
-                    location.assign(error_url);
+                    location.reload();
                 }
             }
         }).catch(function (err) {

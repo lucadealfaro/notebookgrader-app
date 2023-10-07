@@ -164,23 +164,73 @@ def extract_awarded_points(nb):
                 d[meta.id] = meta.points_earned
     return d
 
+
+# Logic to check absence of imports in submissions.
+class ForbiddenImport(Exception):
+    pass
+
+
+class ImportInspector(ast.NodeTransformer):
+
+    def visit_Import(self, node):
+        raise ForbiddenImport()
+
+    def visit_ImportFrom(self, node):
+        raise ForbiddenImport()
+
+import_inspector = ImportInspector()
+
+def is_solution(c):
+    return (c.cell_type == "code"
+            and hasattr(c, "metadata")
+            and hasattr(c.metadata, "notebookgrader")
+            and hasattr(c.metadata.notebookgrader, "is_solution")
+            and c.metadata.notebookgrader.is_solution)
+
+def is_notebook_well_formed(notebook_string):
+    """
+    Checks whether the notebook is well-formed and can be graded.
+    Args:
+        notebook_string:
+
+    Returns:
+
+    """
+    nb = nbformat.reads(notebook_string, as_version=4)
+    for c in nb.cells:
+        if is_solution(c):
+            try:
+                parse_tree = ast.parse(c.source)
+            except SyntaxError as e:
+                return False, c.source, "Syntax error"
+            try:
+                import_inspector.visit(parse_tree)
+            except ForbiddenImport as e:
+                return False, c.source, "Imports are not allowed in solution cells"
+    return True, None, None
+
+
+
+
+##################################
+
 def test_total_points():
     with open("./test_files/TestoutJuly2023source.json") as f:
         s0 = f.read()
-    s1, pts = create_master_notebook(s0)
+    s1, pts, _ = create_master_notebook(s0)
     assert pts == 65
 
 def test_produce_master_twice():
     with open("./test_files/TestoutJuly2023source.json") as f:
         s0 = f.read()
-    s1, _ = create_master_notebook(s0)
-    s2, _ = create_master_notebook(s1)
+    s1, _, _ = create_master_notebook(s0)
+    s2, _, _ = create_master_notebook(s1)
     assert s1 == s2
 
 def test_no_solution():
     with open("./test_files/TestoutJuly2023source.json") as f:
         s0 = f.read()
-    s1, _ = create_master_notebook(s0)
+    s1, _, _ = create_master_notebook(s0)
     s2 = produce_student_version(s1)
     nb = nbformat.reads(s2, as_version=4)
     for c in nb.cells:
@@ -189,9 +239,24 @@ def test_no_solution():
 def test_no_hidden_tests():
     with open("./test_files/TestoutJuly2023source.json") as f:
         s0 = f.read()
-    s1, _ = create_master_notebook(s0)
+    s1, _, _ = create_master_notebook(s0)
     s2 = produce_student_version(s1)
     nb = nbformat.reads(s2, as_version=4)
     for c in nb.cells:
         assert BEGIN_HIDDEN_TESTS not in c.source
 
+def test_no_solution_imports():
+    with open("./test_files/TestoutJuly2023source_with_imports.json") as f:
+        s0 = f.read()
+    s1, _, _ = create_master_notebook(s0)
+    v, c, r = is_notebook_well_formed(s1)
+    # print(r)
+    assert v is False
+
+def test_syntax_errors():
+    with open("./test_files/TestoutJuly2023source_with_syntax_errors.json") as f:
+        s0 = f.read()
+    s1, _, _ = create_master_notebook(s0)
+    v, c, r = is_notebook_well_formed(s1)
+    # print(r)
+    assert v is False

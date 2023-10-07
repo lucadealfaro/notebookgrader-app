@@ -17,7 +17,7 @@ from .settings import STUDENT_GRADING_CALLBACK, MIN_TIME_BETWEEN_GRADE_REQUESTS
 from .common import flash, url_signer, gcs
 from .util import upload_to_drive, read_from_drive, long_random_id, random_id, send_grading_request
 from .run_notebook import match_notebooks
-from .notebook_logic import remove_all_hidden_tests, extract_awarded_points
+from .notebook_logic import remove_all_hidden_tests, extract_awarded_points, is_notebook_well_formed
 from .models import build_drive_service
 
 from .api_homework_grid import HomeworkGrid
@@ -183,11 +183,20 @@ def grade_homework(id=None):
             is_error=True,
             outcome="You can ask for grading only once every {} seconds.".format(MIN_TIME_BETWEEN_GRADE_REQUESTS))
     # The assignment can be graded.
-    # Reads the master copy.
-    master_json = gcs.read(GCS_BUCKET, assignment.master_id_gcs)
     # Reads the student assignment.
     drive_service = build_drive_service()
     submission_json = read_from_drive(drive_service, homework.drive_id)
+    # Checks for the well-formedness of the notebook.
+    is_well_formed, cell_source, reason = is_notebook_well_formed(submission_json)
+    if not is_well_formed:
+        # Gives feedback to the student immediately.
+        return dict(
+            is_error=True,
+            outcome=reason,
+            cell_source=cell_source,
+        )
+    # Reads the master copy.
+    master_json = gcs.read(GCS_BUCKET, assignment.master_id_gcs)
     # Saves the submission json, to have a record of what has been graded.
     submission_id_gcs = long_random_id()
     gcs.write(GCS_SUBMISSIONS_BUCKET, submission_id_gcs, submission_json,
@@ -242,8 +251,10 @@ def receive_grade():
     had_errors = request.params.had_errors
     grading_request = db(db.grading_request.request_nonce == nonce).select().first()
     if grading_request is None:
+        print("No request")
         return "No request"
     if grading_request.completed:
+        print("Already done")
         return "Already done"
     homework = db.homework[grading_request.homework_id]
     assignment = db.assignment[homework.assignment_id]
