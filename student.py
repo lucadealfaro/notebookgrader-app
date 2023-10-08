@@ -243,7 +243,7 @@ def grade_homework(id=None):
 
 
 @action('receive-grade', method=["POST"])
-@action.uses(db)
+@action.uses(db, session)
 def receive_grade():
     nonce = request.params.nonce
     graded_json = request.params.graded_json
