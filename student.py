@@ -287,7 +287,7 @@ def process_grade(homework, assignment, grade_date, student, is_valid, points, n
     # in the revision history.
     write_share = get_assignment_teachers(assignment.id)
     feedback_id = upload_to_drive(drive_service, feedback_json,
-                                  feedback_name, write_share=write_share)
+                                  feedback_name, write_share=write_share, locked=True)
     # We use the time of submission to determine validity.
     db.grade.insert(
         student=student,

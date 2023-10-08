@@ -54,7 +54,7 @@ def long_random_id():
     return hashlib.sha256(uuid.uuid1().bytes).hexdigest()
 
 def upload_to_drive(drive_service, s, drive_file_name, id=None,
-                    write_share=None, read_share=None):
+                    write_share=None, read_share=None, locked=False):
     """
     Uploads a string to drive
     Args:
@@ -64,6 +64,7 @@ def upload_to_drive(drive_service, s, drive_file_name, id=None,
         id: if given, uses the given id.
         write_share: Optional list of people with whom to share in write mode.
         read_share: Optional list of people with whom to share in read mode.
+        locked: Whether to lock the file to edits.
     Returns:
         The file id.
     """
@@ -90,6 +91,13 @@ def upload_to_drive(drive_service, s, drive_file_name, id=None,
         share_drive_file(drive_service, id, user, "writer")
     for user in (read_share or []):
         share_drive_file(drive_service, id, user, "reader")
+    # Locks the file if requested.
+    if locked:
+        drive_service.files().update(
+            fileId=id,
+            body={"contentRestrictions":
+                      [{"readOnly": "true", "reason": "Homework feedback."}]
+                  })
     return id
 
 
