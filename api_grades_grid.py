@@ -20,6 +20,13 @@ GRADE_HELP = """
 A grade is valid if it has been assigned before the due date, 
 or if the instructor has manually flagged it as valid.
 """
+
+FEEDBACK_HELP = """ 
+This is the feedback you received. 
+Note that if you rerun the notebook, the feedback is over-written! 
+To recover it, click on File > Revision history, and view the original version of the file. 
+"""
+
 class StudentGradesGrid(Grid):
 
     def __init__(self, path, **kwargs):
@@ -34,7 +41,7 @@ class StudentGradesGrid(Grid):
             cells=[
                 dict(text="Grade"),
                 dict(text="Graded On"),
-                dict(text="Feedback"),
+                dict(text="Feedback", help=FEEDBACK_HELP),
                 dict(text="Valid", help=GRADE_HELP)
             ],
         )

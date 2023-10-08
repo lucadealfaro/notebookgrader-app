@@ -19,7 +19,12 @@ from .models import get_user_email
 
 GRADE_HELP = "Highest valid grade."
 LATE_HELP = "Does the student have a late grade that is not valid?"
-
+FEEDBACK_HELP = """
+This is the feedback received by the student.  Note that the student
+may have modified the notebook, e.g. by rerunning it, so if you want to see
+the original feedback, you need to go to File > Revision history, and 
+examine the original revision.
+"""
 class HomeworkDetailsGrid(Grid):
 
     def __init__(self, path, **kwargs):
@@ -34,7 +39,7 @@ class HomeworkDetailsGrid(Grid):
             cells=[
                 dict(text="Grade"),
                 dict(text="Graded On"),
-                dict(text="Feedback", help="This is the feedback.  Students often modify it (e.g. by rerunning it), so do not trust what you see. Rather, click on File > Revision history, and examine the original version of the file.  That version actually contains the original feedback. Yes, this is cumbersome, but there is no way to upload to drive files that the file owner cannot modify."),
+                dict(text="Feedback", help=FEEDBACK_HELP),
                 dict(text="Valid", help="You can toggle the validity of a grade"),
             ],
         )
