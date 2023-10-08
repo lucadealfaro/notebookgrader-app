@@ -34,7 +34,7 @@ class HomeworkDetailsGrid(Grid):
             cells=[
                 dict(text="Grade"),
                 dict(text="Graded On"),
-                dict(text="Feedback"),
+                dict(text="Feedback", help="This is the feedback.  Students often modify it (e.g. by rerunning it), so do not trust what you see. Rather, click on File > Revision history, and examine the original version of the file.  That version actually contains the original feedback. Yes, this is cumbersome, but there is no way to upload to drive files that the file owner cannot modify."),
                 dict(text="Valid", help="You can toggle the validity of a grade"),
             ],
         )
