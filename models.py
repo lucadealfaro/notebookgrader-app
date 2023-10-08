@@ -28,7 +28,7 @@ def build_drive_service(user=None):
         db.auth_credentials.email == user).select().first()
     if not user_info:
         print("No user credentials")
-        redirect(URL('index'))
+        return None
     credentials_dict = json.loads(user_info.credentials)
     creds = google.oauth2.credentials.Credentials(**credentials_dict)
     drive_service = build('drive', 'v3', credentials=creds)

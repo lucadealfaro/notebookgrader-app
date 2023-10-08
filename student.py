@@ -248,6 +248,7 @@ def receive_grade():
     nonce = request.params.nonce
     graded_json = request.params.graded_json
     points = request.params.points
+    print("Grading request for nonce:", nonce)
     had_errors = request.params.had_errors
     grading_request = db(db.grading_request.request_nonce == nonce).select().first()
     if grading_request is None:
@@ -258,6 +259,7 @@ def receive_grade():
         return "Already done"
     homework = db.homework[grading_request.homework_id]
     assignment = db.assignment[homework.assignment_id]
+    print("Grading request for assignment id:", assignment.id)
     now = grading_request.created_on
     is_valid = grading_request.created_on < assignment.submission_deadline
     process_grade(homework, assignment, grading_request.created_on,
@@ -279,15 +281,13 @@ def process_grade(homework, assignment, grade_date, student, is_valid, points, n
     feedback_name = "Feedback for {} {}, on {}".format(
         assignment.name, get_user_email(), grade_date.isoformat()
     )
-    drive_service = build_drive_service(user=assignment.owner)
-    # The file will be shared with the student in read mode.
-    # In this way, the student cannot modify the feedback (e.g. by running it)
-    # which is a common fallacy, as it deletes feedback information.
-    read_share = [student]
-    # ... and also with the TAs.
-    read_share.extend(get_assignment_teachers(assignment.id, exclude=assignment.owner))
+    print("Building credentials for:", student)
+    drive_service = build_drive_service(user=student)
+    # We share with the teachers in write mode so that they can go back
+    # in the revision history.
+    write_share = get_assignment_teachers(assignment.id)
     feedback_id = upload_to_drive(drive_service, feedback_json,
-                                  feedback_name, read_share=read_share)
+                                  feedback_name, write_share=write_share)
     # We use the time of submission to determine validity.
     db.grade.insert(
         student=student,
