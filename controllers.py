@@ -31,7 +31,7 @@ import os
 from py4web import action, request, abort, redirect, URL, Flash
 from pydal import Field
 from yatl.helpers import A, BUTTON, SPAN
-from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
+from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated
 from py4web.utils.form import Form, FormStyleBulma
 from .models import get_user_email
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET
@@ -43,10 +43,10 @@ from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 import google.oauth2.credentials
 
-from .common import url_signer, flash, gcs
+from .common import url_signer, gcs
 
 @action('index')
-@action.uses('index.html', db, auth, url_signer, flash)
+@action.uses('index.html', db, auth, url_signer)
 def index():
     return dict(
         # COMPLETE: return here any signed URLs you need.
@@ -105,11 +105,8 @@ def delete_personal_information():
                 # Finally, we delete the session information.
                 # This logs the user out.
                 auth.session.clear()
-                flash.set("All your personal information has been deleted.", sanitize=True)
                 redirect(URL('index'))
         else:
-            flash.set("No information is deleted unless you confirm.",
-                      sanitize=True)
             redirect(URL('delete_personal_information'))
         redirect(URL('index'))
     return dict(form=form)
