@@ -127,3 +127,5 @@ def can_access_assignment(assignment_id):
         not db((db.access.assignment_id == assignment_id) &
                (db.access.user == get_user_email())).isempty())
 
+def is_admin():
+    return get_user_email() == ADMIN_EMAIL
