@@ -231,12 +231,12 @@ def grade_homework(id=None):
         payload = dict(
             notebook_json=nbformat.writes(test_nb, 4)
         )
-        r = send_grading_request(payload,  immediate=True)
+        r = send_grading_request(payload)
         res = r.json()
         points = res.get("points")
         notebook_json = res.get("graded_json")
         process_grade(homework, assignment, now, student, is_valid,
-                      points, notebook_json)
+                      points, notebook_json, submission_id_gcs=submission_id_gcs)
         return dict(is_error=False,
                     watch=False,
                     outcome="")
@@ -263,7 +263,8 @@ def receive_grade():
     now = grading_request.created_on
     is_valid = grading_request.created_on < assignment.submission_deadline
     process_grade(homework, assignment, grading_request.created_on,
-                  grading_request.student, is_valid, points, graded_json)
+                  grading_request.student, is_valid, points, graded_json,
+                  submission_id_gcs=grading_request.input_id_gcs)
     # Marks that the request has been done.
     grading_request.completed = True
     grading_request.grade = points
@@ -271,7 +272,8 @@ def receive_grade():
     grading_request.update_record()
     return "ok"
 
-def process_grade(homework, assignment, grade_date, student, is_valid, points, notebook_json):
+def process_grade(homework, assignment, grade_date, student, is_valid, points, notebook_json,
+                  submission_id_gcs=None):
     """Processes a grading outcome, whether immediate or via callback."""
     # Removes the hidden tests from the feedback.
     feedback_nb = nbformat.reads(notebook_json, as_version=4)
@@ -288,6 +290,9 @@ def process_grade(homework, assignment, grade_date, student, is_valid, points, n
     write_share = get_assignment_teachers(assignment.id)
     feedback_id = upload_to_drive(drive_service, feedback_json,
                                   feedback_name, write_share=write_share, locked=True)
+    # We store the feedback in GCS.
+    feedback_id_gcs = long_random_id()
+    gcs.write(GCS_SUBMISSIONS_BUCKET, feedback_id_gcs, feedback_json)
     # We use the time of submission to determine validity.
     db.grade.insert(
         student=student,
@@ -295,6 +300,8 @@ def process_grade(homework, assignment, grade_date, student, is_valid, points, n
         grade_date=grade_date,
         homework_id=homework.id,
         grade=points,
+        submission_id_gcs=submission_id_gcs,
+        feedback_id_gcs=feedback_id_gcs,
         drive_id=feedback_id,
         is_valid=is_valid,
         cell_id_to_points=json.dumps(extract_awarded_points(feedback_nb)),

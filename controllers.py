@@ -33,8 +33,8 @@ from pydal import Field
 from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated
 from py4web.utils.form import Form, FormStyleBulma
-from .models import get_user_email
-from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET
+from .models import get_user_email, is_admin, build_drive_service
+from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, GCS_SUBMISSIONS_BUCKET
 
 # Google imports
 from googleapiclient.discovery import build
@@ -44,6 +44,7 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 import google.oauth2.credentials
 
 from .common import url_signer, gcs
+from .util import upload_to_drive
 
 @action('index')
 @action.uses('index.html', db, auth, url_signer)
@@ -67,6 +68,27 @@ def terms_of_use():
 @action.uses('about.html')
 def about():
     return dict()
+
+
+@action('admin_share/<source>/<id>')
+@action.uses(db, auth.user, url_signer.verify())
+def admin_share(source, id):
+    """Shares the id from source (typically, a gcs id from a GCS)
+    with the admin as a COLAB notebook."""
+    if not is_admin():
+        redirect(URL('index'))
+    if source == "submission" and id is not None:
+        # Reads the file from gcs.
+        notebook_json = gcs.read(GCS_SUBMISSIONS_BUCKET, id)
+        admin = get_user_email()
+        print("Building credentials for:", admin)
+        drive_service = build_drive_service(user=admin)
+        # We share with the teachers in write mode so that they can go back
+        # in the revision history.
+        title = request.vars.title or "Submission"
+        share_id = upload_to_drive(drive_service, notebook_json, title)
+        redirect(COLAB_BASE + share_id)
+    redirect(URL('index'))
 
 
 @action('delete_personal_information', method=["GET", "POST"])

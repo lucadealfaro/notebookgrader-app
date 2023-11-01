@@ -75,26 +75,15 @@ class ParticipantsGrid(Grid):
                 indicator = SPAN(I(_class="fa fa-warning"), _class="icon is-small has-text-danger")
             else:
                 indicator = SPAN(I(_class="fa fa-check-square"), _class="icon has-text-success is-small")
-            if is_admin():
-                assignment = db.assignment[r["homework"]["assignment_id"]]
-                row_notebook = dict(html=SPAN(
-                    A(I(_class="fa fa-file"), _target="_blank", _href=COLAB_BASE + r["homework"]["drive_id"]),
-                    " ",
-                    A(I(_class="fa fa-eye"), _target="_blank", _href=URL(
-                        'admin_share', "drive", r["homework"]["drive_id"], vars=dict(
-                            title="{} by {}".format(assignment.name, r["homework"]["student"])),
-                        signer=url_signer
-                    ))
-                ).xml()
-                if r["homework"]["drive_id"] is not None else "")
+            if r["homework"]["drive_id"] is None:
+                row_notebook = ""
             else:
-                row_notebook = (dict(html=A(I(_class="fa fa-file"), _target="_blank", _href=COLAB_BASE + r["homework"]["drive_id"]).xml())
-                                if r["homework"]["drive_id"] is not None else "")
+                row_notebook = A(I(_class="fa fa-file"), _target="_blank", _href=COLAB_BASE + r["homework"]["drive_id"]).xml()
             rows.append(dict(cells=[
                 dict(text=r["auth_user"]["first_name"]),
                 dict(text=r["auth_user"]["last_name"]),
                 dict(text=r["auth_user"]["email"]),
-                row_notebook,
+                dict(html=row_notebook),
                 dict(text=r["homework"]["grade"], url=URL("teacher-homework-details", r["homework"]["id"], signer=self.signer)),
                 dict(html=A(indicator, _href=URL("teacher-homework-details", r["homework"]["id"], signer=self.signer)).xml()),
             ]))
