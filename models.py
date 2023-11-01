@@ -86,8 +86,8 @@ db.define_table(
     Field('homework_id', 'reference homework'),
     Field('grade', 'float'),
     Field('drive_id'), # Location in Drive of feedback
-    Field('feedback_id_gcs'), # Location in GCS of feedback
-    Field('submission_id_gcs'), # Location in GCS of submission
+    Field('feedback_id_gcs'), # Location in GCS of feedback #ADD
+    Field('submission_id_gcs'), # Location in GCS of submission #ADD
     Field('is_valid', 'boolean', default=False),
     Field('cell_id_to_points', 'text'), # Json dictionary of grade breakdown.
 )

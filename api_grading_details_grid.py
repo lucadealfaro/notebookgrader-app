@@ -55,35 +55,38 @@ class AssignmentGradingGrid(Grid):
         # Parses the query.
         req = self._get_request_params(header)
         # Forms the database query.
-        query = (db.grading_request.homework_id == id)
+        query = ((db.homework.assignment_id == id) &
+                 (db.grading_request.homework_id == db.homework.id))
         if req.query:
             query &= (db.grading_request.student.startswith(req.query))
         db_rows = db(query).select(**req.search_args).as_list()
         has_more, result_rows = self._has_more(db_rows)
 
         # Now creates the results.
-        assignment = db.assignment[id]
         rows = [header]
+        assignment = db.assignment[id]
         for r in result_rows:
             row_notebook = SPAN(
                 A(I(_class="fa fa-file"), _target="_blank", _href=URL(
-                    'admin_share', 'submission', r["input_id_gcs"],
+                    'admin_share', 'submission', r["grading_request"]["input_id_gcs"],
                     vars=dict(title="{} by {} on {}, Submission".format(
                         assignment.name,
-                        r["student"],
-                        r["created_on"].isoformat(),
+                        r["grading_request"]["student"],
+                        r["grading_request"]["created_on"].isoformat(),
                     )),
                     signer=url_signer
                 )))
+            delay = r["grading_request"]["delay"]
+            delay = "--" if delay is None else "{:.2f}".format(delay)
             rows.append(dict(
             cells=[
-                dict(text=r["student"]),
+                dict(text=r["grading_request"]["student"]),
                 dict(html=row_notebook.xml()),
-                dict(text=r["created_on"].isoformat(), type='datetime'),
-                dict(html=I(_class="fa fa-check").xml() if r["completed"]
+                dict(text=r["grading_request"]["created_on"].isoformat(), type='datetime'),
+                dict(html=I(_class="fa fa-check").xml() if r["grading_request"]["completed"]
                 else I(_class="fa fa-warning is-danger").xml()),
-                dict(text="{:.2f}".format(r["delay"])),
-                dict(text="{}/{}".format(r["grade"], assignment.max_points)),
+                dict(text=delay),
+                dict(text="{}/{}".format(r["grading_request"]["grade"], assignment.max_points)),
             ]))
         return dict(
             page=int(req.page),

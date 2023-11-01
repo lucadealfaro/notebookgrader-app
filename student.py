@@ -261,7 +261,7 @@ def receive_grade():
     homework = db.homework[grading_request.homework_id]
     assignment = db.assignment[homework.assignment_id]
     print("Grading request for assignment id:", assignment.id)
-    now = grading_request.created_on
+    now = datetime.datetime.utcnow()
     is_valid = grading_request.created_on < assignment.submission_deadline
     process_grade(homework, assignment, grading_request.created_on,
                   grading_request.student, is_valid, points, graded_json,
