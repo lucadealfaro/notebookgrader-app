@@ -25,10 +25,41 @@ div.box pre { padding: 0 0 0 0;}
   <p class="mt-3">The prefix <span class="is-family-monospace"># Tests</span> <em>n</em> <span class="is-family-monospace">points</span> has to appear exactly in that format, with <em>n</em> being the number of points of the tests cell.
 The comment is useful to the students: it tells them how many points the cell is worth!</p>
 
-</div>
+  <h2 class="subtitle mt-5">Supported Python Modules</h2>
 
-<div class="section">
-  <h1 class="title">Details</h1>
+  <p>At this time, NotebookGrader supports the following Python modules:</p>
+  
+  <div class="box mt-4 is-family-monospace">
+    [[WHITELISTED_MODULES = [
+    # special
+    "pandas", "numpy", "scipy", "matplotlib", "pytorch",
+    "requests", "PIL",
+    # text and binary
+    "string", "re", "struct",
+    # data types
+    "datetime", "zoneinfo", "calendar", "collections",
+    "heapq", "bisect", "array", "types", "copy", "enum", "graphlib",
+    # numbers etc.
+    "numbers", "math", "cmath", "decimal", "fractions", "random", "statistics",
+    # functions etc.
+    "itertools", "functools", "operator",
+    # Crypto etc
+    "hashlib", "hmac", "secrets",
+    # Os and the like.
+    "time",
+    # Data handling.
+    "json", "base64", "binascii", "zipfile",
+] ]]
+    [[WHITELISTED_MODULES.sort(key = lambda x : x.lower())]]
+    [[= ", ".join(WHITELISTED_MODULES)]]
+  </div>
+  
+  <p>If you need additional modules, please contact <a href="mailto:info@notebookgrader.com">info@notebookgrader.com</a>.
+  
+  <p><span class="has-text-weight-semibold">Note:</span> Modules cannot be imported in solution cells; they must be imported in read-ony or test cells.
+  This prevents students from importing their own modules.</p>
+  
+  <h1 class="title mt-6">Details</h1>
   
   <p>A notebook consists of four types of cells: markdown (text), read-only code, solution cells, and test cells. </p>
   
@@ -38,7 +69,10 @@ The comment is useful to the students: it tells them how many points the cell is
   <h2 class="subtitle mt-5">Solution Cells</h2>
   <p>A solution cell is a cell where students can write their solution to the problems.
   A cell is a solution cell if somewhere in it appears the string <span class="is-family-monospace has-text-primary-dark">### BEGIN SOLUTION</span>.</p>
-  <p class="mt-2">Typically, a solution cells contains one or more regions delimitated by <span class="is-family-monospace has-text-primary-dark">### BEGIN SOLUTION</span> and <span class="is-family-monospace has-text-primary-dark">### END SOLUTION</span>; each of these regions is then replaced by a <span class="is-family-monospace has-text-primary-dark">### YOUR SOLUTION HERE</span> line in the student's notebook.  For instance, if this is the cell in the source notebook:</p>
+  <p class="mt-2">Typically, a solution cells contains one or more regions delimitated by <span class="is-family-monospace has-text-primary-dark">### BEGIN SOLUTION</span> and <span class="is-family-monospace has-text-primary-dark">### END SOLUTION</span>; each of these regions is then replaced by a <span class="is-family-monospace has-text-primary-dark">### YOUR SOLUTION HERE</span> line in the student's notebook.
+    <span class="has-text-weight-semibold">Note that solution cells cannot contain <span class="is-family-monospace">import</span> statements.</span>
+  You will need to import any modules in other cells (read-only or test cells).</p>
+  <p class="mt-2">Example: if this is the cell in the source notebook:</p>
   
   <div class="box mt-3 has-background-white-ter">
     <pre>
