@@ -69,6 +69,11 @@ def terms_of_use():
 def about():
     return dict()
 
+@action('internal_error')
+@action.uses('internal_error.html')
+def internal_error():
+    return dict()
+
 
 @action('admin_share/<source>/<id>')
 @action.uses(db, auth.user, url_signer.verify())

@@ -48,7 +48,11 @@ let init = (app) => {
             // We reload the page.
             location.reload();
         }).catch(function (err) {
-            location.assign(error_url);
+            if (err.response && err.response.status == 403) {
+                location.assign(error_url);
+            } else {
+                location.assign(internal_error_url);
+            }
         });
     };
 
@@ -60,7 +64,11 @@ let init = (app) => {
                     location.reload();
                 }
             }).catch(function(err) {
-                location.assign(error_url);
+                if (err.response && err.response.status == 403) {
+                    location.assign(error_url);
+                } else {
+                    location.assign(internal_error_url);
+                }
             })
         }, 5000);
     };
@@ -85,7 +93,11 @@ let init = (app) => {
                 }
             }
         }).catch(function (err) {
-            location.assign(error_url);
+            if (err.response && err.response.status == 403) {
+                location.assign(error_url);
+            } else {
+                location.assign(internal_error_url);
+            }
         })
     }
 

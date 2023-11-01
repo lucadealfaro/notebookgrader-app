@@ -135,7 +135,8 @@ def homework(id=None):
         obtain_assignment_url=URL('obtain-assignment', id, signer=url_signer),
         homework_details_url=URL('student-homework-details', id, signer=url_signer),
         recent_grade_date_url=URL("recent-grade-date", id, signer=url_signer),
-        error_url=URL('credentials_error')
+        error_url=URL('credentials_error'),
+        internal_error_url=URL('internal_error'),
     )
 
 @action('recent-grade-date/<id>')

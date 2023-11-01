@@ -71,7 +71,7 @@ class StudentGradesGrid(Grid):
                         signer=url_signer
                     )),
                     " ",
-                    A(I(_class="fa fa-eye"), _target="_blank", _href=URL(
+                    A(I(_class="fa fa-gavel"), _target="_blank", _href=URL(
                         'admin_share', 'submission', r["grade"]["feedback_id_gcs"],
                         vars=dict(title="{} by {} on {}, Feedback".format(
                             r["assignment"]["name"],
