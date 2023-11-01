@@ -50,22 +50,22 @@ def index():
     )
 
 @action('privacy_policy')
-@action.uses('privacy_policy.html')
+@action.uses('privacy_policy.html', auth)
 def privacy_policy():
     return dict()
 
 @action('terms_of_use')
-@action.uses('terms_of_use.html')
+@action.uses('terms_of_use.html', auth)
 def terms_of_use():
     return dict()
 
 @action('about')
-@action.uses('about.html')
+@action.uses('about.html', auth)
 def about():
     return dict()
 
 @action('internal_error')
-@action.uses('internal_error.html')
+@action.uses('internal_error.html', auth)
 def internal_error():
     return dict()
 
@@ -140,7 +140,7 @@ def delete_gcs(gcs_id):
         gcs.delete(GCS_BUCKET, gcs_id)
 
 @action("credentials_error")
-@action.uses("credentials_error.html")
+@action.uses("credentials_error.html", auth)
 def credentials_errors():
     return dict()
 
