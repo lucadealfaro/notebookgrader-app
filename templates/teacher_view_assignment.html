@@ -25,6 +25,11 @@
     <a class="button is-success ml-3" href="[[=URL('participants', assignment_id)]]">
       <span class="icon is-small"><i class="fa fa-users"></i></span>
     </a>
+    [[if is_admin:]]
+    <a class="button is-success ml-3" href="[[=URL('grading_details', assignment_id)]]">
+      <span class="icon is-small"><i class="fa fa-gears"></i></span>
+    </a>
+    [[pass]]
   </h1>
 
   [[=form]]

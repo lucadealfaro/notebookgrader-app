@@ -25,8 +25,6 @@ session, db, T, auth, and tempates are examples of Fixtures.
 Warning: Fixtures MUST be declared with @action.uses({fixtures}) else your app will result in undefined behavior
 """
 
-import json
-import os
 
 from py4web import action, request, abort, redirect, URL, Flash
 from pydal import Field
@@ -36,15 +34,12 @@ from py4web.utils.form import Form, FormStyleBulma
 from .models import get_user_email, is_admin, build_drive_service
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, GCS_SUBMISSIONS_BUCKET
 
-# Google imports
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
-import google.oauth2.credentials
-
 from .common import url_signer, gcs
 from .util import upload_to_drive
+
+from .api_grading_details_grid import AssignmentGradingGrid
+
+grading_grid = AssignmentGradingGrid('grading-grid')
 
 @action('index')
 @action.uses('index.html', db, auth, url_signer)
@@ -77,7 +72,7 @@ def internal_error():
 
 @action('admin_share/<source>/<id>')
 @action.uses(db, auth.user, url_signer.verify())
-def admin_share(source, id):
+def admin_share(source=None, id=None):
     """Shares the id from source (typically, a gcs id from a GCS)
     with the admin as a COLAB notebook."""
     if not is_admin():
@@ -90,8 +85,8 @@ def admin_share(source, id):
         drive_service = build_drive_service(user=admin)
         # We share with the teachers in write mode so that they can go back
         # in the revision history.
-        title = request.vars.title or "Submission"
-        share_id = upload_to_drive(drive_service, notebook_json, title)
+        title = request.params.title or "Submission"
+        share_id = upload_to_drive(drive_service, notebook_json.decode("utf-8"), title)
         redirect(COLAB_BASE + share_id)
     redirect(URL('index'))
 
@@ -148,3 +143,14 @@ def delete_gcs(gcs_id):
 @action.uses("credentials_error.html")
 def credentials_errors():
     return dict()
+
+@action('grading_details/<id>')
+@action.uses('grading_details.html', db, auth.user, url_signer, grading_grid)
+def grading_details(id=None):
+    if not is_admin():
+        redirect(URL('index'))
+    assignment = db.assignment[id]
+    return dict(
+        assignment=assignment,
+        grid=grading_grid(id),
+    )
