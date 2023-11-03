@@ -25,6 +25,8 @@ session, db, T, auth, and tempates are examples of Fixtures.
 Warning: Fixtures MUST be declared with @action.uses({fixtures}) else your app will result in undefined behavior
 """
 
+import os
+import json
 
 from py4web import action, request, abort, redirect, URL, Flash
 from pydal import Field
@@ -154,3 +156,14 @@ def grading_details(id=None):
         assignment=assignment,
         grid=grading_grid(id),
     )
+
+@action('faq')
+@action.uses('faq.html', auth)
+def faq():
+    return dict(faq_info_url=URL('faq_info'))
+
+@action('faq_info')
+def faq_info():
+    faq_file = os.path.join(APP_FOLDER, "private/faq.json")
+    with open(faq_file) as f:
+        return json.load(f)

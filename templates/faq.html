@@ -1,0 +1,34 @@
+[[extend 'layout.html']]
+
+<style>
+[v-cloak] {
+     display: none;
+}
+.toggable {
+    cursor: pointer;
+}
+</style>
+
+
+<div class="section" id="vue-target" v-cloak>
+  <h1 class="title">Frequently Asked Questions</h1>
+  
+  <div v-for="q in questions" class="mt-3">
+    <div @click="toggle(q._idx)" class="toggable">
+      <span v-if="q.open"><i class="fa fa-chevron-down"></i></span>
+      <span v-else><i class="fa fa-chevron-right"></i></span>
+      <span class="has-text-weight-semibold"> {{q.title}} </span>
+    </div>
+    <div v-if="q.open" class="mt-1 ml-5">
+      <p v-for="a in q.answer" class="mb-2"> {{a}} </p>
+    </div>
+  </div>
+</div>
+
+[[block page_scripts]]
+<!-- Loads the index-specific js for Vue -->
+<script>
+    const faq_info_url = "[[=XML(faq_info_url)]]";
+</script>
+<script src="js/faq.js"></script>
+[[end]]
