@@ -53,12 +53,20 @@ let init = (app) => {
                         'file_type': file_type,
                         'date_string': date_string,
                         'notebook_content': reader.result}
-                ).then(function (res) {
-                    app.vue.uploading = false;
-                    app.vue.upload_error = res.data.error;
-                    app.vue.instructor_version = res.data.instructor_version;
-                    app.vue.student_version = res.data.student_version;
-                })
+                )
+                    .then(function (res) {
+                        app.vue.uploading = false;
+                        app.vue.upload_error = res.data.error;
+                        app.vue.instructor_version = res.data.instructor_version;
+                        app.vue.student_version = res.data.student_version;
+                    })
+                    .catch(function (err) {
+                        if (err.response && err.response.status == 403) {
+                            location.assign(error_url);
+                        } else {
+                            location.assign(internal_error_url);
+                        }
+                    })
             });
             reader.readAsText(file);
         }

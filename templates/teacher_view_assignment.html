@@ -118,6 +118,8 @@
     [[else:]]
     const upload_url = null;
     [[pass]]
+    const error_url = "[[=XML(error_url)]]";
+    const internal_error_url = "[[=XML(internal_error_url)]]";
 </script>
 <script src="components-bulma/vueform/luxon.min.js"></script>
 <script src="[[=URL('static/components-bulma/vueform/vueform.js')]]"></script>

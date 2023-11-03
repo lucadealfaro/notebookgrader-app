@@ -4,12 +4,8 @@ import nbformat
 import requests
 import time
 
-from py4web import action, request, abort, redirect, URL, Flash
-from pydal import Field
-from yatl.helpers import A, BUTTON, SPAN
-from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated, flash
-from py4web.utils.url_signer import URLSigner
-from py4web.utils.form import Form, FormStyleBulma
+from py4web import action, request, redirect, URL
+from .common import db, session, auth
 from .models import get_user_email
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, GCS_SUBMISSIONS_BUCKET
 from .settings import STUDENT_GRADING_CALLBACK, MIN_TIME_BETWEEN_GRADE_REQUESTS

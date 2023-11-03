@@ -65,6 +65,8 @@ def teacher_view_assignment(id=None):
         change_access_url=URL('change-access-url', id, signer=url_signer),
         notebook_version_url=URL('notebook-version', id, signer=url_signer),
         upload_url=URL('upload-notebook', id, signer=url_signer) if is_owner else None,
+        error_url=URL('credentials_error'),
+        internal_error_url=URL('internal_error'),
     )
 
 @action('change-access-url/<id>', method=["GET", "POST"])
