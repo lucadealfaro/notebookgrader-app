@@ -25,6 +25,7 @@ from .api_grades_grid import StudentGradesGrid
 homework_grid = HomeworkGrid('homework-grid')
 student_grades_grid = StudentGradesGrid('student-grades-grid')
 
+
 def share_assignment_with_student(assignment):
     """Shares an assignment with a student, creating the Google Colab,
     and returning its id."""

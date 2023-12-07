@@ -5,7 +5,7 @@ import traceback
 import nbformat
 import re
 from nbformat.notebooknode import NotebookNode
-from .util import random_id
+from .util import random_id, short_random_id
 
 BEGIN_SOLUTION = "### BEGIN SOLUTION"
 END_SOLUTION = "### END SOLUTION"
@@ -106,6 +106,10 @@ def create_master_notebook(notebook_string):
         check_cell_valid(c)
         ensure(c, "metadata")
         ensure(c.metadata, "notebookgrader")
+        # We want to ensure that each cell has a unique id.
+        # This because Google Drive sometimes strips entirely the notebookgrader metadata otherwise.
+        if c.metadata.get('id') is None:
+            c.metadata.id = short_random_id()
         meta = c.metadata.notebookgrader
         if meta.get('id') is None:
             # We do not want to overwrite old IDs.

@@ -2,6 +2,7 @@ import io
 import json
 import re
 
+import base64
 import hashlib
 import requests
 import uuid
@@ -46,6 +47,9 @@ def normalize_email_list(l):
                 r.append(addr.lower())
     r.sort()
     return r
+
+def short_random_id():
+    return base64.urlsafe_b64encode(hashlib.sha1(uuid.uuid1().bytes).digest()).decode()[:12]
 
 def random_id():
     return hashlib.sha1(uuid.uuid1().bytes).hexdigest()

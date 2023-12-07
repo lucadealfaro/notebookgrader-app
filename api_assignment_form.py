@@ -13,6 +13,7 @@ from .util import random_id
 from .common import url_signer
 from .models import get_assignment_teachers, set_assignment_teachers, get_user_email
 from .util import normalize_email_list
+from .settings import MAX_GRADES_24H
 
 FIELDS = [
     Field('name', length=STRING_FIELD_LENGTH, required=True,
@@ -31,7 +32,7 @@ FIELDS = [
           help="Date when students need to submit the assignment for it to be considered submitted on time."),
     Field('available_until', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
           help="Date until when student can access the assignment and submit a solution, even if late."),
-    Field('max_submissions_in_24h_period', 'integer', default=3, requires=[IS_INT_IN_RANGE(1, 5), IS_NOT_EMPTY()], label="Maximum number of submissions in a 24h period", help="Students will be able to only submit this many solutions in any 24h period."),
+    Field('max_submissions_in_24h_period', 'integer', default=3, requires=[IS_INT_IN_RANGE(1, MAX_GRADES_24H), IS_NOT_EMPTY()], label="Maximum number of submissions in a 24h period", help="Students will be able to only submit this many solutions in any 24h period."),
 ]
 
 

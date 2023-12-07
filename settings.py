@@ -22,6 +22,8 @@ DB_POOL_SIZE = 1
 DB_MIGRATE = True
 DB_FAKE_MIGRATE = False  # maybe?
 
+MAX_GRADES_24H = 100 if IS_TEST else 5
+
 # location where static files are stored:
 STATIC_FOLDER = required_folder(APP_FOLDER, "static")
 
