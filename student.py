@@ -8,10 +8,11 @@ from py4web import action, request, redirect, URL, HTTP
 from .common import db, session, auth
 from .models import get_user_email
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, GCS_SUBMISSIONS_BUCKET
-from .settings import STUDENT_GRADING_CALLBACK, MIN_TIME_BETWEEN_GRADE_REQUESTS
+from .settings import MIN_TIME_BETWEEN_GRADE_REQUESTS
+from .settings import GRADING_URL, FEEDBACK_URL
 
 from .common import flash, url_signer, gcs
-from .util import upload_to_drive, read_from_drive, long_random_id, random_id, send_grading_request
+from .util import upload_to_drive, read_from_drive, long_random_id, random_id, send_function_request
 from .run_notebook import match_notebooks
 from .notebook_logic import remove_all_hidden_tests, extract_awarded_points, is_notebook_well_formed
 from .models import build_drive_service, get_assignment_teachers
@@ -219,7 +220,7 @@ def grade_homework(id=None):
         notebook_json=nbformat.writes(test_nb, 4),
         callback_url = URL('receive-grade', scheme=True)
     )
-    send_grading_request(payload)
+    send_function_request(payload, GRADING_URL)
     return dict(is_error=False,
                 watch=True,
                 outcome="Your request has been enqueued, and a new grade will be available soon.")
@@ -264,9 +265,9 @@ def request_ai_feedback(id=None):
         nonce=nonce,
         master_notebook_json=master_json,
         student_notebook_json=nbformat.writes(test_nb, 4),
-        callback_url = URL('receive-grade', scheme=True)
+        callback_url = URL('receive-ai-feedback', scheme=True)
     )
-    send_ai_feedback_request(payload)
+    send_function_request(payload, FEEDBACK_URL)
     redirect(URL('homework', info.homework.id))
 
 
@@ -276,14 +277,11 @@ def receive_grade():
     nonce = request.params.nonce
     graded_json = request.params.graded_json
     points = request.params.points
-    print("Grading request for nonce:", nonce)
     had_errors = request.params.had_errors
     grading_request = db(db.grading_request.request_nonce == nonce).select().first()
     if grading_request is None:
-        print("No request")
         return "No request"
     if grading_request.completed:
-        print("Already done")
         return "Already done"
     homework = db.homework[grading_request.homework_id]
     assignment = db.assignment[homework.assignment_id]
@@ -299,6 +297,7 @@ def receive_grade():
     grading_request.delay = (now - grading_request.created_on).total_seconds()
     grading_request.update_record()
     return "ok"
+
 
 def process_grade(homework, assignment, grade_date, student, is_valid, points, notebook_json,
                   submission_id_gcs=None):
@@ -340,6 +339,47 @@ def process_grade(homework, assignment, grade_date, student, is_valid, points, n
     else:
         homework.has_invalid_grade = True
     homework.update_record()
+
+
+@action('receive-ai-feedback', method=["POST"])
+@action.uses(db, session)
+def receive_ai_feedback():
+    nonce = request.params.nonce
+    feedback_json = request.params.feedback_json
+    had_errors = request.params.had_errors
+    assert not had_errors
+    ai_feedback_request = db(db.ai_feedback_request.request_nonce == nonce).select().first()
+    if ai_feedback_request is None:
+        return "No request"
+    if ai_feedback_request.completed:
+        return "Already done"
+    # Writes the feedback.
+    now = datetime.datetime.utcnow()
+    grade = db.grade[ai_feedback_request.grade_id]
+    assignment = db.assignment[grade.assignment_id]
+    assert grade is not None and assignment is not None
+    feedback_name = "AI Feedback for {} {}".format(
+        assignment.name, grade.student, now.isoformat()
+    )
+    print("Building credentials for:", grade.student)
+    drive_service = build_drive_service(user=grade.student)
+    # We share with the teachers in write mode so that they can go back
+    # in the revision history.
+    write_share = get_assignment_teachers(assignment.id)
+    feedback_id_drive = upload_to_drive(drive_service, feedback_json,
+                                        feedback_name, write_share=write_share, locked=True)
+    # We store the feedback in GCS.
+    ai_feedback_id_gcs = long_random_id()
+    gcs.write(GCS_SUBMISSIONS_BUCKET, ai_feedback_id_gcs, feedback_json)
+    # Updates the feeback ids. 
+    grade.ai_feedback_id_gcs = ai_feedback_id_gcs
+    grade.ai_feedback_id_drive = feedback_id_drive
+    grade.update_record()
+    # Marks that the request has been done.
+    ai_feedback_request.completed = True
+    ai_feedback_request.delay = (now - ai_feedback_request.created_on).total_seconds()
+    ai_feedback_request.update_record()
+    return "ok"
 
 
 @action('obtain-assignment/<id>', method=["POST"])

@@ -94,7 +94,7 @@ class StudentGradesGrid(Grid):
                     # There is feedback already.
                     ai_feedback_info = A(SPAN(I(_class="fa fa-life-buoy"), "AI Feedback"),
                                          _target="_blank", 
-                                         _href=COLAB_BASE + r["grade"]["ai_feedback_drive_id"])
+                                         _href=COLAB_BASE + r["grade"]["ai_feedback_id_drive"])
                 else:
                     # Checks if there is feedback pending. 
                     ai_feedback_pending = db(

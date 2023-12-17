@@ -12,10 +12,10 @@ from .common import db, session, T, cache, auth, logger, authenticated, unauthen
 from py4web.utils.form import Form, FormStyleBulma
 from .models import (get_user_email, build_drive_service, can_access_assignment,
                      get_assignment_teachers, is_admin)
-from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, ADMIN_EMAIL
+from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, ADMIN_EMAIL, GRADING_URL
 
 from .common import flash, url_signer, gcs
-from .util import random_id, long_random_id, upload_to_drive, send_grading_request
+from .util import random_id, long_random_id, upload_to_drive, send_function_request
 from .notebook_logic import create_master_notebook, produce_student_version, InvalidCell
 
 from .api_assignment_form import AssignmentFormCreate, AssignmentFormEdit, AssignmentFormView
@@ -131,7 +131,7 @@ def upload_notebook(id=None):
     payload = dict(
         notebook_json=master_notebook_json,
     )
-    r = send_grading_request(payload, is_student=False)
+    r = send_function_request(payload, GRADING_URL, immediate=True)
     res = r.json()
     points = res.get("points")
     has_errors = res.get("had_errors")

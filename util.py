@@ -14,7 +14,7 @@ from google.cloud import tasks_v2
 
 from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
 
-from .settings import IS_TEST, IS_CLOUD, GRADING_URL, STUDENT_GRADING_USES_QUEUE
+from .settings import IS_CLOUD
 from .settings import QUEUE_SERVICE_ACCOUNT, STUDENT_GRADING_QUEUE_LOCATION
 from .settings import STUDENT_GRADING_QUEUE_NAME, STUDENT_GRADING_QUEUE_PROJECT
 
@@ -132,57 +132,26 @@ def read_from_drive(drive_service, drive_id):
     return file.getvalue()
 
 
-def send_grading_request(payload, is_student=True):
+def send_function_request(payload, TARGET_URL, immediate=False):
     """
-    Sends a grading request.
-    Args:
-        payload: The payload of the request. Consisting of:
-            nonce: a nonce for the callback
-            notebook_json: to be graded
-            callback_url: to report the results
-        is_student: The request comes from a student.
-    Returns: the result of the request.
-
-    """
-    if IS_CLOUD:
-        # Enqueues the request.
-        return enqueue_request(payload)
-    else:        
-        # This request can use a callback.
-        r = requests.post(GRADING_URL, json=payload)
-        r.raise_for_status()
-        return r
-
-
-def send_ai_feedback_request(payload):
-    """
-    Sends an ai feedback request.
-    Args:
-        payload: The payload of the request. Consisting of:
-            nonce: a nonce for the callback
-            master_notebook_json: instructor version
-            student_notebook_json: student version
-            callback_url: to report the results
-    Returns: the result of the request.
-
-    """
-    if IS_TEST:
-        # This request can use a callback.
-        r = requests.post(GRADING_URL, json=payload)
-        r.raise_for_status()
-        return r
-    else:
-        # Enqueues the request.
-        return enqueue_request(payload)
-
-
-def send_request(payload, TARGET_URL):
-    """See https://cloud.google.com/tasks/docs/creating-http-target-tasks"""
+    Sends a request for grading or feedback. 
+    In the cloud, if immediate is True, then the request is performed
+    without a queue. Otherwise, the request is enqueued.
+    Locally, the request is always performed without a queue.
+    See https://cloud.google.com/tasks/docs/creating-http-target-tasks"""
     if not IS_CLOUD:
         # This request can use a callback.
         r = requests.post(TARGET_URL, json=payload)
         r.raise_for_status()
         return r
+    elif immediate:
+        # Performs the request without queue.
+        auth_req = google.auth.transport.requests.Request()
+        id_token = google.oauth2.id_token.fetch_id_token(auth_req, TARGET_URL)
+        headers = {"Authorization": "Bearer {}".format(id_token)}
+        r = requests.post(TARGET_URL, headers=headers, json=payload)
+        r.raise_for_status()
+        return r        
     else:
         # Create a client.
         client = tasks_v2.CloudTasksClient()

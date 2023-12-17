@@ -90,7 +90,7 @@ db.define_table(
     Field('drive_id'), # Location in Drive of feedback
     Field('feedback_id_gcs'), # Location in GCS of feedback 
     Field('ai_feedback_id_gcs'), # Location in GCS of AI feedback #ADD
-    Field('ai_feedback_drive_id'), # Location in Drive of AI feedback #ADD
+    Field('ai_feedback_id_drive'), # Location in Drive of AI feedback #ADD
     Field('submission_id_gcs'), # Location in GCS of submission
     Field('is_valid', 'boolean', default=False),
     Field('cell_id_to_points', 'text'), # Json dictionary of grade breakdown.
