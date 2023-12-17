@@ -70,7 +70,11 @@ class StudentGradesGrid(Grid):
                                    limitby=req.search_args['limitby']).as_list()
         has_more, result_rows = self._has_more(db_rows)
         # Checks whether we can still ask for AI feedback. 
-        num_given_ai_feedback = len([r for r in db_rows if r['grade']['ai_feedback_id_gcs']])
+        num_given_ai_feedback = db(
+            (db.grade.homework_id == id) &
+            (db.grade.student == get_user_email()) &
+            (db.grading_request.grade_id == db.grade.id)
+        ).count()
         can_request_ai_feedback = num_given_ai_feedback < ai_feedback
         # Now creates the results.
         rows = [header]
@@ -91,14 +95,23 @@ class StudentGradesGrid(Grid):
                     ai_feedback_info = A(SPAN(I(_class="fa fa-life-buoy"), "AI Feedback"),
                                          _target="_blank", 
                                          _href=COLAB_BASE + r["grade"]["ai_feedback_drive_id"])
-                elif can_request_ai_feedback:
-                    # We can request AI feedback.
-                    ai_feedback_info = A(SPAN(I(_class="fa fa-life-buoy"), "Request AI Feedback"),
-                                         _target="_blank", _class="button is-primary",
-                                         _href=URL('request_ai_feedback', signer=url_signer, args=[r["grade"]["id"]]))
-                else: 
-                    # No info for this row. 
-                    ai_feedback_info = ""
+                else:
+                    # Checks if there is feedback pending. 
+                    ai_feedback_pending = db(
+                        (db.ai_feedback_request.grade_id == r["grade"]["id"]) & 
+                        (db.ai_feedback_request.completed == False)
+                    ).select().first()
+                    if ai_feedback_pending:
+                        # There is feedback pending. 
+                        ai_feedback_info = SPAN(I(_class="fa fa-spinner fa-spin"), " Pending")
+                    elif can_request_ai_feedback:
+                        # We can request AI feedback.
+                        ai_feedback_info = A(SPAN(I(_class="fa fa-life-buoy"), "Request AI Feedback"),
+                                            _target="_blank", _class="button is-primary",
+                                            _href=URL('request_ai_feedback', signer=url_signer, args=[r["grade"]["id"]]))
+                    else: 
+                        # No info for this row. 
+                        ai_feedback_info = ""
                 rows[-1]['cells'].insert(3, dict(html=ai_feedback_info.xml()))
         return dict(
             page=int(req.page),

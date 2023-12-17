@@ -14,7 +14,7 @@ from google.cloud import tasks_v2
 
 from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
 
-from .settings import IS_TEST, GRADING_URL, STUDENT_GRADING_USES_QUEUE
+from .settings import IS_TEST, IS_CLOUD, GRADING_URL, STUDENT_GRADING_USES_QUEUE
 from .settings import QUEUE_SERVICE_ACCOUNT, STUDENT_GRADING_QUEUE_LOCATION
 from .settings import STUDENT_GRADING_QUEUE_NAME, STUDENT_GRADING_QUEUE_PROJECT
 
@@ -144,50 +144,69 @@ def send_grading_request(payload, is_student=True):
     Returns: the result of the request.
 
     """
+    if IS_CLOUD:
+        # Enqueues the request.
+        return enqueue_request(payload)
+    else:        
+        # This request can use a callback.
+        r = requests.post(GRADING_URL, json=payload)
+        r.raise_for_status()
+        return r
+
+
+def send_ai_feedback_request(payload):
+    """
+    Sends an ai feedback request.
+    Args:
+        payload: The payload of the request. Consisting of:
+            nonce: a nonce for the callback
+            master_notebook_json: instructor version
+            student_notebook_json: student version
+            callback_url: to report the results
+    Returns: the result of the request.
+
+    """
     if IS_TEST:
         # This request can use a callback.
         r = requests.post(GRADING_URL, json=payload)
         r.raise_for_status()
         return r
     else:
-        if is_student and STUDENT_GRADING_USES_QUEUE:
-            # Enqueues the request.
-            return enqueue_request(payload)
-        else:
-            # Performs the request without queue.
-            auth_req = google.auth.transport.requests.Request()
-            id_token = google.oauth2.id_token.fetch_id_token(auth_req, GRADING_URL)
-            headers = {"Authorization": "Bearer {}".format(id_token)}
-            r = requests.post(GRADING_URL, headers=headers, json=payload)
-            r.raise_for_status()
-            return r
+        # Enqueues the request.
+        return enqueue_request(payload)
 
 
-def enqueue_request(payload):
+def send_request(payload, TARGET_URL):
     """See https://cloud.google.com/tasks/docs/creating-http-target-tasks"""
-    # Create a client.
-    client = tasks_v2.CloudTasksClient()
-# Construct the request body.
-    task = tasks_v2.Task(
-        http_request=tasks_v2.HttpRequest(
-            http_method=tasks_v2.HttpMethod.POST,
-            url=GRADING_URL,
-            oidc_token=tasks_v2.OidcToken(
-                service_account_email=QUEUE_SERVICE_ACCOUNT,
-                audience=GRADING_URL,
+    if not IS_CLOUD:
+        # This request can use a callback.
+        r = requests.post(TARGET_URL, json=payload)
+        r.raise_for_status()
+        return r
+    else:
+        # Create a client.
+        client = tasks_v2.CloudTasksClient()
+        # Construct the request body.
+        task = tasks_v2.Task(
+            http_request=tasks_v2.HttpRequest(
+                http_method=tasks_v2.HttpMethod.POST,
+                url=TARGET_URL,
+                oidc_token=tasks_v2.OidcToken(
+                    service_account_email=QUEUE_SERVICE_ACCOUNT,
+                    audience=TARGET_URL,
+                ),
+                headers={"Content-Type": "application/json"},
+                body=json.dumps(payload).encode('utf-8'),
             ),
-            headers={"Content-Type": "application/json"},
-            body=json.dumps(payload).encode('utf-8'),
-        ),
-    )
-    # Use the client to build and send the task.
-    return client.create_task(
-        tasks_v2.CreateTaskRequest(
-            parent=client.queue_path(
-                STUDENT_GRADING_QUEUE_PROJECT,
-                STUDENT_GRADING_QUEUE_LOCATION,
-                STUDENT_GRADING_QUEUE_NAME),
-            task=task,
         )
-    )
+        # Use the client to build and send the task.
+        return client.create_task(
+            tasks_v2.CreateTaskRequest(
+                parent=client.queue_path(
+                    STUDENT_GRADING_QUEUE_PROJECT,
+                    STUDENT_GRADING_QUEUE_LOCATION,
+                    STUDENT_GRADING_QUEUE_NAME),
+                task=task,
+            )
+        )
 

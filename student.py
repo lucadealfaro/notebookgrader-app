@@ -4,7 +4,7 @@ import nbformat
 import requests
 import time
 
-from py4web import action, request, redirect, URL
+from py4web import action, request, redirect, URL, HTTP
 from .common import db, session, auth
 from .models import get_user_email
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, GCS_SUBMISSIONS_BUCKET
@@ -205,39 +205,69 @@ def grade_homework(id=None):
     # Produces a clean notebook by matching the cells of master and submission.
     test_nb = match_notebooks(master_nb, submission_nb)
     # Creates the grade request.
-    if STUDENT_GRADING_CALLBACK:
-        # The grading is via a callback.
-        nonce = random_id()
-        db.grading_request.insert(
-            homework_id=homework.id,
-            request_nonce=nonce,
-            input_id_gcs=submission_id_gcs,
-        )
-        db.commit() # So no db work pending.
-        # Enqueues the grade request.
-        payload = dict(
-            nonce=nonce,
-            notebook_json=nbformat.writes(test_nb, 4),
-            callback_url = URL('receive-grade', scheme=True)
-        )
-        send_grading_request(payload)
-        return dict(is_error=False,
-                    watch=True,
-                    outcome="Your request has been enqueued, and a new grade will be available soon.")
-    else:
-        # The grading is immediate.
-        payload = dict(
-            notebook_json=nbformat.writes(test_nb, 4)
-        )
-        r = send_grading_request(payload)
-        res = r.json()
-        points = res.get("points")
-        notebook_json = res.get("graded_json")
-        process_grade(homework, assignment, now, student, is_valid,
-                      points, notebook_json, submission_id_gcs=submission_id_gcs)
-        return dict(is_error=False,
-                    watch=False,
-                    outcome="")
+    # The grading is via a callback.
+    nonce = random_id()
+    db.grading_request.insert(
+        homework_id=homework.id,
+        request_nonce=nonce,
+        input_id_gcs=submission_id_gcs,
+    )
+    db.commit() # So no db work pending.
+    # Enqueues the grade request.
+    payload = dict(
+        nonce=nonce,
+        notebook_json=nbformat.writes(test_nb, 4),
+        callback_url = URL('receive-grade', scheme=True)
+    )
+    send_grading_request(payload)
+    return dict(is_error=False,
+                watch=True,
+                outcome="Your request has been enqueued, and a new grade will be available soon.")
+
+
+@action('request_ai_feedback/<id>')
+@action.uses(db, session, auth.user, url_signer.verify())
+def request_ai_feedback(id=None):
+    # Gets the grade and assignment. 
+    info = db((db.grade.id == id) & 
+              (db.grade.homework_id == db.homework.id) &
+              (db.homework.assignment_id == db.assignment.id)).select().first()
+    if info is None:
+        raise HTTP(403)
+    # Checks how many grades have feedback already requested. 
+    num_given_ai_feedback = db(
+        (db.grade.homework_id == info.homework.id) &
+        (db.grade.student == get_user_email()) &
+        (db.grading_request.grade_id == db.grade.id)
+    ).count()
+    max_num_ai_feedback = info.assignment.ai_feedback or 0
+    if num_given_ai_feedback >= max_num_ai_feedback:
+        # Exhausted the feedback. 
+        raise HTTP(403)
+    # Prepares the information for the feedback: the master notebook, and the student notebook.
+    master_json = gcs.read(GCS_BUCKET, info.assignment.master_id_gcs)
+    submission_json = gcs.read(GCS_SUBMISSIONS_BUCKET, info.submission_id_gcs)
+    # Produces a clean notebook by matching the cells of master and submission.
+    master_nb = nbformat.reads(master_json, as_version=4)
+    submission_nb = nbformat.reads(submission_json, as_version=4)
+    test_nb = match_notebooks(master_nb, submission_nb)
+    # Creates the grade request.
+    # The grading is via a callback.
+    nonce = random_id()
+    db.ai_feedback_request.insert(
+        grade_id=info.grade.id,
+        request_nonce=nonce,
+    )
+    db.commit() # So no db work pending.
+    # Enqueues the grade request.
+    payload = dict(
+        nonce=nonce,
+        master_notebook_json=master_json,
+        student_notebook_json=nbformat.writes(test_nb, 4),
+        callback_url = URL('receive-grade', scheme=True)
+    )
+    send_ai_feedback_request(payload)
+    redirect(URL('homework', info.homework.id))
 
 
 @action('receive-grade', method=["POST"])

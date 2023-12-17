@@ -108,6 +108,15 @@ db.define_table(
     Field('delay', 'float'),
 )
 
+db.define_table( # ADD
+    'ai_feedback_request',
+    Field('grade_id', 'reference grade', ondelete="SET NULL"),
+    Field('created_on', 'datetime', default=get_time),
+    Field('request_nonce', default=random_id),
+    Field('completed', 'boolean', default=False),
+    Field('delay', 'float'),
+)
+
 db.commit()
 
 def get_assignment_teachers(assignment_id, exclude=None):
