@@ -14,6 +14,7 @@ from .common import url_signer
 from .models import get_assignment_teachers, set_assignment_teachers, get_user_email
 from .util import normalize_email_list
 from .settings import MAX_GRADES_24H
+from .private.private_settings import TESTER_EMAILS
 
 FIELDS = [
     Field('name', length=STRING_FIELD_LENGTH, required=True,
@@ -33,6 +34,8 @@ FIELDS = [
     Field('available_until', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
           help="Date until when student can access the assignment and submit a solution, even if late."),
     Field('max_submissions_in_24h_period', 'integer', default=3, requires=[IS_INT_IN_RANGE(1, MAX_GRADES_24H), IS_NOT_EMPTY()], label="Maximum number of submissions in a 24h period", help="Students will be able to only submit this many solutions in any 24h period."),
+    Field('ai_feedback', 'integer', default=0, requires=IS_INT_IN_RANGE(0, 10), label="Maximum number of AI feedback requests", 
+          help="Students will be able to request AI feedback this many times."),
 ]
 
 
@@ -65,7 +68,7 @@ class AssignmentFormEdit(AssignmentForm):
     def __init__(self, path, use_id=True, redirect_url=None, readonly=False,
                  validate=None, **kwargs):
         super().__init__(FIELDS, path, use_id=use_id, readonly=readonly,
-                         validate=validate or self.validate_dates, **kwargs)
+                         validate=validate or self.validate, **kwargs)
         self.redirect_url = redirect_url
 
     def validate_dates(self, fields, validated_values):
@@ -82,6 +85,18 @@ class AssignmentFormEdit(AssignmentForm):
             validated_values['instructors'].append(user)
         validated_values['instructors'] = normalize_email_list(validated_values['instructors'])
         return errors
+    
+    def validate_ai_feedback(self, fields, validated_values):
+        errors = {}
+        n = validated_values['ai_feedback']
+        if n > 0 and get_user_email() not in TESTER_EMAILS:
+            errors['ai_feedback'] = "This feature is in preview; only testers can create assignments with AI feedback."
+        return errors
+
+    def validate(self, fields, validated_values):
+        e = self.validate_dates(fields, validated_values)
+        e.update(self.validate_ai_feedback(fields, validated_values))
+        return e
 
     def process_post(self, record_id, validated_values):
         new_instructors = validated_values['instructors']
@@ -98,21 +113,8 @@ class AssignmentFormCreate(AssignmentFormEdit):
 
     def __init__(self, path, redirect_url=None, **kwargs):
         super().__init__(path, use_id=False, readonly=False,
-                         validate=self.validate_dates, **kwargs)
+                         validate=self.validate, **kwargs)
         self.redirect_url = redirect_url
-
-    def validate_dates(self, fields, validated_values):
-        d1 = validated_values['available_from']
-        d2 = validated_values['submission_deadline']
-        d3 = validated_values['available_until']
-        errors = {}
-        if d2 < datetime.datetime.utcnow():
-            errors['submission_deadline'] = "The submission deadline should be in the future"
-        if d2 < d1:
-            errors['submission_deadline'] = "The submission deadline should come after the assignment is available"
-        if d3 < d2:
-            errors['available_until'] = "An assignment should be available at least until its deadline"
-        return errors
 
     def read_values(self, record_id):
         values = {}

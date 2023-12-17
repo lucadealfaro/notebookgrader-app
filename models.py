@@ -55,12 +55,14 @@ db.define_table(
     Field('available_until', 'datetime'),
     Field('submission_deadline', 'datetime'),
     Field('max_submissions_in_24h_period', 'integer'),
+    Field('ai_feedback', 'integer', default=0), # ADD Maximum number of AI feedback requests.
     Field('access_url', default=random_id),
     Field('max_points', 'integer'),
     Field('test_ids', 'text'), # Json string of pairs [(id, name, points), ...] of tests.
 )
 
-db.assignment.max_submissions_in_24h_period.requires = IS_INT_IN_RANGE(1, 3)
+db.assignment.max_submissions_in_24h_period.requires = IS_INT_IN_RANGE(1, 100)
+db.assignment.ai_feedback.requires = IS_INT_IN_RANGE(0, 2)
 
 db.define_table(
     'access',
@@ -86,8 +88,10 @@ db.define_table(
     Field('homework_id', 'reference homework'),
     Field('grade', 'float'),
     Field('drive_id'), # Location in Drive of feedback
-    Field('feedback_id_gcs'), # Location in GCS of feedback #ADD
-    Field('submission_id_gcs'), # Location in GCS of submission #ADD
+    Field('feedback_id_gcs'), # Location in GCS of feedback 
+    Field('ai_feedback_id_gcs'), # Location in GCS of AI feedback #ADD
+    Field('ai_feedback_drive_id'), # Location in Drive of AI feedback #ADD
+    Field('submission_id_gcs'), # Location in GCS of submission
     Field('is_valid', 'boolean', default=False),
     Field('cell_id_to_points', 'text'), # Json dictionary of grade breakdown.
 )
