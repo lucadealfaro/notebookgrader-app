@@ -16,7 +16,7 @@ END_HIDDEN_TESTS = "### END HIDDEN TESTS"
 HIDDEN_TESTS = (BEGIN_HIDDEN_TESTS, END_HIDDEN_TESTS)
 IS_TESTS = "# Tests"
 IS_TEST_REGEXP = r"^# *Tests? (\d+) points"
-TEST_NAME_REGEXP = r"^# *Tests \d+ points *: *([^\n]*)"
+TEST_NAME_REGEXP = r"^# *Tests? \d+ points *: *([^\n]*)"
 
 
 test_regexp = re.compile(IS_TEST_REGEXP)

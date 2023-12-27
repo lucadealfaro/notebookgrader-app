@@ -48,17 +48,17 @@ class StudentGradesGrid(Grid):
         header = dict(
             is_header=True,
             cells=[
+                dict(text="Valid", help=GRADE_HELP),
                 dict(text="Grade"),
                 dict(text="Graded On"),
-                dict(text="Feedback", help=FEEDBACK_HELP),
-                dict(text="Valid", help=GRADE_HELP)
+                dict(text="Graded Assignment", help=FEEDBACK_HELP),
             ],
             
         )
         # If there can be AI feedback, add a column for it.
         if ai_feedback > 0:
-            header['cells'].insert(3, dict(
-                text=f"AI Feedback (max {ai_feedback})", help=AI_FEEDBACK_HELP))
+            header['cells'].append(dict(
+                text=f"AI Feedback", help=AI_FEEDBACK_HELP))
         
         # Parses the query.
         req = self._get_request_params(header)
@@ -73,21 +73,20 @@ class StudentGradesGrid(Grid):
         num_given_ai_feedback = db(
             (db.grade.homework_id == id) &
             (db.grade.student == get_user_email()) &
-            (db.grading_request.grade_id == db.grade.id)
+            (db.ai_feedback_request.grade_id == db.grade.id)
         ).count()
         can_request_ai_feedback = num_given_ai_feedback < ai_feedback
         # Now creates the results.
         rows = [header]
         for r in result_rows:
-            row_notebook = A(I(_class="fa fa-file"), _target="_blank", _href=COLAB_BASE + r["grade"]["drive_id"])
-            rows.append(dict(
+            row_notebook = A(SPAN(I(_class="fa fa-file"), " View"), _class="button is-success", _target="_blank", _href=COLAB_BASE + r["grade"]["drive_id"])
             cells=[
+                dict(html=I(_class="fa fa-check").xml() if r["grade"]["is_valid"]
+                else I(_class="fa fa-warning is-danger").xml()),
                 dict(text="{}/{}".format(r["grade"]["grade"], r["assignment"]["max_points"])),
                 dict(text=r["grade"]["grade_date"].isoformat(), type='datetime'),
                 dict(html=row_notebook.xml()),
-                dict(html=I(_class="fa fa-check").xml() if r["grade"]["is_valid"]
-                else I(_class="fa fa-warning is-danger").xml()),
-            ]))
+            ]
             # Inserts the info on AI feedback. 
             if ai_feedback > 0:
                 if r["grade"]["ai_feedback_id_gcs"]:
@@ -106,13 +105,14 @@ class StudentGradesGrid(Grid):
                         ai_feedback_info = SPAN(I(_class="fa fa-spinner fa-spin"), " Pending")
                     elif can_request_ai_feedback:
                         # We can request AI feedback.
-                        ai_feedback_info = A(SPAN(I(_class="fa fa-life-buoy"), "Request AI Feedback"),
+                        ai_feedback_info = A(SPAN(I(_class="fa fa-life-buoy"), " Request AI Feedback ({} left)".format(ai_feedback - num_given_ai_feedback)),
                                             _target="_blank", _class="button is-primary",
-                                            _href=URL('request_ai_feedback', signer=url_signer, args=[r["grade"]["id"]]))
+                                            _href=URL('request_ai_feedback', r["grade"]["id"], signer=url_signer))
                     else: 
                         # No info for this row. 
                         ai_feedback_info = ""
-                rows[-1]['cells'].insert(3, dict(html=ai_feedback_info.xml()))
+                cells.append(dict(html=ai_feedback_info.xml()))
+            rows.append(dict(cells=cells))
         return dict(
             page=int(req.page),
             has_search=False,

@@ -263,8 +263,8 @@ def request_ai_feedback(id=None):
     # Enqueues the grade request.
     payload = dict(
         nonce=nonce,
-        master_notebook_json=master_json,
-        student_notebook_json=nbformat.writes(test_nb, 4),
+        master_json=master_json,
+        student_json=nbformat.writes(test_nb, 4),
         callback_url = URL('receive-ai-feedback', scheme=True)
     )
     send_function_request(payload, FEEDBACK_URL)
