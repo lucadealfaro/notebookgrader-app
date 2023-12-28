@@ -6,7 +6,9 @@ from pydal.validators import *
 from .my_validators import IS_ISO_DATETIME
 
 from .components.grid import Grid
-from yatl.helpers import BUTTON, I, A, SPAN, DIV
+from yatl.helpers import BUTTON, I, A, SPAN, DIV, XML
+
+FEEDBACK_BUTTON = '<feedback_button url="{url}"></feedback_button>'
 
 from .constants import *
 from .common import db, session, auth, Field
