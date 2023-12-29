@@ -95,9 +95,23 @@ def student_home():
         grid=homework_grid(),
     )
 
+
 @action('homework/<id>')
-@action.uses('homework.html', db, auth.user, student_grades_grid)
+@action.uses('homework.html', db, auth.user)
 def homework(id=None):
+    """Displays details on a student's homework."""
+    homework = db.homework[id]
+    if homework is None or homework.student != get_user_email():
+        redirect(URL('student-home'))
+    assignment = db.assignment[homework.assignment_id]
+    return dict(
+        assignment_name=assignment.name,
+    )
+
+
+@action('homework-old/<id>')
+@action.uses('homework_old.html', db, auth.user, student_grades_grid)
+def homework_old(id=None):
     """Displays details on a student's homework."""
     homework = db.homework[id]
     if homework is None or homework.student != get_user_email():

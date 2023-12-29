@@ -12,34 +12,19 @@
 
 <div class="section" id="vue-target" v-cloak>
   <!-- Put here your Vue.js template -->
-  <h1 class="title">[[=assignment_name]]</h1>
-
-  <!-- Section with general information about the homework. -->
-
-  <p class="mt-2"><b>Submission deadline:</b> 
-    <span @mouseover="show_deadline_help = true" @mouseout="show_deadline_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span>
-    {{submission_deadline}}</p>
-  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_deadline_help">
-    <p>Late submissions are graded, but the grade will not be used unless the instructor manually flags it as valid.</p>
+  <h1 class="title">[[=assignment.name]] <span @mouseover="show_homework_help = true" @mouseout="show_homework_help = false" class="icon is-small has-text-primary ml-3"><i class="fa fa-info-circle"></i></span></h1>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_homework_help">
+    <p v-if="drive_url">Please work on the assignment accessible via the button below, and remember to have it graded before {{submission_deadline}}.
+    <p v-else>The assignment is not available yet; it will become accessible on {{date_available}}.</p>
   </div>
   
-  <p class="mt-2"><b>Late submission possible until:</b> 
-    <span @mouseover="show_late_help = true" @mouseout="show_late_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span> 
-    {{date_closes}}</p>
+  <p><b>Grading limit:</b> You can have your assignment graded at most [[=assignment.max_submissions_in_24h_period]] times in 24h.</p>
+  <p class="mt-2"><b>Submission deadline:</b> {{submission_deadline}}</p>
+  <p class="mt-2"><b>Late submission possible until:</b> <span @mouseover="show_late_help = true" @mouseout="show_late_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span> {{date_closes}}</p>
   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_late_help">
     <p>Late submissions are graded, but the grade will not be used unless the instructor manually flags it as valid.</p>
   </div>
-
-  <p class="mt-2"><b>Grading limit:</b> 
-    <span @mouseover="show_grade_limit_help = true" @mouseout="show_grade_limit_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span> 
-    {{grading_limit}} every 24h</p>
-  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_grade_limit_help">
-    <p>You can have your homeowrk graded at most this number of times every 24h.</p>
-  </div>
-
-  <!-- Section for accessing the homework. -->
   
-  <h2 class="subtitle mt-5">Your Assignment</h2>
   <div v-if="drive_url">
     <a :href="drive_url" target="_blank" class="button is-success mt-3">Access assignment</a>
   </div>
@@ -53,20 +38,19 @@
   <div v-else>
     <p class="has-text-weight-semibold mt-2">The instructor has not finalized the assignment yet. Check back later.</p>
   </div>
+  
+  
+  [[if can_grade:]]
+  <div class="mt-5" v-if="drive_url && submission_open">
+    <p >To receive credit for your work, you must submit it for grading before the deadline.
+    <b>You can still request [[=assignment.max_submissions_in_24h_period - num_grades_past_24h]] gradings</b> in these 24h.</p>
+    <p class="mt-3"><b>Save your Colab notebook</b> before requesting grading.</p>
+    <button class="button is-warning mt-2" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Work</button>
     
-  <!-- Section for asking the homework to be graded. --> 
-
-  <div v-if="drive_url && submission_open">
-    <h2 class="subtitle mt-5">Submit Assignment</h2>
-    <p>You can still request {{available_grades}} in these 24h.</p>
-    <p class="mt-2"><b>Save your Colab notebook</b> before requesting grading.</p>
-    <p>
-      <button class="button is-danger mt-2" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Assignment</button>
-    </p>
-
     <div class="box has-background-success-light has-text-success-dark mt-2" v-if="grading_outcome && !grading_error">
       {{grading_outcome}}
     </div>
+
     <div class="box has-background-danger-light has-text-danger-dark mt-2" v-if="grading_outcome && grading_error">
       {{grading_outcome}}
     </div>
@@ -77,10 +61,21 @@
     </div>
 
   </div>
+  [[else:]]
+  <div class="box has-text-danger-dark has-background-danger-light mt-4">
+    [[=reason]]
+  </div>
+  [[pass]]
   
-  <!-- Section displaying the grades -->
-  
-
+  <h2 class="subtitle mt-5">Your Grades
+    <span @mouseover="show_grades_help = true" @mouseout="show_grades_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
+<!--    <button @click="do_reload" class="button is-small ml-2"><i class="fa fa-refresh"></i></button></h2>-->
+   <div class="box has-background-primary-light has-text-primary-dark" v-if="show_grades_help">
+    <p>Below are the grades and feedback you received.
+      Grades for late submissions are valid only if the instructor marks them so manually.</p>
+  </div>
+  [[=grid]]
+</div>
 
 
 [[block page_scripts]]
