@@ -80,8 +80,33 @@
   
   <!-- Section displaying the grades -->
   
+  <h2 class="subtitle mt-5">Your Grades
+    <span @mouseover="show_grades_help = true" @mouseout="show_grades_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_grades_help">
+    <p>Below are the grades and feedback you received.
+      Grades for late submissions are valid only if the instructor marks them so manually.
+      Your assignment grade is the highest valid grade you received. 
+    </p>
+  </div>
 
 
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_table_help">
+    <p>{{table_help}}</p>
+  </div>
+  <table v-if="grades.length > 0" class="table is-striped is-fullwidth">
+    <tr>
+      <th>Valid <span @mouseover="show_table_valid_help = true" @mouseout="show_table_valid_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></th>
+      <th>Grade</th>
+      <th>Graded On</th>
+      <th>Graded Assignment <span @mouseover="show_table_graded_help = true" @mouseout="show_table_graded_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></th>
+      <th v-if="ai_feedback_enabled">AI Feedback <span @mouseover="show_table_ai_help = true" @mouseout="show_table_ai_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></th>
+    </tr>
+    <tr v-for="grade in grades">
+      <td>{{grade.is_valid}}</td>
+      <td>{{grade.grade_date}}</td>
+      <td>{{grade.feedback}}</td>
+      <td><ai_feedback_button :url="{{grade.ai_feedback_url}}"></td>
+    </tr>
 
 [[block page_scripts]]
 <!-- Loads the index-specific js for Vue -->
@@ -95,6 +120,6 @@
 </script>
 <script src="components-bulma/vueform/luxon.min.js"></script>
 <script src="[[=URL('static/components-bulma/grid/grid.js')]]"></script>
-<script src="[[=URL('static/components-bulma/feedback_button/feedback_button.js')]]"></script>
+<script src="[[=URL('static/components-bulma/ai_feedback_button/ai_feedback_button.js')]]"></script>
 <script src="js/homework.js"></script>
 [[end]]
