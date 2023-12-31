@@ -10,9 +10,11 @@ let init = (app) => {
     // This is the Vue data.
     app.data = {
         // Help.
-        show_homework_help: false,
+        show_deadline_help: false,
         show_late_help: false,
+        show_grade_limit_help: false,
         show_grades_help: false,
+        show_homework_help: false,
         // Dates.
         date_available: null,
         timestamp_available: null,
@@ -23,13 +25,41 @@ let init = (app) => {
         assignment_not_yet_open: false,
         can_obtain_notebook: false,
         submission_open: null,
+        last_grade_date: null,
         // Etc.
+        grades: [],
         drive_url: null,
         obtain_disabled: false,
         is_grading: false,
         grading_error: null,
         grading_outcome: "",
         cell_source: null,
+        max_in_24h: null,
+        num_ai_feedback: 0,
+    };
+
+    app.computed = {
+        assignment_is_available: function () {
+            return Date.now() >= app.vue.timestamp_available && app.vue.can_obtain_notebook;
+        },
+        assignment_not_yet_open: function () {
+            return Date.now() < app.vue.timestamp_available;
+        },
+        submission_open: function () {
+            return Date.now() < app.vue.timestamp_closes;
+        },
+        available_grades: function () {
+            // Computes the number of recent grades.
+            let recent_grades = 0;
+            for (let g of app.vue.grades) {
+                let grade_date = luxon.DateTime.fromISO(g.grade_date, {zone: "UTC"});
+                let is_recent = grade_date.plus({days: 1}) > Date.now();
+                if (is_recent) {
+                    recent_grades++;
+                }
+            }
+            return app.vue.max_in_24h - recent_grades;
+        },
     };
 
     app.time_zone = luxon.DateTime.local().zoneName;
@@ -41,12 +71,20 @@ let init = (app) => {
         return a;
     };
 
+    app.convert_grades = (grades) => {
+        // This converts the grade dates to local time.
+        for (let g of grades) {
+            let grade_date = luxon.DateTime.fromISO(g.grade_date, {zone: "UTC"});
+            g.grade_date = grade_date.setZone(app.time_zone).toLocaleString(luxon.DateTime.DATETIME_MED_WITH_WEEKDAY);
+        }
+        return app.enumerate(grades);
+    };
+
+    // ok
     app.obtain_assignment = function () {
         app.vue.obtain_disabled = true; // To avoid double clicks.
         axios.post(obtain_assignment_url).then(function (res) {
             app.vue.drive_url = res.data.drive_url;
-            // We reload the page.
-            location.reload();
         }).catch(function (err) {
             if (err.response && err.response.status == 403) {
                 location.assign(error_url);
@@ -54,23 +92,6 @@ let init = (app) => {
                 location.assign(internal_error_url);
             }
         });
-    };
-
-    app.check_new_grade = function () {
-        app.checker = setInterval(() => {
-            axios.get(recent_grade_date_url).then(function (res) {
-                if (app.last_grade_date < res.data.last_grade_date) {
-                    // There is a new grade now.
-                    location.reload();
-                }
-            }).catch(function(err) {
-                if (err.response && err.response.status == 403) {
-                    location.assign(error_url);
-                } else {
-                    location.assign(internal_error_url);
-                }
-            })
-        }, 5000);
     };
 
     app.grade_homework = function () {
@@ -82,15 +103,11 @@ let init = (app) => {
             app.vue.grading_outcome=res.data.outcome;
             app.vue.grading_error=res.data.is_error;
             app.vue.cell_source = res.data.cell_source;
-            if (res.data.watch) {
+            if (!res.data.is_error) {
                 // We have to watch for changes.
                 app.check_new_grade();
             } else {
                 app.vue.is_grading = false;
-                if (!res.data.is_error) {
-                    // The new grade has arrived.
-                    location.reload();
-                }
             }
         }).catch(function (err) {
             if (err.response && err.response.status == 403) {
@@ -101,17 +118,44 @@ let init = (app) => {
         })
     }
 
-    app.do_reload = function () {
-        location.reload();
-    }
+    app.check_new_grade = function () {
+        let got_grades = false;
+        while (!got_grades) {
+            setTimeout(() => {
+                // First, we compute the last grade date.
+                let last_grade_date = null;
+                if (app.vue.grades.length > 0) {
+                    last_grade_date = app.vue.grades[0].grade_date;
+                }
+                // Then, request updated grades.
+                axios.get(homework_grades_url).then(function (res) {
+                    if (res.data.grades.length > 0 && 
+                        (last_grade_date == null ||
+                         res.data.grades[0].grade_date > last_grade_date)) {
+                            // We got the new grades.
+                            app.vue.grades = app.convert_grades(res.data.grades);
+                            app.has_pending_grades = res.data.has_pending_grades;
+                            app.vue.is_grading = false;
+                            got_grades = true;
+                        }
+                }).catch(function(err) {
+                    if (err.response && err.response.status == 403) {
+                        location.assign(error_url);
+                    } else {
+                        location.assign(internal_error_url);
+                    }
+                })
+            }, 5000);
+        }
+    };
 
     // This contains all the methods.
     app.methods = {
         // Complete as you see fit.
         obtain_assignment: app.obtain_assignment,
         grade_homework: app.grade_homework,
-        do_reload: app.do_reload,
     };
+
 
     // This creates the Vue instance.
     app.vue = new Vue({
@@ -120,9 +164,10 @@ let init = (app) => {
         methods: app.methods
     });
 
+
     // And this initializes it.
     app.init = () => {
-        axios.get(homework_details_url).then(function (res) {
+        axios.get(homework_api_url).then(function (res) {
             // Availability date.
             let timestamp_available = luxon.DateTime.fromISO(res.data.available_from, {zone: "UTC"});
             let local_available = timestamp_available.setZone(app.time_zone);
@@ -140,12 +185,12 @@ let init = (app) => {
             // Drive URL.
             app.vue.drive_url = res.data.drive_url;
             app.vue.can_obtain_notebook = res.data.can_obtain_notebook;
-            app.vue.assignment_is_available = Date.now() >= timestamp_available && app.vue.can_obtain_notebook;
-            app.vue.assignment_not_yet_open = Date.now() < timestamp_available;
-            app.vue.submission_open = Date.now() < timestamp_closes;
+            app.vue.max_in_24h = res.data.max_in_24h;
+            app.vue.num_ai_feedback = res.data.num_ai_feedback;
         });
-        axios.get(recent_grade_date_url).then(function (res) {
-            app.last_grade_date = res.data.last_grade_date;
+        axios.get(homework_grades_url).then(function (res) {
+            app.vue.grades = app.convert_grades(res.data.grades);
+            app.has_pending_grades = res.data.has_pending_grades;
         });
     };
 

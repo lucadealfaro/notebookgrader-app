@@ -106,59 +106,59 @@ def homework(id=None):
     assignment = db.assignment[homework.assignment_id]
     return dict(
         assignment_name=assignment.name,
+        homework_api_url=URL('api-homework-details', id, signer=url_signer),
+        homework_grades_url=URL('api-homework-grades', id, signer=url_signer),
     )
 
 
-@action('homework-old/<id>')
-@action.uses('homework_old.html', db, auth.user, student_grades_grid)
-def homework_old(id=None):
-    """Displays details on a student's homework."""
+@action('api-homework-details/<id>', method="GET")
+@action.uses(db, auth.user, url_signer.verify())
+def api_homework_details(id=None):
+    """Returns the details of a homework, except its list of grades."""
     homework = db.homework[id]
     if homework is None or homework.student != get_user_email():
-        redirect(URL('student-home'))
+        raise HTTP(403)
     assignment = db.assignment[homework.assignment_id]
-    grid = student_grades_grid(id=id)
-    # Checks if we can grade the current version.
-    now = datetime.datetime.utcnow()
-    query = ((db.grade.homework_id == id) &
-             (db.grade.student == get_user_email()) &
-             (db.grade.grade_date > now - datetime.timedelta(hours=24)))
-    num_grades_past_24h = db(query).count()
-    can_grade = True
-    reason = None
-    if homework.drive_id is None:
-        can_grade = False
-        reason = "You have not submitted anything yet."
-    elif not (assignment.available_from < now < assignment.available_until):
-        can_grade = False
-        reason = "The assignment is not open."
-    elif num_grades_past_24h >= assignment.max_submissions_in_24h_period:
-        can_grade = False
-        reason = "You have already had your assignment graded the maximum number of {} times in the last 24h".format(
-            assignment.max_submissions_in_24h_period)
+    assert assignment is not None
     return dict(
-        homework=homework,
-        assignment=assignment,
-        grid=grid,
-        can_grade=can_grade,
-        reason=reason,
-        grade_homework_url=URL('grade-homework', id, signer=url_signer),
-        num_grades_past_24h=num_grades_past_24h,
+        submission_deadline=assignment.submission_deadline.isoformat(),
+        available_from=assignment.available_from.isoformat(),
+        available_until=assignment.available_until.isoformat(),
+        max_in_24h=assignment.max_submissions_in_24h_period,
+        can_obtain_notebook=assignment.master_id_gcs is not None,
+        drive_url=None if homework.drive_id is None else COLAB_BASE + homework.drive_id,
         obtain_assignment_url=URL('obtain-assignment', id, signer=url_signer),
-        homework_details_url=URL('student-homework-details', id, signer=url_signer),
-        recent_grade_date_url=URL("recent-grade-date", id, signer=url_signer),
         error_url=URL('credentials_error'),
         internal_error_url=URL('internal_error'),
+        num_ai_feedback = assignment.ai_feedback or 0,
     )
 
-@action('recent-grade-date/<id>')
+@action('api-homework-grades/<id>', method="GET")
 @action.uses(db, auth.user, url_signer.verify())
-def recent_grade_checker(id=None):
-    recent_grade = db((db.grade.homework_id == id) &
-                      (db.grade.student == get_user_email())).select(orderby=~db.grade.grade_date).first()
-    return dict(last_grade_date=
-                recent_grade.grade_date if recent_grade is not None
-                else "0000-00-00 00:00:00")
+def api_homework_grades(id=None):
+    """Returns the grades the student received in the homeworks."""
+    homework = db.homework[id]
+    if homework is None or homework.student != get_user_email():
+        raise HTTP(403)
+    grades = db(db.grade.homework_id == id).select(orderby=~db.grade.grade_date)
+    grades_list = [
+        dict(id=g.id,
+             is_valid=g.is_valid,
+             grade="{:.2f}".format(g.grade),
+             grade_date=g.grade_date.isoformat(),
+             feedback=None if g.drive_id is None else COLAB_BASE + g.drive_id,
+        ) for g in grades]
+    # I also want to know if there are any pending grades. 
+    has_pending_grades = not db((db.grading_request.homework_id == id) &
+                                (db.grading_request.completed == False)).isempty()
+    last_request = db(db.grading_request.homework_id == id).select(
+        orderby=~db.grading_request.created_on).first()
+    return dict(    
+        grades=grades_list,
+        has_pending_grades=has_pending_grades,
+        last_request_date=None if last_request is None 
+        else last_request.created_on.isoformat(),
+        )
 
 
 @action('grade-homework/<id>', method=["POST"])
@@ -416,17 +416,3 @@ def obtain_assignment(id=None):
     return dict(drive_url=None if drive_id is None else COLAB_BASE + drive_id)
 
 
-@action('student-homework-details/<id>')
-@action.uses(db, auth.user, url_signer.verify())
-def homework_details(id=None):
-    homework = db.homework[id]
-    assert homework is not None and homework.student == get_user_email()
-    assignment = db.assignment[homework.assignment_id]
-    assert assignment is not None
-    return dict(
-        available_from=assignment.available_from.isoformat(),
-        submission_deadline=assignment.submission_deadline.isoformat(),
-        available_until=assignment.available_until.isoformat(),
-        can_obtain_notebook=assignment.master_id_gcs is not None,
-        drive_url=None if homework.drive_id is None else COLAB_BASE + homework.drive_id
-    )
