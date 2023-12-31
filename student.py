@@ -108,6 +108,7 @@ def homework(id=None):
         assignment_name=assignment.name,
         homework_api_url=URL('api-homework-details', id, signer=url_signer),
         homework_grades_url=URL('api-homework-grades', id, signer=url_signer),
+        grade_homework_url=URL('grade-homework', id, signer=url_signer),
     )
 
 

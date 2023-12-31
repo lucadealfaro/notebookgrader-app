@@ -77,7 +77,7 @@ let init = (app) => {
         // This converts the grade dates to local time.
         for (let g of grades) {
             let grade_date = luxon.DateTime.fromISO(g.grade_date, {zone: "UTC"});
-            g.grade_date = grade_date.setZone(app.time_zone).toLocaleString(luxon.DateTime.DATETIME_MED_WITH_WEEKDAY);
+            g.grade_date_display = grade_date.setZone(app.time_zone).toLocaleString(luxon.DateTime.DATETIME_MED_WITH_WEEKDAY);
         }
         return app.enumerate(grades);
     };
@@ -108,7 +108,7 @@ let init = (app) => {
             app.vue.cell_source = res.data.cell_source;
             if (!res.data.is_error) {
                 // We have to watch for changes.
-                app.check_new_grade();
+                
             } else {
                 app.vue.is_grading = false;
             }
