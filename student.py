@@ -109,6 +109,9 @@ def homework(id=None):
         homework_api_url=URL('api-homework-details', id, signer=url_signer),
         homework_grades_url=URL('api-homework-grades', id, signer=url_signer),
         grade_homework_url=URL('grade-homework', id, signer=url_signer),
+        obtain_assignment_url=URL('obtain-assignment', id, signer=url_signer),
+        error_url=URL('credentials_error'),
+        internal_error_url=URL('internal_error'),
     )
 
 
@@ -128,9 +131,6 @@ def api_homework_details(id=None):
         max_in_24h=assignment.max_submissions_in_24h_period,
         can_obtain_notebook=assignment.master_id_gcs is not None,
         drive_url=None if homework.drive_id is None else COLAB_BASE + homework.drive_id,
-        obtain_assignment_url=URL('obtain-assignment', id, signer=url_signer),
-        error_url=URL('credentials_error'),
-        internal_error_url=URL('internal_error'),
         num_ai_feedback = assignment.ai_feedback or 0,
     )
 

@@ -57,11 +57,6 @@ let init = (app) => {
             }
             return this.max_in_24h - recent_grades;
         },
-        can_ask_for_grade: function () {
-            // We check that we have not asked too recently for a grade.
-            return this.most_recent_request == null || 
-                Date.now() > this.most_recent_request.plus({minutes: 1});
-        }
     };
 
     app.time_zone = luxon.DateTime.local().zoneName;
@@ -103,12 +98,11 @@ let init = (app) => {
         app.vue.is_error = null;
         app.vue.most_recent_request = Date.now();
         axios.post(grade_homework_url, {}).then(function (res) {
-            app.vue.grading_outcome=res.data.outcome;
-            app.vue.grading_error=res.data.is_error;
+            app.vue.grading_outcome = res.data.outcome;
+            app.vue.grading_error = res.data.is_error;
             app.vue.cell_source = res.data.cell_source;
             if (!res.data.is_error) {
                 // We have to watch for changes.
-                
             } else {
                 app.vue.is_grading = false;
             }

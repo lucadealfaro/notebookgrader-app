@@ -61,7 +61,7 @@
     <p>You can submit your assignment for grading at most {{max_in_24h}} times in 24h, and you have {{available_grades}} remaining submissions.</p>
     <p class="mt-2"><b>Save your Colab notebook</b> before requesting grading.</p>
     <p>
-      <button class="button is-danger mt-2" :disabled="is_grading || !can_ask_for_grade" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Assignment</button>
+      <button class="button is-danger mt-2" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Assignment</button>
     </p>
 
     <div class="box has-background-success-light has-text-success-dark mt-2" v-if="grading_outcome && !grading_error">
@@ -117,6 +117,9 @@
     const homework_api_url = "[[=XML(homework_api_url)]]";
     const homework_grades_url = "[[=XML(homework_grades_url)]]";
     const grade_homework_url = "[[=XML(grade_homework_url)]]";
+    const error_url = "[[=XML(error_url)]]";
+    const internal_error_url = "[[=XML(internal_error_url)]]";
+    const obtain_assignment_url = "[[=XML(obtain_assignment_url)]]";
 </script>
 <script src="components-bulma/vueform/luxon.min.js"></script>
 <script src="[[=URL('static/components-bulma/grid/grid.js')]]"></script>
