@@ -147,8 +147,10 @@ def api_homework_grades(id=None):
              grade="{:.2f}".format(g.grade),
              grade_date=g.grade_date.isoformat(),
              feedback=None if g.drive_id is None else COLAB_BASE + g.drive_id,
+             ai_url=URL('api-ai-feedback', g.id, signer=url_signer),
         ) for g in grades]
-    # I also want to know if there are any pending grades. 
+    # I also want to know if there are any pending grades.
+     
     has_pending_grades = not db((db.grading_request.homework_id == id) &
                                 (db.grading_request.completed == False)).isempty()
     last_request = db(db.grading_request.homework_id == id).select(
@@ -156,7 +158,7 @@ def api_homework_grades(id=None):
     return dict(    
         grades=grades_list,
         has_pending_grades=has_pending_grades,
-        last_request_date=None if last_request is None 
+        most_recent_request=None if last_request is None 
         else last_request.created_on.isoformat(),
         )
 

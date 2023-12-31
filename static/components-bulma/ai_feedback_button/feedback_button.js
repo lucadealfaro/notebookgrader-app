@@ -9,6 +9,7 @@
         var data = {
             state: 'ask',
             callback_url: this.url,
+            my_num_ai_feedback: app.vue.num_ai_feedback,
         };
         return data;
     };
@@ -23,7 +24,7 @@
         self.state = 'ask';
     };
 
-    Q.register_vue_component('feedback_button', 'components-bulma/feedback_button/feedback_button.html',
+    Q.register_vue_component('ai_feedback_button', 'components-bulma/ai_feedback_button/feedback_button.html',
         function(template) {
             feedback_button.template = template.data;
             return feedback_button;
