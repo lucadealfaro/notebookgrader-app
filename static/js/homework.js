@@ -103,6 +103,7 @@ let init = (app) => {
             app.vue.cell_source = res.data.cell_source;
             if (!res.data.is_error) {
                 // We have to watch for changes.
+                app.check_new_grade();
             } else {
                 app.vue.is_grading = false;
             }
@@ -116,33 +117,35 @@ let init = (app) => {
     }
 
     app.check_new_grade = function () {
-        let got_grades = false;
-        while (!got_grades) {
-            setTimeout(() => {
-                // First, we compute the last grade date.
-                let update_date = null;
-                if (app.vue.grades.length > 0) {
-                    update_date = app.vue.grades[0].grade_date;
-                }
-                // Then, request updated grades.
-                axios.get(homework_grades_url).then(function (res) {
-                    if (res.data.grades.length > 0 && 
-                        (update_date == null ||
-                         res.data.grades[0].grade_date > update_date)) {
-                            // We got the new grades.
-                            app.vue.grades = app.convert_grades(res.data.grades);
-                            app.vue.is_grading = false;
-                            got_grades = true;
-                        }
-                }).catch(function(err) {
-                    if (err.response && err.response.status == 403) {
-                        location.assign(error_url);
+        setTimeout(() => {
+            // First, we compute the last grade date.
+            let update_date = null;
+            if (app.vue.grades.length > 0) {
+                update_date = app.vue.grades[0].grade_date;
+            }
+            // Then, request updated grades.
+            axios.get(homework_grades_url).then(function (res) {
+                if (res.data.grades.length > 0 && 
+                    (update_date == null ||
+                        res.data.grades[0].grade_date > update_date)) {
+                        // We got the new grades.
+                        app.vue.grades = app.convert_grades(res.data.grades);
+                        app.vue.is_grading = false;
+                        app.vue.grading_outcome = "";
+                        app.vue.grading_error = "";
+                        app.vue.cell_source = "";
                     } else {
-                        location.assign(internal_error_url);
+                        // We have to wait a bit more.
+                        app.check_new_grade();
                     }
-                })
-            }, 10000);
-        }
+            }).catch(function(err) {
+                if (err.response && err.response.status == 403) {
+                    location.assign(error_url);
+                } else {
+                    location.assign(internal_error_url);
+                }
+            })
+        }, 10000);
     };
 
     // This contains all the methods.
