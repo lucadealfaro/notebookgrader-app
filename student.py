@@ -8,7 +8,7 @@ from py4web import action, request, redirect, URL, HTTP
 from .common import db, session, auth
 from .models import get_user_email
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, GCS_SUBMISSIONS_BUCKET
-from .settings import MIN_TIME_BETWEEN_GRADE_REQUESTS
+from .settings import MIN_TIME_BETWEEN_GRADE_REQUESTS, MAX_AGE_AI_PENDING_REQUEST
 from .settings import GRADING_URL, FEEDBACK_URL
 
 from .common import flash, url_signer, gcs
@@ -257,7 +257,9 @@ def request_ai_feedback(id=None):
         return dict(state="received", url=COLAB_BASE + info.grade.ai_feedback_id_drive)    
     # Checks if there is feedback pending.
     pending_request = db(db.ai_feedback_request.grade_id == info.grade.id).select().first()
-    if pending_request is not None:
+    if pending_request is not None and (
+        pending_request.created_on > 
+        datetime.datetime.utcnow() - datetime.timedelta(seconds=MAX_AGE_AI_PENDING_REQUEST)):
         return dict(state="requested")
     else:
         # There is no requested feedback. 
@@ -308,7 +310,9 @@ def request_ai_feedback(id=None):
     # Enqueues the grade request.
     payload = dict(
         nonce=nonce,
-        master_json=master_json,
+        # It seems silly to write the master notebook, since it is unchanged, but the 
+        # master_json variable contains bytes, it turns out. 
+        master_json=nbformat.writes(master_nb, 4),
         student_json=nbformat.writes(test_nb, 4),
         callback_url = URL('receive-ai-feedback', scheme=True)
     )

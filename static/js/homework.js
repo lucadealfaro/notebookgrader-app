@@ -99,7 +99,7 @@ let init = (app) => {
             if (g.ai_state == 'requested') {
                 setTimeout(() => {
                     app.get_ai_state(g);
-                }, 10000);
+                }, 20000);
             }
         }).catch(function (err) {
             if (err.response && err.response.status == 403) {

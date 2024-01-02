@@ -30,10 +30,10 @@ def build_drive_service(user=None):
         print("No user credentials")
         return None
     credentials_dict = json.loads(user_info.credentials)
+    print("Using credentials:", credentials_dict)
     creds = google.oauth2.credentials.Credentials(**credentials_dict)
     drive_service = build('drive', 'v3', credentials=creds)
     return drive_service
-
 
 ### Define your table below
 #
@@ -111,6 +111,7 @@ db.define_table(
 db.define_table( # ADD
     'ai_feedback_request',
     Field('grade_id', 'reference grade', ondelete="SET NULL"),
+    Field('student', default=get_user_email),
     Field('created_on', 'datetime', default=get_time),
     Field('request_nonce', default=random_id),
     Field('completed', 'boolean', default=False),

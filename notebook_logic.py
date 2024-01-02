@@ -142,7 +142,7 @@ def create_master_notebook(notebook_string):
     # Adds total points into notebook.
     ensure(new_nb.metadata, 'notebookgrader')
     new_nb.metadata.notebookgrader.total_points = total_points
-    return nbformat.writes(new_nb, version=4), total_points, test_list
+    return nbformat.writes(new_nb, version=nbformat.NO_CONVERT), total_points, test_list
 
 def produce_student_version(master_notebook_string):
     """Given a master notebook string, produces the student version.

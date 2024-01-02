@@ -14,12 +14,11 @@ from pydal.tools.tags import Tags
 from py4web.utils.factories import ActionFactory
 from py4web.utils.form import FormStyleBulma
 from py4web.utils.url_signer import URLSigner
-from py4web.utils.auth_plugins.oauth2google_scoped import AuthEnforcerGoogleScoped
 
 from . import settings
 from .settings import APP_FOLDER, IS_TEST
 
-from .google_scoped_login import GoogleScopedLogin
+from .google_scoped_login import GoogleScopedLogin, MyAuthEnforcerGoogleScoped
 
 # #######################################################
 # implement custom loggers form settings.LOGGERS
@@ -156,7 +155,7 @@ auth.register_plugin(GoogleScopedLogin(
     ]
 ))
 
-auth.param.auth_enforcer = AuthEnforcerGoogleScoped(auth, error_page="credentials_error")
+auth.param.auth_enforcer = MyAuthEnforcerGoogleScoped(auth, db, error_page="credentials_error")
 
 # Below are the standard py4web plugins.
 
