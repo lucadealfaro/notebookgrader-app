@@ -71,10 +71,40 @@ let init = (app) => {
     app.convert_grades = (grades) => {
         // This converts the grade dates to local time.
         for (let g of grades) {
-            let grade_date = luxon.DateTime.fromISO(g.grade_date, {zone: "UTC"});
-            g.grade_date_display = grade_date.setZone(app.time_zone).toLocaleString(luxon.DateTime.DATETIME_MED_WITH_WEEKDAY);
+            app.convert_time(g);
+            app.set_ai_info(g);
         }
         return app.enumerate(grades);
+    };
+
+    app.convert_time = (g) => {
+        let grade_date = luxon.DateTime.fromISO(g.grade_date, {zone: "UTC"});
+        g.grade_date_display = grade_date.setZone(app.time_zone).toLocaleString(luxon.DateTime.DATETIME_MED_WITH_WEEKDAY);
+    }
+
+    app.set_ai_info = (g) => {
+        // Initializes the AI feedback info so Vue pays attention to it.
+        g.ai_state = 'ask';
+        g.ai_feedback_url = null;
+        g.ai_error_message = null;
+    };
+
+    app.get_ai_state = (g) => {
+        // Checks the AI feedback for the grade.
+        axios.get(g.ai_url).then(function (res) {
+            g.ai_state = res.data.state;
+            g.ai_feedback_url = res.data.feedback_url;
+            g.ai_error_message = res.data.message;
+            // If we are in the requested state, we have to check if the feedback has been given.
+            if (g.ai_state == 'requested') {
+                setTimeout(() => {
+                    app.get_ai_state(g);
+                }, 10000);
+            }
+        }).catch(function (err) {
+            g.ai_state = 'error';
+            g.ai_error_message = "An error occurred.";
+        })
     };
 
     // ok
@@ -116,6 +146,7 @@ let init = (app) => {
         })
     }
 
+    // FIX BELOW
     app.check_new_grade = function () {
         setTimeout(() => {
             // First, we compute the last grade date.
@@ -191,6 +222,10 @@ let init = (app) => {
         });
         axios.get(homework_grades_url).then(function (res) {
             app.vue.grades = app.convert_grades(res.data.grades);
+            // Checks the AI feedback for each grade.
+            for (let g of app.vue.grades) {
+                app.get_ai_state(g);
+            }
             app.vue.most_recent_request = luxon.DateTime.fromISO(res.data.most_recent_request, {zone: "UTC"});
             app.vue.has_pending_requests = res.data.has_pending_requests;
             // If there are pending requests, tries to get the new grades.

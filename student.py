@@ -97,7 +97,7 @@ def student_home():
 
 
 @action('homework/<id>')
-@action.uses('homework.html', db, auth.user)
+@action.uses('homework.html', db, auth.user, url_signer)
 def homework(id=None):
     """Displays details on a student's homework."""
     homework = db.homework[id]
