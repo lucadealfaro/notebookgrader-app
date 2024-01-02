@@ -18,7 +18,7 @@ import google_auth_oauthlib.flow
 import google.oauth2.credentials
 from googleapiclient.discovery import build
 
-from py4web import request, redirect, URL, HTTP
+from py4web import request, response, redirect, URL, HTTP
 from pydal import Field
 from py4web.utils.auth import AuthEnforcer, REGEX_APPJSON
 from google.auth.exceptions import RefreshError
@@ -45,6 +45,8 @@ class MyAuthEnforcerGoogleScoped(AuthEnforcer):
             self._handle_error()
             
     def _handle_error(self):
+        # Removes this Google cookie, trying to enforce loggin in again. 
+        response.delete_cookie("G_ENABLED_IDPS")
         self.auth.session.clear()
         if re.search(REGEX_APPJSON, request.headers.get("accept", "")) and (
             request.headers.get("json-redirects", "") != "on"

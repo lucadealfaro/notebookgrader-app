@@ -28,7 +28,7 @@ Warning: Fixtures MUST be declared with @action.uses({fixtures}) else your app w
 import os
 import json
 
-from py4web import action, request, abort, redirect, URL, Flash
+from py4web import action, request, response, abort, redirect, URL, Flash
 from pydal import Field
 from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, T, cache, auth, logger, authenticated, unauthenticated
@@ -71,6 +71,10 @@ def about():
 def internal_error():
     return dict()
 
+@action("credentials_error")
+@action.uses("credentials_error.html", auth)
+def credentials_errors():
+    return dict()
 
 @action('admin_share/<source>/<id>')
 @action.uses(db, auth.user, url_signer.verify())
@@ -140,11 +144,6 @@ def delete_gcs(gcs_id):
     """Deletes an id from GCS."""
     if gcs_id is not None:
         gcs.delete(GCS_BUCKET, gcs_id)
-
-@action("credentials_error")
-@action.uses("credentials_error.html", auth)
-def credentials_errors():
-    return dict()
 
 @action('grading_details/<id>')
 @action.uses('grading_details.html', db, auth.user, url_signer, grading_grid)

@@ -72,7 +72,8 @@ def upload_to_drive(drive_service, s, drive_file_name, id=None,
     Returns:
         The file id.
     """
-    sio = io.BytesIO(s.encode('utf-8'))
+    s_bytes = s if isinstance(s, bytes) else s.encode('utf-8')
+    sio = io.BytesIO(s_bytes)
     media = MediaIoBaseUpload(sio,
         mimetype='application/vnd.google.colaboratory', resumable=True)
     meta = {'name': drive_file_name}

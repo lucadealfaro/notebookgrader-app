@@ -3,6 +3,7 @@ import json
 import nbformat
 import requests
 import time
+import traceback
 
 from py4web import action, request, redirect, URL, HTTP
 from .common import db, session, auth
@@ -253,17 +254,26 @@ def request_ai_feedback(id=None):
     if info is None:
         return dict(state="error", message="No such grade")
     # Checks if there is feedback already.
-    if info.grade.ai_feedback_id_drive is not None:
-        return dict(state="received", url=COLAB_BASE + info.grade.ai_feedback_id_drive)    
+    if info.grade.ai_feedback_id_gcs is not None:
+        if info.grade.ai_feedback_id_drive is None:
+            # We need to write the feedback to drive. 
+            feedback_json = gcs.read(GCS_SUBMISSIONS_BUCKET, info.grade.ai_feedback_id_gcs)
+            drive_id = write_ai_feedback_to_drive(info.assignment, info.grade, feedback_json)
+        else:
+            drive_id = info.grade.ai_feedback_id_drive
+        return dict(state="received", url=COLAB_BASE + drive_id)    
     # Checks if there is feedback pending.
     pending_request = db(db.ai_feedback_request.grade_id == info.grade.id).select().first()
-    if pending_request is not None and (
-        pending_request.created_on > 
-        datetime.datetime.utcnow() - datetime.timedelta(seconds=MAX_AGE_AI_PENDING_REQUEST)):
+    if has_recent_request(pending_request):
         return dict(state="requested")
     else:
         # There is no requested feedback. 
         return dict(state="ask")
+
+
+def has_recent_request(past_request):
+    return (past_request is not None and past_request.created_on > 
+        datetime.datetime.utcnow() - datetime.timedelta(seconds=MAX_AGE_AI_PENDING_REQUEST))
 
 
 @action('api-ai-feedback/<id>', method="POST")
@@ -280,7 +290,7 @@ def request_ai_feedback(id=None):
         return dict(state="error", message="No such grade")
     # Check if feedback has already been requested. 
     past_request = db(db.ai_feedback_request.grade_id == info.grade.id).select().first()
-    if past_request is not None:
+    if has_recent_request(past_request):
         return dict(state="requested")
     # Checks how many grades have AI feedback already requested. 
     num_given_ai_feedback = db(
@@ -292,6 +302,8 @@ def request_ai_feedback(id=None):
     if num_given_ai_feedback >= max_num_ai_feedback:
         # Exhausted the feedback. 
         return dict(state="error", message="No more AI feedback requests available.")
+    # We want to fail already here if the user cannot login. 
+    build_drive_service()
     # Prepares the information for the feedback: the master notebook, and the student notebook.
     master_json = gcs.read(GCS_BUCKET, info.assignment.master_id_gcs)
     submission_json = gcs.read(GCS_SUBMISSIONS_BUCKET, info.grade.submission_id_gcs)
@@ -407,6 +419,27 @@ def receive_ai_feedback():
     grade = db.grade[ai_feedback_request.grade_id]
     assignment = db.assignment[grade.assignment_id]
     assert grade is not None and assignment is not None
+    # We store the feedback in GCS.
+    ai_feedback_id_gcs = long_random_id()
+    gcs.write(GCS_SUBMISSIONS_BUCKET, ai_feedback_id_gcs, feedback_json)
+    grade.ai_feedback_id_gcs = ai_feedback_id_gcs
+    grade.update_record()
+    # Marks that the request has been done.
+    ai_feedback_request.completed = True
+    ai_feedback_request.delay = (now - ai_feedback_request.created_on).total_seconds()
+    ai_feedback_request.update_record()
+    db.commit()    
+    # Writes also the AI feedback to drive.
+    try: 
+        write_ai_feedback_to_drive(assignment, grade, feedback_json)
+    except:
+        traceback.print_exc()
+    return "ok"
+
+
+def write_ai_feedback_to_drive(assignment, grade, feedback_json):
+    """Writes the AI feedback to drive, returning the ID."""
+    now = datetime.datetime.utcnow()
     feedback_name = "AI Feedback for {} {}".format(
         assignment.name, grade.student, now.isoformat()
     )
@@ -417,18 +450,10 @@ def receive_ai_feedback():
     write_share = get_assignment_teachers(assignment.id)
     feedback_id_drive = upload_to_drive(drive_service, feedback_json,
                                         feedback_name, write_share=write_share, locked=True)
-    # We store the feedback in GCS.
-    ai_feedback_id_gcs = long_random_id()
-    gcs.write(GCS_SUBMISSIONS_BUCKET, ai_feedback_id_gcs, feedback_json)
     # Updates the feeback ids. 
-    grade.ai_feedback_id_gcs = ai_feedback_id_gcs
     grade.ai_feedback_id_drive = feedback_id_drive
     grade.update_record()
-    # Marks that the request has been done.
-    ai_feedback_request.completed = True
-    ai_feedback_request.delay = (now - ai_feedback_request.created_on).total_seconds()
-    ai_feedback_request.update_record()
-    return "ok"
+    return feedback_id_drive
 
 
 @action('obtain-assignment/<id>', method=["POST"])
