@@ -261,7 +261,7 @@ def request_ai_feedback(id=None):
             drive_id = write_ai_feedback_to_drive(info.assignment, info.grade, feedback_json)
         else:
             drive_id = info.grade.ai_feedback_id_drive
-        return dict(state="received", url=COLAB_BASE + drive_id)    
+        return dict(state="received", feedback_url=COLAB_BASE + drive_id)    
     # Checks if there is feedback pending.
     pending_request = db(db.ai_feedback_request.grade_id == info.grade.id).select().first()
     if has_recent_request(pending_request):

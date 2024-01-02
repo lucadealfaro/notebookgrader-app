@@ -105,16 +105,16 @@
       </td>
       <td>{{grade.grade}}</td>
       <td>{{grade.grade_date_display}}</td>
-      <td><a v-if="grade.feedback" :href="grade.feedback" target="_blank"><i class="fa fa-file"></i></a></td>
+      <td><a v-if="grade.feedback" :href="grade.feedback" target="_blank" class="button is-info is-small">Review</a></td>
       <td v-if="num_ai_feedback > 0">
         <span>
-          <button v-if="grade.ai_state=='ask'" @click="ai_ask(grade._idx)" class="button is-primary">Request</button>
+          <button v-if="grade.ai_state=='ask'" @click="ai_ask(grade._idx)" class="button is-small is-primary">Request</button>
           <span v-else-if="grade.ai_state=='confirm'">
-              <button @click="ai_confirm(grade._idx)" class="button is-danger">Confirm</button>
-              <button @click="ai_cancel(grade._idx)" class="button is-warning">Cancel</button>
+              <button @click="ai_confirm(grade._idx)" class="button is-small is-danger">Confirm</button>
+              <button @click="ai_cancel(grade._idx)" class="button is-small is-warning">Cancel</button>
           </span>
-          <button v-else-if="grade.ai_state=='requested'" class="button is-warning is-loading">Requested</button>
-          <a v-else-if="grade.ai_state=='received'" class="button is-info" :href="grade.ai_feedback_url" target="_blank">Read</a>
+          <button v-else-if="grade.ai_state=='requested'" class="button is-small is-warning is-loading">Requested</button>
+          <a v-else-if="grade.ai_state=='received'" class="button is-small is-info" :href="grade.ai_feedback_url" target="_blank">Read</a>
           <span v-else-if="grade.ai_state=='error'" class="has-text-danger-dark">Error: {{grade.ai_error_message}}</span>
         </span>
       </td>
