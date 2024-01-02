@@ -129,6 +129,7 @@ let init = (app) => {
                     (update_date == null ||
                         res.data.grades[0].grade_date > update_date)) {
                         // We got the new grades.
+                        app.vue.grades = [];
                         app.vue.grades = app.convert_grades(res.data.grades);
                         app.vue.is_grading = false;
                         app.vue.grading_outcome = "";

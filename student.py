@@ -292,7 +292,7 @@ def request_ai_feedback(id=None):
         return dict(state="error", message="No more AI feedback requests available.")
     # Prepares the information for the feedback: the master notebook, and the student notebook.
     master_json = gcs.read(GCS_BUCKET, info.assignment.master_id_gcs)
-    submission_json = gcs.read(GCS_SUBMISSIONS_BUCKET, info.submission_id_gcs)
+    submission_json = gcs.read(GCS_SUBMISSIONS_BUCKET, info.grade.submission_id_gcs)
     # Produces a clean notebook by matching the cells of master and submission.
     master_nb = nbformat.reads(master_json, as_version=4)
     submission_nb = nbformat.reads(submission_json, as_version=4)
