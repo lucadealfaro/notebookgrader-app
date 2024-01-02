@@ -102,10 +102,44 @@ let init = (app) => {
                 }, 10000);
             }
         }).catch(function (err) {
-            g.ai_state = 'error';
-            g.ai_error_message = "An error occurred.";
+            if (err.response && err.response.status == 403) {
+                location.assign(error_url);
+            } else {
+                location.assign(internal_error_url);
+            }
         })
     };
+
+    app.ai_ask = function (g_idx) {
+        let g = app.vue.grades[g_idx];
+        g.ai_state = 'confirm';
+    };
+
+    app.ai_cancel = function (g_idx) {
+        let g = app.vue.grades[g_idx];
+        g.ai_state = 'ask';
+    };
+
+    app.ai_confirm = function (g_idx) {
+        let g = app.vue.grades[g_idx];
+        g.ai_state = 'requested';
+        axios.post(g.ai_url).then(function (res) {
+            g.ai_state = res.data.state;
+            g.ai_feedback_url = res.data.feedback_url;
+            g.ai_error_message = res.data.message;
+            if (g.ai_state == 'requested') {
+                setTimeout(() => {
+                    app.get_ai_state(g);
+                }, 10000);
+            }
+        }).catch(function (err) {
+            if (err.response && err.response.status == 403) {
+                location.assign(error_url);
+            } else {
+                location.assign(internal_error_url);
+            }
+        });
+    }
 
     // ok
     app.obtain_assignment = function () {
@@ -146,7 +180,6 @@ let init = (app) => {
         })
     }
 
-    // FIX BELOW
     app.check_new_grade = function () {
         setTimeout(() => {
             // First, we compute the last grade date.
@@ -160,8 +193,29 @@ let init = (app) => {
                     (update_date == null ||
                         res.data.grades[0].grade_date > update_date)) {
                         // We got the new grades.
-                        app.vue.grades = [];
-                        app.vue.grades = app.convert_grades(res.data.grades);
+                        // Makes a dictionary of id to old grade, to save the AI state.
+                        let old_grades = {};
+                        for (let g of app.vue.grades) {
+                            old_grades[g.id] = g;
+                        }
+                        // Updates the grades.
+                        new_grades = [];
+                        for (let g of res.data.grades) {
+                            if (g.id in old_grades) {
+                                // We already had this grade.
+                                old_g = old_grades[g.id];
+                                old_g.is_valid = g.is_valid;
+                                new_grades.push(old_g);
+                            } else {
+                                // This is a new grade.
+                                app.convert_time(g);
+                                app.set_ai_info(g);
+                                app.get_ai_state(g);
+                                new_grades.push(g);
+                            }
+                        }
+                        new_grades = app.enumerate(new_grades);
+                        app.vue.grades = new_grades;
                         app.vue.is_grading = false;
                         app.vue.grading_outcome = "";
                         app.vue.grading_error = "";
@@ -185,6 +239,9 @@ let init = (app) => {
         // Complete as you see fit.
         obtain_assignment: app.obtain_assignment,
         grade_homework: app.grade_homework,
+        ai_ask: app.ai_ask,
+        ai_cancel: app.ai_cancel,
+        ai_confirm: app.ai_confirm,
     };
 
 
@@ -219,6 +276,12 @@ let init = (app) => {
             app.vue.can_obtain_notebook = res.data.can_obtain_notebook;
             app.vue.max_in_24h = res.data.max_in_24h;
             app.vue.num_ai_feedback = res.data.num_ai_feedback;
+        }).catch(function (err) {
+            if (err.response && err.response.status == 403) {
+                location.assign(error_url);
+            } else {
+                location.assign(internal_error_url);
+            }
         });
         axios.get(homework_grades_url).then(function (res) {
             app.vue.grades = app.convert_grades(res.data.grades);
@@ -231,6 +294,12 @@ let init = (app) => {
             // If there are pending requests, tries to get the new grades.
             if (app.vue.has_pending_requests) {
                 app.check_new_grade();
+            }
+        }).catch(function (err) {
+            if (err.response && err.response.status == 403) {
+                location.assign(error_url);
+            } else {
+                location.assign(internal_error_url);
             }
         });
     };
