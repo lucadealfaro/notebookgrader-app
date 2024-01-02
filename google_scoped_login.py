@@ -28,7 +28,7 @@ class MyAuthEnforcerGoogleScoped(AuthEnforcer):
     """This class catches certain invalid access errors Google generates
     when credentials get stale, and forces the user to login again.
     Pass it to Auth as param.auth_enfoercer, as in:
-    auth.param.auth_enforcer = MyAuthEnforcerGoogleScoped(auth)
+    auth.param.auth_enforcer = MyAuthEnforcerGoogleScoped(auth, db)
     """
 
     def __init__(self, auth, db, condition=None, error_page=None):

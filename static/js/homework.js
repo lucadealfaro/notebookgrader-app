@@ -89,7 +89,7 @@ let init = (app) => {
         g.ai_error_message = null;
     };
 
-    app.get_ai_state = (g) => {
+    app.get_ai_state = (g, delay=10000) => {
         // Checks the AI feedback for the grade.
         axios.get(g.ai_url).then(function (res) {
             g.ai_state = res.data.state;
@@ -98,8 +98,8 @@ let init = (app) => {
             // If we are in the requested state, we have to check if the feedback has been given.
             if (g.ai_state == 'requested') {
                 setTimeout(() => {
-                    app.get_ai_state(g);
-                }, 20000);
+                    app.get_ai_state(g, Math.min(delay * 1.2, 5 * 60 * 1000));
+                }, delay);
             }
         }).catch(function (err) {
             if (err.response && err.response.status == 403) {
@@ -180,7 +180,7 @@ let init = (app) => {
         })
     }
 
-    app.check_new_grade = function () {
+    app.check_new_grade = function (delay=10000) {
         setTimeout(() => {
             // First, we compute the last grade date.
             let update_date = null;
@@ -222,7 +222,7 @@ let init = (app) => {
                         app.vue.cell_source = "";
                     } else {
                         // We have to wait a bit more.
-                        app.check_new_grade();
+                        app.check_new_grade(Math.min(delay * 1.2, 5 * 60 * 1000));
                     }
             }).catch(function(err) {
                 if (err.response && err.response.status == 403) {
@@ -231,7 +231,7 @@ let init = (app) => {
                     location.assign(internal_error_url);
                 }
             })
-        }, 10000);
+        }, delay);
     };
 
     // This contains all the methods.
