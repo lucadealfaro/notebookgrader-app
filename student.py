@@ -243,25 +243,53 @@ def grade_homework(id=None):
                 outcome="Your request has been enqueued, and a new grade will be available soon.")
 
 
-@action('request_ai_feedback/<id>')
+@action('api-ai-feedback/<id>', method="GET")
 @action.uses(db, session, auth.user, url_signer.verify())
 def request_ai_feedback(id=None):
+    """Requests information on the AI feedback for this grade."""
+    info = db((db.grade.id == id) & 
+              (db.grade.homework_id == db.homework.id) &
+              (db.homework.assignment_id == db.assignment.id)).select().first()
+    if info is None:
+        return dict(state="error", message="No such grade")
+    # Checks if there is feedback already.
+    if info.grade.ai_feedback_id_drive is not None:
+        return dict(state="received", url=COLAB_BASE + info.grade.ai_feedback_id_drive)    
+    # Checks if there is feedback pending.
+    pending_request = db(db.ai_feedback_request.grade_id == info.grade.id).select().first()
+    if pending_request is not None:
+        return dict(state="requested")
+    else:
+        # There is no requested feedback. 
+        return dict(state="ask")
+
+
+@action('api-ai-feedback/<id>', method="POST")
+@action.uses(db, session, auth.user, url_signer.verify())
+def request_ai_feedback(id=None):
+    """This method is used to request AI feedback. It is called with the grade id, 
+    and it must return the feedback url if present (in practice, null) and the status 
+    (in practice, requested, unless there is an error)."""
     # Gets the grade and assignment. 
     info = db((db.grade.id == id) & 
               (db.grade.homework_id == db.homework.id) &
               (db.homework.assignment_id == db.assignment.id)).select().first()
     if info is None:
-        raise HTTP(403)
-    # Checks how many grades have feedback already requested. 
+        return dict(state="error", message="No such grade")
+    # Check if feedback has already been requested. 
+    past_request = db(db.ai_feedback_request.grade_id == info.grade.id).select().first()
+    if past_request is not None:
+        return dict(state="requested")
+    # Checks how many grades have AI feedback already requested. 
     num_given_ai_feedback = db(
         (db.grade.homework_id == info.homework.id) &
         (db.grade.student == get_user_email()) &
-        (db.grading_request.grade_id == db.grade.id)
+        (db.ai_feedback_request.grade_id == db.grade.id)
     ).count()
     max_num_ai_feedback = info.assignment.ai_feedback or 0
     if num_given_ai_feedback >= max_num_ai_feedback:
         # Exhausted the feedback. 
-        raise HTTP(403)
+        return dict(state="error", message="No more AI feedback requests available.")
     # Prepares the information for the feedback: the master notebook, and the student notebook.
     master_json = gcs.read(GCS_BUCKET, info.assignment.master_id_gcs)
     submission_json = gcs.read(GCS_SUBMISSIONS_BUCKET, info.submission_id_gcs)
@@ -285,7 +313,7 @@ def request_ai_feedback(id=None):
         callback_url = URL('receive-ai-feedback', scheme=True)
     )
     send_function_request(payload, FEEDBACK_URL)
-    redirect(URL('homework', info.homework.id))
+    return dict(state="requested")
 
 
 @action('receive-grade', method=["POST"])

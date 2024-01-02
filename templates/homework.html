@@ -106,7 +106,7 @@
       <td>{{grade.grade}}</td>
       <td>{{grade.grade_date_display}}</td>
       <td><a v-if="grade.feedback" :href="grade.feedback" target="_blank"><i class="fa fa-file"></i></a></td>
-      <td v-if="num_ai_feedback > 0">Helo</td>
+      <td v-if="num_ai_feedback > 0"><ai_feedback_button :url="grade.ai_url"></td>
     </tr>
   </table>
 </div>
@@ -123,6 +123,6 @@
 </script>
 <script src="components-bulma/vueform/luxon.min.js"></script>
 <script src="[[=URL('static/components-bulma/grid/grid.js')]]"></script>
-<script src="[[=URL('static/components-bulma/ai_feedback_button/feedback_button.js')]]"></script>
+<script src="[[=URL('static/components-bulma/ai_feedback_button/ai_feedback_button.js')]]"></script>
 <script src="js/homework.js"></script>
 [[end]]
