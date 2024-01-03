@@ -296,7 +296,10 @@ def request_ai_feedback(id=None):
     num_given_ai_feedback = db(
         (db.grade.homework_id == info.homework.id) &
         (db.grade.student == get_user_email()) &
-        (db.ai_feedback_request.grade_id == db.grade.id)
+        (db.ai_feedback_request.grade_id == db.grade.id & 
+        ((db.ai_feedback_request.completed == True) |
+         (db.ai_feedback_request.created_on > 
+          datetime.datetime.utcnow() - datetime.timedelta(seconds=MAX_AGE_AI_PENDING_REQUEST))))
     ).count()
     max_num_ai_feedback = info.assignment.ai_feedback or 0
     if num_given_ai_feedback >= max_num_ai_feedback:
@@ -407,8 +410,8 @@ def process_grade(homework, assignment, grade_date, student, is_valid, points, n
 def receive_ai_feedback():
     nonce = request.params.nonce
     feedback_json = request.params.feedback_json
-    had_errors = request.params.had_errors
-    assert not had_errors
+    prompt_tokens = request.params.prompt_tokens
+    completion_tokens = request.params.completion_tokens
     ai_feedback_request = db(db.ai_feedback_request.request_nonce == nonce).select().first()
     if ai_feedback_request is None:
         return "No request"
@@ -427,6 +430,8 @@ def receive_ai_feedback():
     # Marks that the request has been done.
     ai_feedback_request.completed = True
     ai_feedback_request.delay = (now - ai_feedback_request.created_on).total_seconds()
+    ai_feedback_request.prompt_tokens = prompt_tokens
+    ai_feedback_request.completion_tokens = completion_tokens
     ai_feedback_request.update_record()
     db.commit()    
     # Writes also the AI feedback to drive.

@@ -30,7 +30,6 @@ def build_drive_service(user=None):
         print("No user credentials")
         return None
     credentials_dict = json.loads(user_info.credentials)
-    print("Using credentials:", credentials_dict)
     creds = google.oauth2.credentials.Credentials(**credentials_dict)
     drive_service = build('drive', 'v3', credentials=creds)
     return drive_service
@@ -116,6 +115,8 @@ db.define_table( # ADD
     Field('request_nonce', default=random_id),
     Field('completed', 'boolean', default=False),
     Field('delay', 'float'),
+    Field('prompt_tokens', 'integer'),
+    Field('completion_tokens', 'integer'),
 )
 
 db.commit()

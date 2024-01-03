@@ -31,7 +31,7 @@ let init = (app) => {
         grading_outcome: "",
         cell_source: null,
         max_in_24h: null,
-        num_ai_feedback: 0,
+        max_ai_feedback: 0,
         most_recent_request: null,
     };
 
@@ -57,6 +57,16 @@ let init = (app) => {
             }
             return this.max_in_24h - recent_grades;
         },
+        num_received_ai_feedback: function () {
+            let n = 0;
+            for (let g of this.grades) {
+                if (g.ai_state == 'received' || g.ai_state == 'requested') {
+                    n++;
+                }
+            }
+            return n;
+        }
+
     };
 
     app.time_zone = luxon.DateTime.local().zoneName;
@@ -275,7 +285,7 @@ let init = (app) => {
             app.vue.drive_url = res.data.drive_url;
             app.vue.can_obtain_notebook = res.data.can_obtain_notebook;
             app.vue.max_in_24h = res.data.max_in_24h;
-            app.vue.num_ai_feedback = res.data.num_ai_feedback;
+            app.vue.max_ai_feedback = res.data.num_ai_feedback;
         }).catch(function (err) {
             if (err.response && err.response.status == 403) {
                 location.assign(error_url);
