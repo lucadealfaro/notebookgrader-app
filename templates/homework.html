@@ -56,11 +56,22 @@
     
   <!-- Section for asking the homework to be graded. --> 
 
-  <div v-if="drive_url && submission_open">
-    <h2 class="subtitle mt-6 has-text-weight-semibold">Submit Assignment</h2>
+  <h2 class="subtitle mt-5 has-text-weight-semibold">Grades
+    <span @mouseover="show_grades_help = true" @mouseout="show_grades_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
+  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_grades_help">
     <p>You can submit your assignment for grading at most {{max_in_24h}} times in 24h.
-    <span class="has-text-weight-semibold">You can ask for {{available_grades}} more gradings in these 24h.</span></p>
-    <p class="mt-2"><span class="has-text-weight-semibold">Save your Colab notebook</span> before requesting grading.</p>
+    <p class="mt-2">The grades and feedback are reported below.
+      Grades for late submissions are valid only if the instructor marks them so manually.
+      Your assignment grade is the highest valid grade you received. 
+    </p>
+    <p class="mt-2">Grades are valid if assigned before the deadline, or if the instructor explicitly validates them. If you submitted late, and you wish your grade to be valid, contact the instructor.</p>
+    <p class="mt-2">You can inspect your graded assignment to see how your grade was assigned.  Do not modify it: if you do, you will lose the original feedback.  If you accidentally modify it, you can go to the revision history (File > Show revision history) to restore the original version.</p>
+    <p class="mt-2" v-if="max_ai_feedback > 0">You can request AI feedback for up to {{max_ai_feedback}} of your submissions.  Each AI feedback is a notebook, in which feedback follows each of your answers.</p>
+  </div>
+
+  <div v-if="drive_url && submission_open">
+    <span class="has-text-weight-semibold">You can have your work graded {{available_grades}} more times in 24h.</span>
+    <span class="has-text-weight-semibold">Save your Colab notebook</span> before requesting grading.</p>
     <p>
       <button class="button is-danger mt-2" :disabled="is_grading" :class="{'is-loading': is_grading}" @click="grade_homework">Grade My Assignment</button>
     </p>
@@ -81,18 +92,7 @@
   
   <!-- Section displaying the grades -->
 
-  <h2 class="subtitle mt-5 has-text-weight-semibold">Your Grades
-    <span @mouseover="show_grades_help = true" @mouseout="show_grades_help = false" class="icon is-small has-text-primary"><i class="fa fa-info-circle"></i></span></h2>
-  <div class="box has-background-primary-light has-text-primary-dark" v-if="show_grades_help">
-    <p>Below are the grades and feedback you received.
-      Grades for late submissions are valid only if the instructor marks them so manually.
-      Your assignment grade is the highest valid grade you received. 
-    </p>
-    <p class="mt-2">Grades are valid if assigned before the deadline, or if the instructor explicitly validates them. If you submitted late, and you wish your grade to be valid, contact the instructor.</p>
-    <p class="mt-2">You can inspect your graded assignment to see how your grade was assigned.  Do not modify it: if you do, you will lose the original feedback.  If you accidentally modify it, you can go to the revision history (File > Show revision history) to restore the original version.</p>
-    <p class="mt-2" v-if="max_ai_feedback > 0">You can request AI feedback for up to {{max_ai_feedback}} of your submissions.  Each AI feedback is a notebook, in which feedback follows each of your answers.</p>
-  </div>
-  <table v-if="grades.length > 0" class="table is-striped is-fullwidth">
+  <table v-if="grades.length > 0" class="mt-3 table is-striped is-fullwidth">
     <tr>
       <th>Valid</th>
       <th>Grade</th>
