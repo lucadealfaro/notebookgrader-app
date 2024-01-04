@@ -88,8 +88,6 @@ db.define_table(
     Field('grade', 'float'),
     Field('drive_id'), # Location in Drive of feedback
     Field('feedback_id_gcs'), # Location in GCS of feedback 
-    Field('ai_feedback_id_gcs'), # Location in GCS of AI feedback #ADD
-    Field('ai_feedback_id_drive'), # Location in Drive of AI feedback #ADD
     Field('submission_id_gcs'), # Location in GCS of submission
     Field('is_valid', 'boolean', default=False),
     Field('cell_id_to_points', 'text'), # Json dictionary of grade breakdown.
@@ -115,8 +113,20 @@ db.define_table( # ADD
     Field('request_nonce', default=random_id),
     Field('completed', 'boolean', default=False),
     Field('delay', 'float'),
-    Field('prompt_tokens', 'integer'),
-    Field('completion_tokens', 'integer'),
+)
+
+# Having a separate table lets us free to use more than one feedback
+# per notebook in the future. 
+db.define_table( # ADD
+    'ai_feedback',
+    Field('grade_id', 'reference grade', ondelete="SET NULL"),
+    Field('student', default=get_user_email),
+    Field('created_on', 'datetime', default=get_time),
+    Field('ai_feedback_id_gcs'), # Location in GCS of AI feedback #ADD
+    Field('ai_feedback_id_drive'), # Location in Drive of AI feedback #ADD
+    Field('model_used'),
+    Field('cost_information', 'text'),
+    Field('rating', 'float'),
 )
 
 db.commit()

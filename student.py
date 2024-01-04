@@ -248,32 +248,31 @@ def grade_homework(id=None):
 @action.uses(db, session, auth.user, url_signer.verify())
 def request_ai_feedback(id=None):
     """Requests information on the AI feedback for this grade."""
-    info = db((db.grade.id == id) & 
-              (db.grade.homework_id == db.homework.id) &
-              (db.homework.assignment_id == db.assignment.id)).select().first()
-    if info is None:
-        return dict(state="error", message="No such grade")
-    # Checks if there is feedback already.
-    if info.grade.ai_feedback_id_gcs is not None:
-        if info.grade.ai_feedback_id_drive is None:
+    ai_feedback = db(db.ai_feedback.grade_id == id).select().first()
+    if ai_feedback is not None:
+        # Copies to drive from gcs if necessary.
+        drive_id = ai_feedback.ai_feedback_id_drive
+        if drive_id is None:
             # We need to write the feedback to drive. 
             feedback_json = gcs.read(GCS_SUBMISSIONS_BUCKET, info.grade.ai_feedback_id_gcs)
+            info = db((db.grade.id == id) & 
+                    (db.grade.homework_id == db.homework.id) &
+                    (db.homework.assignment_id == db.assignment.id)).select().first()
             drive_id = write_ai_feedback_to_drive(info.assignment, info.grade, feedback_json)
-        else:
-            drive_id = info.grade.ai_feedback_id_drive
         return dict(state="received", feedback_url=COLAB_BASE + drive_id)    
     # Checks if there is feedback pending.
-    pending_request = db(db.ai_feedback_request.grade_id == info.grade.id).select().first()
-    if has_recent_request(pending_request):
+    past_requests = db(db.ai_feedback_request.grade_id == id).select()
+    if any(is_valid_request(r) for r in past_requests):
         return dict(state="requested")
     else:
         # There is no requested feedback. 
         return dict(state="ask")
 
 
-def has_recent_request(past_request):
-    return (past_request is not None and past_request.created_on > 
-        datetime.datetime.utcnow() - datetime.timedelta(seconds=MAX_AGE_AI_PENDING_REQUEST))
+def is_valid_request(past_request):
+    return (past_request is not None and 
+            (past_request.created_on > 
+             datetime.datetime.utcnow() - datetime.timedelta(seconds=MAX_AGE_AI_PENDING_REQUEST)))
 
 
 @action('api-ai-feedback/<id>', method="POST")
@@ -289,8 +288,8 @@ def request_ai_feedback(id=None):
     if info is None:
         return dict(state="error", message="No such grade")
     # Check if feedback has already been requested. 
-    past_request = db(db.ai_feedback_request.grade_id == info.grade.id).select().first()
-    if has_recent_request(past_request):
+    past_requests = db(db.ai_feedback_request.grade_id == info.grade.id).select()
+    if any(is_valid_request(r) for r in past_requests):
         return dict(state="requested")
     # Checks how many grades have AI feedback already requested. 
     num_given_ai_feedback = db(
@@ -329,6 +328,8 @@ def request_ai_feedback(id=None):
         # master_json variable contains bytes, it turns out. 
         master_json=nbformat.writes(master_nb, 4),
         student_json=nbformat.writes(test_nb, 4),
+        provider="openai", # or openai. 
+        model="gpt-4-1106-preview", # or gpt-4-1106-preview
         callback_url = URL('receive-ai-feedback', scheme=True)
     )
     send_function_request(payload, FEEDBACK_URL)
@@ -410,8 +411,6 @@ def process_grade(homework, assignment, grade_date, student, is_valid, points, n
 def receive_ai_feedback():
     nonce = request.params.nonce
     feedback_json = request.params.feedback_json
-    prompt_tokens = request.params.prompt_tokens
-    completion_tokens = request.params.completion_tokens
     ai_feedback_request = db(db.ai_feedback_request.request_nonce == nonce).select().first()
     if ai_feedback_request is None:
         return "No request"
@@ -422,27 +421,40 @@ def receive_ai_feedback():
     grade = db.grade[ai_feedback_request.grade_id]
     assignment = db.assignment[grade.assignment_id]
     assert grade is not None and assignment is not None
-    # We store the feedback in GCS.
-    ai_feedback_id_gcs = long_random_id()
-    gcs.write(GCS_SUBMISSIONS_BUCKET, ai_feedback_id_gcs, feedback_json)
-    grade.ai_feedback_id_gcs = ai_feedback_id_gcs
-    grade.update_record()
+    ai_feedback = db(db.ai_feedback.grade_id == grade.id).select().first() 
+    if ai_feedback is not None:
+        # We already have feedback. 
+        gcs.write(GCS_SUBMISSIONS_BUCKET, ai_feedback.ai_feedback_id_gcs, feedback_json)
+        ai_feedback.model_used = request.params.model
+        ai_feedback.cost_information = request.params.cost_information
+        ai_feedback.rating = None # To over-write any previous star rating.
+        ai_feedback.update_record()
+    else: 
+        # We create the feedback.   
+        ai_feedback_id_gcs = long_random_id()
+        gcs.write(GCS_SUBMISSIONS_BUCKET, ai_feedback_id_gcs, feedback_json)
+        # We create the feedback. 
+        feedback_id = db.ai_feedback.insert(
+            grade_id=grade.id,
+            student=grade.student,
+            ai_feedback_id_gcs=ai_feedback_id_gcs,
+            model_used = request.params.model,
+            cost_information = request.params.cost_information,
+        )
     # Marks that the request has been done.
     ai_feedback_request.completed = True
     ai_feedback_request.delay = (now - ai_feedback_request.created_on).total_seconds()
-    ai_feedback_request.prompt_tokens = prompt_tokens
-    ai_feedback_request.completion_tokens = completion_tokens
     ai_feedback_request.update_record()
     db.commit()    
     # Writes also the AI feedback to drive.
     try: 
-        write_ai_feedback_to_drive(assignment, grade, feedback_json)
+        write_ai_feedback_to_drive(feedback_id, assignment, grade, feedback_json)
     except:
         traceback.print_exc()
     return "ok"
 
 
-def write_ai_feedback_to_drive(assignment, grade, feedback_json):
+def write_ai_feedback_to_drive(feedback_id, assignment, grade, feedback_json):
     """Writes the AI feedback to drive, returning the ID."""
     now = datetime.datetime.utcnow()
     feedback_name = "AI Feedback for {} {}".format(
@@ -456,8 +468,9 @@ def write_ai_feedback_to_drive(assignment, grade, feedback_json):
     feedback_id_drive = upload_to_drive(drive_service, feedback_json,
                                         feedback_name, write_share=write_share, locked=True)
     # Updates the feeback ids. 
-    grade.ai_feedback_id_drive = feedback_id_drive
-    grade.update_record()
+    ai_feedback = db.ai_feedback[feedback_id]
+    ai_feedback.ai_feedback_id_drive = feedback_id_drive
+    ai_feedback.update_record()
     return feedback_id_drive
 
 
