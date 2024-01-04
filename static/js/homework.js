@@ -33,6 +33,7 @@ let init = (app) => {
         max_in_24h: null,
         max_ai_feedback: 0,
         most_recent_request: null,
+        star_indices: [1, 2, 3, 4, 5],
     };
 
     app.computed = {
@@ -97,6 +98,8 @@ let init = (app) => {
         g.ai_state = 'ask';
         g.ai_feedback_url = null;
         g.ai_error_message = null;
+        g.num_stars_display = 0;
+        g.num_stars_assigned = 0;
     };
 
     app.get_ai_state = (g, delay=10000) => {
@@ -110,6 +113,10 @@ let init = (app) => {
                 setTimeout(() => {
                     app.get_ai_state(g, Math.min(delay * 1.2, 5 * 60 * 1000));
                 }, delay);
+            }
+            // If we are in the received state, we have to get the number of stars.
+            if (g.ai_state == 'received') {
+                app.get_stars(g);
             }
         }).catch(function (err) {
             if (err.response && err.response.status == 403) {
@@ -142,6 +149,10 @@ let init = (app) => {
                     app.get_ai_state(g);
                 }, 10000);
             }
+            // If we are in the received state, we have to get the number of stars.
+            if (g.ai_state == 'received') {
+                app.get_stars(g);
+            }            
         }).catch(function (err) {
             if (err.response && err.response.status == 403) {
                 location.assign(error_url);
@@ -244,6 +255,30 @@ let init = (app) => {
         }, delay);
     };
 
+    // Star methods. 
+    app.stars_over = function (g_idx, star_idx) {
+        let g = app.vue.grades[g_idx];
+        g.num_stars_display = star_idx;
+    };
+
+    app.stars_out = function (g_idx) {
+        let g = app.vue.grades[g_idx];
+        g.num_stars_display = g.num_stars_assigned;
+    };
+
+    app.set_stars = function (g_idx, star_idx) {
+        let g = app.vue.grades[g_idx];
+        g.num_stars_assigned = star_idx;
+        axios.post(g.ai_rate_url, {num_stars: g.num_stars_assigned});
+    };
+
+    app.get_stars = function (g) {
+        axios.get(g.ai_rate_url).then(function (res) {
+            g.num_stars_assigned = res.data.num_stars;
+            g.num_stars_display = res.data.num_stars;
+        })
+    };
+
     // This contains all the methods.
     app.methods = {
         // Complete as you see fit.
@@ -252,6 +287,9 @@ let init = (app) => {
         ai_ask: app.ai_ask,
         ai_cancel: app.ai_cancel,
         ai_confirm: app.ai_confirm,
+        stars_over: app.stars_over,
+        stars_out: app.stars_out,
+        set_stars: app.set_stars,
     };
 
 

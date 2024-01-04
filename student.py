@@ -85,7 +85,6 @@ def invite(access_url=None):
         assignment_id=assignment.id,
         drive_id=student_drive_id,
     )
-    print("Redirect 3")
     redirect(URL('student-home'))
 
 @action('student-home')
@@ -150,6 +149,7 @@ def api_homework_grades(id=None):
              grade_date=g.grade_date.isoformat(),
              feedback=None if g.drive_id is None else COLAB_BASE + g.drive_id,
              ai_url=URL('api-ai-feedback', g.id, signer=url_signer),
+             ai_rate_url=URL('api-ai-rate', g.id, signer=url_signer),
         ) for g in grades]
     # I also want to know if there are any pending grades.
      
@@ -493,4 +493,19 @@ def obtain_assignment(id=None):
         drive_id = None
     return dict(drive_url=None if drive_id is None else COLAB_BASE + drive_id)
 
+# Star rating API. 
 
+@action('api-ai-rate/<id>', method="GET")
+@action.uses(db, session, auth.user, url_signer.verify())
+def get_api_ai_rate(id=None):
+    ai_feedback = db(db.ai_feedback.grade_id == id).select().first()
+    return None if ai_feedback is None else dict(num_stars=ai_feedback.rating)
+
+@action('api-ai-rate/<id>', method="POST")
+@action.uses(db, session, auth.user, url_signer.verify())
+def set_api_ai_rate(id=None):
+    ai_feedback = db(db.ai_feedback.grade_id == id).select().first()
+    assert ai_feedback is not None
+    ai_feedback.rating = request.params.num_stars
+    ai_feedback.update_record()
+    return "ok"

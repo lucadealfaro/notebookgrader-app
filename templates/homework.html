@@ -1,7 +1,7 @@
 [[extend 'layout.html']]
 
 [[block page_head]]
-<link rel="stylesheet" href="[[=URL('static/components-bulma/grid/grid.css')]]">
+<link rel="stylesheet" href="[[=URL('static/components-bulma/starrater/starrater.css')]]">
 [[end]]
 
 <style>
@@ -115,7 +115,17 @@
               <button @click="ai_cancel(grade._idx)" class="button is-small is-warning">Cancel</button>
           </span>
           <button v-else-if="grade.ai_state=='requested'" class="button is-small is-warning is-loading">Requested</button>
-          <a v-else-if="grade.ai_state=='received'" class="button is-small is-info" :href="grade.ai_feedback_url" target="_blank">Read</a>
+          <span v-else-if="grade.ai_state=='received'">
+            <a class="button is-small is-info" :href="grade.ai_feedback_url" target="_blank">Read</a>
+            <span v-on:mouseout="stars_out(grade._idx)" class="starrater">
+              <span v-on:mouseover="stars_over(grade._idx, idx)"
+                    v-on:click="set_stars(grade._idx, idx)"
+                    v-for="idx in star_indices">
+                  <i v-if="idx <= grade.num_stars_display" class="fa fa-star"></i>
+                  <i v-if="idx > grade.num_stars_display" class="fa fa-star-o"></i>
+              </span>
+            </span>        
+          </span>
           <span v-else-if="grade.ai_state=='error'" class="has-text-danger-dark">Error: {{grade.ai_error_message}}</span>
         </span>
       </td>
