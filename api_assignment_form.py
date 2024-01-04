@@ -34,7 +34,7 @@ FIELDS = [
     Field('available_until', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
           help="Date until when student can access the assignment and submit a solution, even if late."),
     Field('max_submissions_in_24h_period', 'integer', default=3, requires=[IS_INT_IN_RANGE(1, MAX_GRADES_24H), IS_NOT_EMPTY()], label="Maximum number of submissions in a 24h period", help="Students will be able to only submit this many solutions in any 24h period."),
-    Field('ai_feedback', 'integer', default=0, requires=IS_INT_IN_RANGE(0, 10), label="Maximum number of AI feedback requests", 
+    Field('ai_feedback', 'integer', default=0, requires=IS_INT_IN_RANGE(0, 3), label="Maximum number of AI feedback requests", 
           help="Students will be able to request AI feedback this many times."),
 ]
 
@@ -89,7 +89,8 @@ class AssignmentFormEdit(AssignmentForm):
     def validate_ai_feedback(self, fields, validated_values):
         errors = {}
         n = validated_values['ai_feedback']
-        if n > 0 and get_user_email() not in TESTER_EMAILS:
+        email = get_user_email()
+        if n > 0 and not (email in TESTER_EMAILS or email.endswith("@ucsc.edu")):
             errors['ai_feedback'] = "This feature is in preview; only testers can create assignments with AI feedback."
         return errors
 
