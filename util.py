@@ -121,6 +121,20 @@ def share_drive_file(drive_service, file_id, user, mode):
     ).execute()
 
 
+def unshare_drive_file(drive_service, file_id, user):
+    """Shares a drive file with a user in the requested mode."""
+    permissions = drive_service.permissions().list(fileId=file_id).execute()
+    for p in permissions['permissions']:
+        permission_id = p['id']
+        details = drive_service.permissions().get(
+            fileId=file_id, permissionId=permission_id, fields='emailAddress').execute()
+        email = details['emailAddress']
+        if email == user:
+            drive_service.permissions().delete(
+                fileId=file_id, permissionId=permission_id).execute()
+            print("Removed permission from", user)
+            
+
 def read_from_drive(drive_service, drive_id):
     """Reads a drive id into a string."""
     # https://developers.google.com/drive/api/guides/manage-downloads#python

@@ -8,12 +8,12 @@ from .my_validators import IS_ISO_DATETIME, IS_REAL_LIST_OF_EMAILS, IS_DOMAIN
 from .components.vueform import VueForm
 
 from .constants import *
-from .common import db, session, auth, Field
-from .util import random_id
+from .common import db, session, auth, Field, gcs
+from .util import random_id, long_random_id, upload_to_drive, share_drive_file, unshare_drive_file
 from .common import url_signer
-from .models import get_assignment_teachers, set_assignment_teachers, get_user_email
+from .models import get_assignment_teachers, set_assignment_teachers, get_user_email, build_drive_service
 from .util import normalize_email_list
-from .settings import MAX_GRADES_24H
+from .settings import MAX_GRADES_24H, GCS_BUCKET
 from .private.private_settings import TESTER_EMAILS
 
 FIELDS = [
@@ -100,13 +100,27 @@ class AssignmentFormEdit(AssignmentForm):
         return e
 
     def process_post(self, record_id, validated_values):
-        new_instructors = validated_values['instructors']
-        user = get_user_email()
-        if user not in new_instructors:
-            new_instructors.append(user)
+        assignment = self.db.assignment[record_id]
+        old_instructors = set(get_assignment_teachers(record_id)) | {assignment.owner}
+        new_instructors = set(validated_values['instructors']) | {assignment.owner}
         set_assignment_teachers(record_id, new_instructors)
         del validated_values['instructors']
-        self.db(self.db.assignment.id == record_id).update(**validated_values)
+        assignment.update_record(**validated_values)
+        # Updates the instructors on the master notebook.
+        remove_instructors = set(old_instructors) - set(new_instructors)
+        add_instructors = set(new_instructors) - set(old_instructors)
+        # Shares the notebooks with the new users. 
+        drive_service = build_drive_service()
+        if assignment.master_id_drive is not None:
+            for u in add_instructors:
+                share_drive_file(drive_service, assignment.master_id_drive, u, "reader")
+            for u in remove_instructors:
+                unshare_drive_file(drive_service, assignment.master_id_drive, u)
+        if assignment.student_id_drive is not None:
+            for u in add_instructors:
+                share_drive_file(drive_service, assignment.student_id_drive, u, "reader")
+            for u in remove_instructors:
+                unshare_drive_file(drive_service, assignment.student_id_drive, u)        
         return dict(redirect_url=URL(self.redirect_url, record_id))
 
 
@@ -116,11 +130,21 @@ class AssignmentFormCreate(AssignmentFormEdit):
         super().__init__(path, use_id=False, readonly=False,
                          validate=self.validate, **kwargs)
         self.redirect_url = redirect_url
+        
+    def __call__(self, duplicate_id=None, **kwargs):
+        if duplicate_id is not None:
+            self.duplicated_assignment = self.db.assignment[duplicate_id]
+        else:
+            self.duplicated_assignment = None
+        return super().__call__(**kwargs)
 
     def read_values(self, record_id):
         values = {}
         for f_name, f in self.fields.items():
-            values[f_name] = f.formatter(None)
+            if self.duplicated_assignment is not None and f_name == "name":
+                values[f_name] = f.formatter("Copy of " + self.duplicated_assignment[f_name])
+            else:
+                values[f_name] = f.formatter(None)
         return values
 
     def process_post(self, null_record_id, validated_values):
@@ -131,5 +155,28 @@ class AssignmentFormCreate(AssignmentFormEdit):
         if user not in new_instructors:
             new_instructors.append(user)
         set_assignment_teachers(new_id, new_instructors)
+        # Copies the notebooks if needed.
+        if self.duplicated_assignment is not None:
+            assignment = db.assignment[new_id]
+            tas = get_assignment_teachers(assignment.id, exclude=assignment.owner)
+            drive_service = build_drive_service()
+            master_json = gcs.read(GCS_BUCKET, self.duplicated_assignment.master_id_gcs)
+            student_json = gcs.read(GCS_BUCKET, self.duplicated_assignment.student_id_gcs)
+            master_id_gcs = long_random_id() + ".json"
+            student_id_gcs = long_random_id() + ".json"
+            gcs.write(GCS_BUCKET, master_id_gcs, master_json, type="application/json")
+            gcs.write(GCS_BUCKET, student_id_gcs, student_json, type="application/json")
+            assignment.master_id_gcs = master_id_gcs
+            assignment.student_id_gcs = student_id_gcs
+            date_string = datetime.datetime.utcnow().isoformat()
+            master_file_name = "{}, version: {}".format(assignment.name, date_string)
+            student_file_name = "{}, version: {}".format(assignment.name, date_string)
+            assignment.master_id_drive = upload_to_drive(
+                drive_service, master_json, master_file_name,
+                read_share=tas, id=assignment.master_id_drive)
+            assignment.student_id_drive = upload_to_drive(
+                drive_service, student_json, student_file_name,
+                read_share=tas, id=assignment.student_id_drive)            
+            assignment.update_record()
         return dict(redirect_url=URL(self.redirect_url, new_id))
 

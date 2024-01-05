@@ -16,6 +16,7 @@
             fields: [],
             readonly: false,
             time_zone: luxon.DateTime.local().zoneName,
+            submitting: false,
         };
         form.methods.load.call(data);
         return data;
@@ -154,6 +155,7 @@
         let self = this;
         let d = {};
         let ok = true;
+        self.submitting = true;
         for (let field of self.fields) {
             try {
                 d[field.name] = get_field_value(field);
@@ -165,16 +167,15 @@
         if (ok) {
             console.log("Posting:", d);
             axios.post(self.server_url, d).then(function (res) {
-            if (res.data.redirect_url) {
-                window.location = res.data.redirect_url;
-            } else {
-                // There has been some error.
-                // Clear our errors.
-                for (let field of self.fields) {
-                    field.error = res.data.errors[field.name];
+                if (res.data.redirect_url) {
+                    window.location = res.data.redirect_url;
+                } else {
+                    // There has been some error.
+                    self.submitting = false;                
+                    for (let field of self.fields) {
+                        field.error = res.data.errors[field.name];
+                    }
                 }
-                // Then copy the errors from the return message.
-            }
             });
         }
     };

@@ -63,7 +63,7 @@
   </table>
   <div v-if="!readonly" class="submission">
     <p class="error" v-if="some_error">Please fix the above errors</p>
-    <button v-on:click="submit" class="button is-primary" :disabled="some_error">Save</button>
+    <button v-on:click="submit" class="button is-primary" :class="{'is-loading': submitting}" :disabled="some_error || submitting">Save</button>
     <button v-if="cancel_url_" v-on:click="cancel" class="button">Cancel</button>
   </div>
 </div>

@@ -15,7 +15,7 @@ from .models import (get_user_email, build_drive_service, can_access_assignment,
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, ADMIN_EMAIL, GRADING_URL
 
 from .common import flash, url_signer, gcs
-from .util import random_id, long_random_id, upload_to_drive, send_function_request
+from .util import random_id, long_random_id, upload_to_drive, send_function_request, unshare_drive_file
 from .notebook_logic import create_master_notebook, produce_student_version, InvalidCell
 
 from .api_assignment_form import AssignmentFormCreate, AssignmentFormEdit, AssignmentFormView
@@ -44,7 +44,13 @@ def teacher_home():
 @action('create-assignment')
 @action.uses('create_assignment.html', db, auth.user, form_assignment_create)
 def create_assignment():
-    form = form_assignment_create(cancel_url=URL('teacher-home'))
+    duplicate = request.params.duplicate
+    if duplicate:
+        # Cheks that the assignment exists and that the user is the owner.
+        assignment = db.assignment[duplicate]
+        if assignment is None or assignment.owner != get_user_email():
+            redirect(URL('teacher-home'))
+    form = form_assignment_create(duplicate=duplicate, cancel_url=URL('teacher-home'))
     return dict(form=form)
 
 @action('teacher-view-assignment/<id>')
