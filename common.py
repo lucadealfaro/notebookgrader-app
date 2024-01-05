@@ -117,7 +117,7 @@ auth.param.button_classes = auth_button_classes
 auth.param.registration_requires_confirmation = False
 auth.param.registration_requires_approval = False
 auth.param.allowed_actions = settings.ALLOWED_ACTIONS
-auth.param.login_expiration_time = 3600 * 24
+auth.param.login_expiration_time = 3600 * 24 * 365
 # FIXME: Readd for production.
 auth.param.password_complexity = {"entropy": 2}
 auth.param.block_previous_password_num = 3
