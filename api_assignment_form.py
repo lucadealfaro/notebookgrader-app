@@ -131,9 +131,9 @@ class AssignmentFormCreate(AssignmentFormEdit):
                          validate=self.validate, **kwargs)
         self.redirect_url = redirect_url
         
-    def __call__(self, duplicate_id=None, **kwargs):
-        if duplicate_id is not None:
-            self.duplicated_assignment = self.db.assignment[duplicate_id]
+    def __call__(self, duplicate=None, **kwargs):
+        if duplicate is not None:
+            self.duplicated_assignment = self.db.assignment[duplicate]
         else:
             self.duplicated_assignment = None
         return super().__call__(**kwargs)

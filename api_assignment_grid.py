@@ -4,6 +4,7 @@ import uuid
 from py4web import request, URL
 from pydal.validators import *
 from .my_validators import IS_ISO_DATETIME
+from yatl.helpers import BUTTON, I, A, SPAN, DIV
 
 from .components.grid import Grid
 
@@ -28,6 +29,7 @@ class TeacherAssignmentGrid(Grid):
             cells=[
                 dict(text="Assignment"),
                 dict(text="Due Date"),
+                dict(text="Duplicate", help="Duplicate an assignment, copying the notebooks associated with it."),
             ],
         )
         # Parses the query.
@@ -48,6 +50,8 @@ class TeacherAssignmentGrid(Grid):
                      ),
                 dict(text=r["assignment"]["submission_deadline"].isoformat(),
                      type='datetime'),
+                dict(html=A(I(_class="fa fa-copy"), 
+                            _href=URL('create-assignment', vars={'duplicate': r["assignment"]["id"]})).xml()),
             ]
         )
             for r in result_rows
