@@ -75,4 +75,7 @@ CREATE TABLE `ai_feedback` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
+```sql
+ALTER TABLE `assignment` ADD `ai_feedback` INT(11);
+```
 

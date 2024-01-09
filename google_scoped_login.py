@@ -31,10 +31,20 @@ class MyAuthEnforcerGoogleScoped(AuthEnforcer):
     auth.param.auth_enforcer = MyAuthEnforcerGoogleScoped(auth, db)
     """
 
-    def __init__(self, auth, db, condition=None, error_page=None):
+    def __init__(self, auth, db, condition=None, error_page=None,
+                 check_refresh=False):
+        """
+        Args:
+        auth: auth object
+        db: database
+        condition: condition for the auth enforcer
+        error_page: page to redirect to in case of error
+        check_refresh: check if the refresh token is missing?
+        """
         super().__init__(auth, condition=condition)
         self.db = db
         self.error_page = error_page
+        self.check_refresh = check_refresh
         assert (
             error_page is not None
         ), "You need to specify an error page; can't use login."
@@ -70,10 +80,11 @@ class MyAuthEnforcerGoogleScoped(AuthEnforcer):
         user_info = self.db(self.db.auth_credentials.email == user["email"]).select().first()
         if not user_info:
             self._handle_error()
-        credentials_dict = json.loads(user_info.credentials)
-        if not credentials_dict.get("refresh_token"):
-            print("Missing credentials:", user["email"], credentials_dict)
-            self._handle_error()
+        if self.check_refresh:
+            credentials_dict = json.loads(user_info.credentials)
+            if not credentials_dict.get("refresh_token"):
+                print("Missing credentials:", user["email"], credentials_dict)
+                self._handle_error()
             
 
 class GoogleScopedLogin(object):
@@ -85,7 +96,8 @@ class GoogleScopedLogin(object):
     label = "Google Scoped"
     callback_url = "auth/plugin/oauth2googlescoped/callback"
 
-    def __init__(self, secrets_file=None, scopes=None, db=None, define_tables=True):
+    def __init__(self, secrets_file=None, scopes=None, db=None, 
+                 define_tables=True):
         """
         Creates an authorization object for Google with Oauth2 and paramters.
         Args:
@@ -95,11 +107,6 @@ class GoogleScopedLogin(object):
                 and https://developers.google.com/identity/protocols/oauth2/scopes
             db: Database handle.
             define_tables: Define the tables for storing credentials?
-            delete_credentials_on_logout: if True, the credentials are cleared
-                when the user logs out.  If False, the app keeps a copy of the
-                credentials, so it can do work on behalf of the user using
-                those credentials after logout.  This can obviously
-                generate security concerns.
         """
 
         # Local secrets to be able to access.
