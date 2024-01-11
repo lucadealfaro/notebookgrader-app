@@ -34,8 +34,8 @@ FIELDS = [
     Field('available_until', 'datetime', required=True, requires=[IS_ISO_DATETIME(), IS_NOT_EMPTY()],
           help="Date until when student can access the assignment and submit a solution, even if late."),
     Field('max_submissions_in_24h_period', 'integer', default=3, requires=[IS_INT_IN_RANGE(1, MAX_GRADES_24H), IS_NOT_EMPTY()], label="Maximum number of submissions in a 24h period", help="Students will be able to only submit this many solutions in any 24h period."),
-    Field('ai_feedback', 'integer', default=0, requires=IS_INT_IN_RANGE(0, 3), label="Maximum number of AI feedback requests", 
-          help="Students will be able to request AI feedback this many times."),
+    # Field('ai_feedback', 'integer', default=0, requires=IS_INT_IN_RANGE(0, 3), label="Maximum number of AI feedback requests", 
+    #       help="Students will be able to request AI feedback this many times."),
 ]
 
 
@@ -86,17 +86,17 @@ class AssignmentFormEdit(AssignmentForm):
         validated_values['instructors'] = normalize_email_list(validated_values['instructors'])
         return errors
     
-    def validate_ai_feedback(self, fields, validated_values):
-        errors = {}
-        n = validated_values['ai_feedback']
-        email = get_user_email()
-        if n > 0 and not (email in TESTER_EMAILS or email.endswith("@ucsc.edu")):
-            errors['ai_feedback'] = "This feature is in preview; only testers can create assignments with AI feedback."
-        return errors
+    # def validate_ai_feedback(self, fields, validated_values):
+    #     errors = {}
+    #     n = validated_values['ai_feedback']
+    #     email = get_user_email()
+    #     if n > 0 and not (email in TESTER_EMAILS or email.endswith("@ucsc.edu")):
+    #         errors['ai_feedback'] = "This feature is in preview; only testers can create assignments with AI feedback."
+    #     return errors
 
     def validate(self, fields, validated_values):
         e = self.validate_dates(fields, validated_values)
-        e.update(self.validate_ai_feedback(fields, validated_values))
+        # e.update(self.validate_ai_feedback(fields, validated_values))
         return e
 
     def process_post(self, record_id, validated_values):
@@ -105,6 +105,9 @@ class AssignmentFormEdit(AssignmentForm):
         new_instructors = set(validated_values['instructors']) | {assignment.owner}
         set_assignment_teachers(record_id, new_instructors)
         del validated_values['instructors']
+        email = get_user_email()
+        num_ai_feedbacks = 2 if (email in TESTER_EMAILS or email.endswith("@ucsc.edu")) else 0
+        validated_values["ai_feedback"] = num_ai_feedbacks
         assignment.update_record(**validated_values)
         # Updates the instructors on the master notebook.
         remove_instructors = set(old_instructors) - set(new_instructors)
@@ -150,6 +153,9 @@ class AssignmentFormCreate(AssignmentFormEdit):
     def process_post(self, null_record_id, validated_values):
         new_instructors = validated_values['instructors']
         del validated_values['instructors']
+        email = get_user_email()
+        num_ai_feedbacks = 2 if (email in TESTER_EMAILS or email.endswith("@ucsc.edu")) else 0
+        validated_values["ai_feedback"] = num_ai_feedbacks
         new_id = self.db.assignment.insert(**validated_values)
         user = get_user_email()
         if user not in new_instructors:
