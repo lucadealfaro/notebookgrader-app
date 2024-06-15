@@ -43,6 +43,7 @@ def share_assignment_with_student(assignment):
 def invite(access_url=None):
     if access_url is None:
         redirect(URL('student-home'))
+    # Is the student already in the assignment?
     # One can try a failed invitation once a minute.
     t = time.time()
     if session.get('last_failed_invite_time') is not None and t - session.get('last_failed_invite_time') < 60:
@@ -51,10 +52,9 @@ def invite(access_url=None):
     if assignment is None:
         session['last_failed_invite_time'] = t
         redirect(URL('student-home'))
-    # Is the student already in the assignment?
-    membership = db((db.homework.student == get_user_email()) &
+    homework = db((db.homework.student == get_user_email()) &
                     (db.homework.assignment_id == assignment.id)).select().first()
-    if membership is not None:
+    if homework is not None:
         return dict(
             name=assignment.name,
             message="You are already participating in this assignment.")
@@ -73,18 +73,22 @@ def invite(access_url=None):
     now = datetime.datetime.utcnow()
     if now > assignment.available_until:
         return dict(name=assignment.name, message="The assignment has already closed.")
+    # At this point, we know the student can join. 
+    db.homework.update_or_insert(
+        (db.homework.student == get_user_email()) & 
+        (db.homework.assignment_id == assignment.id),
+        student=get_user_email(),
+        assignment_id=assignment.id,
+    )
+    # Shares the homework if possible.     
     if assignment.student_id_gcs is None or assignment.available_from > now:
         # The notebook is not accessible from the student yet.
         student_drive_id = None
     else:
         # The student can be shared the assignment on drive.
         student_drive_id = share_assignment_with_student(assignment)
-    # Adds the student to the assignment.
-    db.homework.insert(
-        student=get_user_email(),
-        assignment_id=assignment.id,
-        drive_id=student_drive_id,
-    )
+    db((db.homework.student == get_user_email()) & 
+        (db.homework.assignment_id == assignment.id)).update(drive_id=student_drive_id)
     redirect(URL('student-home'))
 
 @action('student-home')
@@ -493,8 +497,8 @@ def obtain_assignment(id=None):
         drive_id = None
     return dict(drive_url=None if drive_id is None else COLAB_BASE + drive_id)
 
-# Star rating API. 
 
+# Star rating API. 
 @action('api-ai-rate/<id>', method="GET")
 @action.uses(db, session, auth.user, url_signer.verify())
 def get_api_ai_rate(id=None):

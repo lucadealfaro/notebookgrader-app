@@ -164,16 +164,19 @@ let init = (app) => {
 
     // ok
     app.obtain_assignment = function () {
-        app.vue.obtain_disabled = true; // To avoid double clicks.
-        axios.post(obtain_assignment_url).then(function (res) {
-            app.vue.drive_url = res.data.drive_url;
-        }).catch(function (err) {
-            if (err.response && err.response.status == 403) {
-                location.assign(error_url);
-            } else {
-                location.assign(internal_error_url);
-            }
-        });
+        if (app.computed.assignment_is_available.call(app.vue) &&
+             !app.vue.obtain_disabled) {
+            app.vue.obtain_disabled = true; // To avoid double clicks.
+            axios.post(obtain_assignment_url).then(function (res) {
+                app.vue.drive_url = res.data.drive_url;
+            }).catch(function (err) {
+                if (err.response && err.response.status == 403) {
+                    location.assign(error_url);
+                } else {
+                    location.assign(internal_error_url);
+                }
+            });
+        }
     };
 
     app.grade_homework = function () {
