@@ -14,7 +14,7 @@ from .common import url_signer
 from .models import get_assignment_teachers, set_assignment_teachers, get_user_email, build_drive_service
 from .util import normalize_email_list
 from .settings import MAX_GRADES_24H, GCS_BUCKET
-from .private.private_settings import TESTER_EMAILS
+from .private.private_settings import TESTER_EMAILS, AI_EMAILS
 
 FIELDS = [
     Field('name', length=STRING_FIELD_LENGTH, required=True,
@@ -154,7 +154,7 @@ class AssignmentFormCreate(AssignmentFormEdit):
         new_instructors = validated_values['instructors']
         del validated_values['instructors']
         email = get_user_email()
-        num_ai_feedbacks = 2 if (email in TESTER_EMAILS or email.endswith("@ucsc.edu")) else 0
+        num_ai_feedbacks = 2 if (email in AI_EMAILS) else 0
         validated_values["ai_feedback"] = num_ai_feedbacks
         new_id = self.db.assignment.insert(**validated_values)
         user = get_user_email()

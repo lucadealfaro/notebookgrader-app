@@ -158,6 +158,8 @@ class GoogleScopedLogin(object):
             # Enable offline access so that you can refresh an access token without
             # re-prompting the user for permission. Recommended for web server apps.
             access_type='offline',
+            # Used to ask for consent explicitly. 
+            prompt='consent',
             # Enable incremental authorization. Recommended as a best practice.
             include_granted_scopes='true')
         auth.session["oauth2googlescoped:state"] = state
