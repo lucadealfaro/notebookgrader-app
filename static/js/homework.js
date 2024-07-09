@@ -24,6 +24,7 @@ let init = (app) => {
         can_obtain_notebook: false,
         // Etc.
         grades: [],
+        max_points: 0,
         drive_url: null,
         obtain_disabled: false,
         is_grading: false,
@@ -327,6 +328,7 @@ let init = (app) => {
             app.vue.can_obtain_notebook = res.data.can_obtain_notebook;
             app.vue.max_in_24h = res.data.max_in_24h;
             app.vue.max_ai_feedback = res.data.num_ai_feedback;
+            app.vue.max_points = res.data.max_points;
         }).catch(function (err) {
             if (err.response && err.response.status == 403) {
                 location.assign(error_url);
