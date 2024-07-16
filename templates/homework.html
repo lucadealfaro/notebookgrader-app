@@ -41,7 +41,8 @@
   
   <h2 class="subtitle mt-5 has-text-weight-semibold">Your Assignment</h2>
   <div v-if="drive_url">
-    <a :href="drive_url" target="_blank" class="button is-success">Access assignment</a>
+    <p><a :href="drive_url" target="_blank" class="button is-success">Access assignment</a></p>
+    <p>If you corrupt your copy of the assignment, you can <a :href="get_new_notebook_url">get a new copy</a>.</p>
   </div>
   <div v-else-if="assignment_is_available">
     <p class="has-text-weight-semibold">Please obtain the assignment by clicking on the button below:</p>

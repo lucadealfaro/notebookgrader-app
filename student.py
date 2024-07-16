@@ -6,6 +6,9 @@ import time
 import traceback
 
 from py4web import action, request, redirect, URL, HTTP
+from py4web.utils.form import Form, FormStyleBulma
+from pydal import Field
+from yatl.helpers import A, BUTTON, SPAN
 from .common import db, session, auth
 from .models import get_user_email
 from .settings import APP_FOLDER, COLAB_BASE, GCS_BUCKET, GCS_SUBMISSIONS_BUCKET
@@ -136,6 +139,7 @@ def api_homework_details(id=None):
         max_in_24h=assignment.max_submissions_in_24h_period,
         can_obtain_notebook=assignment.master_id_gcs is not None,
         drive_url=None if homework.drive_id is None else COLAB_BASE + homework.drive_id,
+        get_new_notebook_url=URL('obtain-new-notebook', id, signer=url_signer),
         num_ai_feedback = assignment.ai_feedback or 0,
     )
 
@@ -498,6 +502,35 @@ def obtain_assignment(id=None):
         drive_id = None
     return dict(drive_url=None if drive_id is None else COLAB_BASE + drive_id)
 
+
+@action('obtain-new-notebook/<id>', method=["GET", "POST"])
+@action.uses('obtain_new_notebook.html', db, auth.user, url_signer.verify())
+def obtain_new_notebook(id=None):
+    homework = db.homework[id]
+    assert homework is not None and homework.student == get_user_email()
+    assignment = db.assignment[homework.assignment_id]
+    assert assignment is not None
+    now = datetime.datetime.utcnow()
+    # Creates the form.
+    def validate_form(form):
+        if not form.vars['yes_get_new_copy']:
+            form.errors['yes_get_new_copy'] = "You must confirm to get a new copy."
+    form = Form([Field('yes_get_new_copy', 'boolean', label="Confirm: get a new notebook copy")],
+                validation=validate_form,
+                csrf_session=session, formstyle=FormStyleBulma)
+    attrs = {
+        "_onclick": "window.history.back(); return false;",
+        "_class": "button is-default ml-2",
+    }
+    form.param.sidecar.append(A("Cancel", **attrs))
+    if form.accepted:
+        if form.vars['yes_get_new_copy']:
+            drive_id = share_assignment_with_student(assignment)
+            homework.drive_id = drive_id
+            homework.update_record()
+            redirect(URL('homework', homework.id))            
+    return dict(form=form, assignment_name=assignment.name)
+    
 
 # Star rating API. 
 @action('api-ai-rate/<id>', method="GET")

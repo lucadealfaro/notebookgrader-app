@@ -26,6 +26,7 @@ let init = (app) => {
         grades: [],
         max_points: 0,
         drive_url: null,
+        get_new_notebook_url: null,
         obtain_disabled: false,
         is_grading: false,
         grading_error: null,
@@ -325,6 +326,7 @@ let init = (app) => {
             app.vue.date_closes = local_closes.toLocaleString(luxon.DateTime.DATETIME_MED_WITH_WEEKDAY);
             // Drive URL.
             app.vue.drive_url = res.data.drive_url;
+            app.vue.get_new_notebook_url = res.data.get_new_notebook_url;
             app.vue.can_obtain_notebook = res.data.can_obtain_notebook;
             app.vue.max_in_24h = res.data.max_in_24h;
             app.vue.max_ai_feedback = res.data.num_ai_feedback;
