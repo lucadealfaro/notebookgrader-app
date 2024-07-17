@@ -53,7 +53,7 @@ class AdminAssignmentGrid(Grid):
             query &= (
                 db.assignment.owner.contains(req.query) |
                 db.assignment.domain_restriction.contains(req.query) |
-                db.auth_user.fist_name.contains(req.query) |
+                db.auth_user.first_name.contains(req.query) |
                 db.auth_user.last_name.contains(req.query) |
                 db.assignment.name.contains(req.query))
         db_rows = db(query).select(**req.search_args).as_list()
