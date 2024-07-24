@@ -132,7 +132,7 @@ def api_homework_details(id=None):
     assignment = db.assignment[homework.assignment_id]
     assert assignment is not None
     return dict(
-        max_points="{:.2f}".format(assignment.max_points),
+        max_points="{:.2f}".format(assignment.max_points) if assignment.max_points is not None else "",
         submission_deadline=assignment.submission_deadline.isoformat(),
         available_from=assignment.available_from.isoformat(),
         available_until=assignment.available_until.isoformat(),
